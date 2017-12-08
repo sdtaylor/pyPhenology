@@ -92,8 +92,7 @@ class _base_model():
     
 class Thermal_Time(_base_model):
     """The classic growing degree day model using
-    a fixed threshold (usually 0 or 5C) above which
-    forcing accumulates.
+    a fixed threshold above which forcing accumulates.
     
     Parameters
     ----------
