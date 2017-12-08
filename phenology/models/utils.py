@@ -2,6 +2,51 @@ import numpy as np
 import pandas as pd
 from scipy import optimize
 
+def sigmoid2(temperature, b, c):
+    """The two parameter sigmoid function from Chuine 2000
+    
+    Parameters
+    ----------
+    temperature : Numpy array
+        (obs,doy) array of daily temperature values
+    
+    b : int
+        Sigmoid fitting parameter
+    
+    c : int
+        Sigmoid fitting paramter
+    
+    Returns
+    -------
+    temperature : Numpy array
+        (obs, doy) array of daily forcings derived from function
+    """
+    temperature = 1 / (1 + np.exp(b*(temperature-c)))
+
+def sigmoid3(temperature, a, b, c):
+    """The three parameter sigmoid function from Chuine 2000
+    
+    Parameters
+    ----------
+    temperature : Numpy array
+        (obs,doy) array of daily temperature values
+    
+    a : int
+        Sigmoid fitting parameter
+    
+    b : int
+        Sigmoid fitting paramter
+    
+    b : int
+        Sigmoid fitting paramter
+        
+    Returns
+    -------
+    temperature : Numpy array
+        (obs, doy) array of daily forcings derived from function
+    """
+    return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
+
 def forcing_accumulator(temperature):
     """ The accumulated forcing for each observation
     and doy in the (obs, doy) array.
@@ -38,8 +83,6 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
         1D array of length obs with the doy values which
         first meet the threshold
     """
-    
-    
     n_samples = forcing.shape[0]
 
     #If threshold is not met for a particular row, ensure that a large doy
@@ -84,6 +127,7 @@ def validate_DOY(DOY, for_prediction=False):
     
     for_prediction : bool
         If being used to in model.predict(), then one less colum is required
+        
     Returns
     -------
     DOY : The same dataframe but with only the valid columns
