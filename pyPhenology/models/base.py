@@ -10,7 +10,7 @@ class _base_model():
     def fit(self, DOY, temperature, method='DE', verbose=False):
         utils.validate_temperature(temperature)
         utils.validate_DOY(DOY)
-        assert len(self._parameters_to_estimate)==0, 'No parameters to estimate'
+        assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
         
         self.DOY_fitting = DOY.doy.values
         self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature, verbose=verbose)
@@ -30,7 +30,7 @@ class _base_model():
     def predict(self, site_years=None, temperature=None, return_type='array'):
         # utils.validate_temperature
         total_parameters_in_model = len(self._fixed_parameters) + len(self._parameters_to_estimate)
-        assert len(self._fitted_params) < total_parameters_in_model, 'Not all parameters set'
+        assert len(self._fitted_params) == total_parameters_in_model, 'Not all parameters set'
         
         utils.validate_temperature(temperature)
         utils.validate_DOY(site_years, for_prediction=True)
