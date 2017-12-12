@@ -1,6 +1,7 @@
 import numpy as np
 from . import utils
 from scipy import optimize
+from collections import OrderedDict
 
 class _base_model():
     def __init__(self):
@@ -9,6 +10,8 @@ class _base_model():
     def fit(self, DOY, temperature, method='DE', verbose=False):
         utils.validate_temperature(temperature)
         utils.validate_DOY(DOY)
+        assert len(self._parameters_to_estimate)==0, 'No parameters to estimate'
+        
         self.DOY_fitting = DOY.doy.values
         self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature)
         
@@ -26,7 +29,8 @@ class _base_model():
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
         # utils.validate_temperature
-        assert len(self._fitted_params) > 0, 'Parameters not set'
+        total_parameters_in_model = len(self._fixed_parameters) + len(self._parameters_to_estimate)
+        assert len(self._fitted_params) < total_parameters_in_model, 'Not all parameters set'
         
         utils.validate_temperature(temperature)
         utils.validate_DOY(site_years, for_prediction=True)
@@ -41,6 +45,26 @@ class _base_model():
         elif return_type == 'df':
             site_years['doy_predicted'] = predictions
             return site_years
+    
+    def _organize_parameters(self, params):
+        parameters_to_estimate={}
+        fixed_parameters={}
+        for parameter, value in params.items():
+            if isinstance(value, tuple):
+                assert len(value)==2, 'Parameter tuple should have 2 values'
+                parameters_to_estimate[parameter]=value
+            elif isinstance(value*1.0, float):
+                fixed_parameters[parameter]=value
+            else:
+                raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
+        
+        self._parameters_to_estimate = OrderedDict(parameters_to_estimate)
+        self._fixed_parameters = OrderedDict(fixed_parameters)
+        
+        # If nothing to estimate then assume all parameters have been
+        # passed as fixed values
+        if len(parameters_to_estimate)==0:
+            self._fitted_params = fixed_parameters
     
     def set_predict(self):
         pass
@@ -57,39 +81,45 @@ class _base_model():
     def get_initial_bounds(self):
         return self.bounds
     
-    def get_doy_estimates(self, **params):
+    def get_doy_fitting_estimates(self, **params):
         return self._apply_model(temperature = self.temperature_fitting.copy(), 
                                  doy_series = self.doy_series.copy(),
                                  **params)
     
     def get_error(self, **kargs):
-        doy_estimates = self.get_doy_estimates(**kargs)
+        doy_estimates = self.get_doy_fitting_estimates(**kargs)
         error = np.sqrt(np.mean((doy_estimates - self.DOY_fitting)**2))
         return error
     
     def _translate_scipy_parameters(self, parameters_array):
         """Map paramters from a 1D array to a dictionary for
-        use in phenology model functions.
+        use in phenology model functions. Ordering matters
+        in unpacking the scipy_array since it isn't labelled. Thus
+        it relies on self._parameters_to_estimate being an 
+        OrdereddDict
         """
         labeled_parameters={}
-        for i, param in enumerate(self.parameters):
-            labeled_parameters[param]=parameters_array[i]
+        for i, param in enumerate(self._parameters_to_estimate.items()):
+            labeled_parameters[param[0]]=parameters_array[i]
         return labeled_parameters
     
     def _scipy_error(self,x):
         """Error function for use within scipy.optimize functions.        
         """
         parameters = self._translate_scipy_parameters(x)
+        
+        # add any fixed paramters
+        parameters.update(self._fixed_parameters)
+        
         return self.get_error(**parameters)
     
     def _scipy_bounds(self):
         """Bounds structured for scipy.optimize input"""
-        return [self.bounds[param] for param  in self.parameters]
+        return [bounds for param, bounds  in list(self._parameters_to_estimate.items())]
     
     def score(self, metric='rmse'):
         pass
 
-    
 class Thermal_Time(_base_model):
     """The classic growing degree day model using
     a fixed threshold above which forcing accumulates.
@@ -105,12 +135,9 @@ class Thermal_Time(_base_model):
     F : int, > 0
         The total forcing units required
     """
-    def __init__(self):
+    def __init__(self, parameters={'t1':(-67,298),'T':(-25,25),'F':(0,1000)}):
         _base_model.__init__(self)
-        self.bounds = {'t1':(-67,298), 
-                       'T':(-25,25),
-                       'F':(0,1000)}
-        self.parameters = ['t1','T','F']
+        self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t1, T, F):
         #Temperature threshold
@@ -219,9 +246,10 @@ class Unichill(_base_model):
         temp_chilling[:,doy_series<t0]=0
         accumulated_chill=utils.forcing_accumulator(temp_chilling)
         
-        #Heat forcing accumulation starts when the chilling
+        # Heat forcing accumulation starts when the chilling
         # requirement, C, has been met. Enforce this by 
         # setting everything prior to that date to 0
+        # TODO: optimize this so it doesn't use a for loop
         F_begin = utils.doy_estimator(forcing = accumulated_chill,
                                       doy_series=doy_series,
                                       threshold=C)
