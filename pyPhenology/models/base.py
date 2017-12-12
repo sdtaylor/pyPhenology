@@ -10,7 +10,7 @@ class _base_model():
         utils.validate_temperature(temperature)
         utils.validate_DOY(DOY)
         self.DOY_fitting = DOY.doy.values
-        self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature)
+        self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature, verbose=verbose)
         
         # TODO: make this it's own function or class to allow other methods
         # like basinhopping or brute force and configurable params
@@ -156,7 +156,7 @@ class Uniforc(_base_model):
         temperature = utils.sigmoid2(temperature, b=b, c=c)
     
         #Only accumulate forcing after t1
-        temperature[:,self.temperature<t1]=0
+        temperature[:,doy_series<t1]=0
     
         accumulateed_forcing=utils.forcing_accumulator(temperature)
     

@@ -21,7 +21,7 @@ def sigmoid2(temperature, b, c):
     temperature : Numpy array
         (obs, doy) array of daily forcings derived from function
     """
-    temperature = 1 / (1 + np.exp(b*(temperature-c)))
+    return 1 / (1 + np.exp(b*(temperature-c)))
 
 def sigmoid3(temperature, a, b, c):
     """The three parameter sigmoid function from Chuine 2000
