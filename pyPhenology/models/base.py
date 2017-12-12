@@ -1,5 +1,5 @@
 import numpy as np
-from . import utils
+from . import utils, validation
 from scipy import optimize
 from collections import OrderedDict
 
@@ -8,8 +8,8 @@ class _base_model():
         self._fitted_params = {}
         
     def fit(self, DOY, temperature, method='DE', verbose=False):
-        utils.validate_temperature(temperature)
-        utils.validate_DOY(DOY)
+        validation.validate_temperature(temperature)
+        validation.validate_DOY(DOY)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
         
         self.DOY_fitting = DOY.doy.values
@@ -31,8 +31,8 @@ class _base_model():
     def predict(self, site_years=None, temperature=None, return_type='array'):
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
-        utils.validate_temperature(temperature)
-        utils.validate_DOY(site_years, for_prediction=True)
+        validation.validate_temperature(temperature)
+        validation.validate_DOY(site_years, for_prediction=True)
         temp_array, doy_series = utils.format_temperature(site_years, temperature)
         
         predictions = self._apply_model(temp_array.copy(),
