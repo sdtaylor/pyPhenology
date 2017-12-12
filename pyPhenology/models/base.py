@@ -26,11 +26,10 @@ class _base_model():
                                                           recombination=0.25)
         
         self._fitted_params = self._translate_scipy_parameters(optimize_output['x'])
+        self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
-        # utils.validate_temperature
-        total_parameters_in_model = len(self._fixed_parameters) + len(self._parameters_to_estimate)
-        assert len(self._fitted_params) == total_parameters_in_model, 'Not all parameters set'
+        assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
         utils.validate_temperature(temperature)
         utils.validate_DOY(site_years, for_prediction=True)
@@ -46,23 +45,39 @@ class _base_model():
             site_years['doy_predicted'] = predictions
             return site_years
     
-    def _organize_parameters(self, params):
+    def _organize_parameters(self, passed_parameters):
+        """Interpret each passed parameter value to a model.
+        They can either be a fixed value, a range to estimate with,
+        or, if missing, implying using the default range described
+        in the model.
+        """
         parameters_to_estimate={}
         fixed_parameters={}
-        for parameter, value in params.items():
-            if isinstance(value, tuple):
-                assert len(value)==2, 'Parameter tuple should have 2 values'
-                parameters_to_estimate[parameter]=value
-            elif isinstance(value*1.0, float):
-                fixed_parameters[parameter]=value
-            else:
-                raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
+        
+        if len(passed_parameters)==0:
+            parameters_to_estimate = self.all_required_parameters
+        else:
+            for parameter, value in passed_parameters.items():
+                assert parameter in self.all_required_parameters, 'Unknown parameter: '+str(parameter)
+                
+                if isinstance(value, tuple):
+                    assert len(value)==2, 'Parameter tuple should have 2 values'
+                    parameters_to_estimate[parameter]=value
+                elif isinstance(value*1.0, float):
+                    fixed_parameters[parameter]=value
+                else:
+                    raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
+        
+            # Add in required stuff that wasn't specified in model call
+            for parameter, value in self.all_required_parameters.items():
+                if parameter not in parameters_to_estimate and parameter not in fixed_parameters:
+                    parameters_to_estimate[parameter]=value
         
         self._parameters_to_estimate = OrderedDict(parameters_to_estimate)
         self._fixed_parameters = OrderedDict(fixed_parameters)
         
-        # If nothing to estimate then assume all parameters have been
-        # passed as fixed values
+        # If nothing to estimate then all parameters have been
+        # passed as fixed values and no fitting is needed
         if len(parameters_to_estimate)==0:
             self._fitted_params = fixed_parameters
     
@@ -99,8 +114,8 @@ class _base_model():
         OrdereddDict
         """
         labeled_parameters={}
-        for i, param in enumerate(self._parameters_to_estimate.items()):
-            labeled_parameters[param[0]]=parameters_array[i]
+        for i, (param,value) in enumerate(self._parameters_to_estimate.items()):
+            labeled_parameters[param]=parameters_array[i]
         return labeled_parameters
     
     def _scipy_error(self,x):
@@ -135,8 +150,9 @@ class Thermal_Time(_base_model):
     F : int, > 0
         The total forcing units required
     """
-    def __init__(self, parameters={'t1':(-67,298),'T':(-25,25),'F':(0,1000)}):
+    def __init__(self, parameters={}):
         _base_model.__init__(self)
+        self.all_required_parameters = {'t1':(-67,298),'T':(-25,25),'F':(0,1000)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t1, T, F):
