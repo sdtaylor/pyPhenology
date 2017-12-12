@@ -1,4 +1,5 @@
 from pyPhenology import utils, models
+from pyPhenology.models import validation
 import pytest
 
 doy, temp = utils.load_test_data(name='vaccinium')
@@ -8,6 +9,9 @@ model_list={'Uniforc': models.Uniforc,
             'Thermal_Time':models.Thermal_Time}
 
 for model_name, Model in model_list.items():
+    print(model_name + ' - Initial validaiton')
+    validation.validate_model(Model())
+        
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
     model=Model()

@@ -44,4 +44,5 @@ def validate_DOY(DOY, for_prediction=False):
 
 def validate_model(model_class):
     required_attributes = ['_apply_model','all_required_parameters']
-    [hasattr(model_class, attribute) for attribute in required_attributes]
+    for attribute in required_attributes:
+        assert hasattr(model_class, attribute), 'Missing model attribute: ' + str(attribute)
