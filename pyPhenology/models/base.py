@@ -187,8 +187,9 @@ class Uniforc(_base_model):
     c : int
         Sigmoid function parameter
     """
-    def __init__(self, parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-100,100)}):
+    def __init__(self, parameters={} ):
         _base_model.__init__(self)
+        self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-100,100)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t1, F, b, c):
@@ -235,9 +236,10 @@ class Unichill(_base_model):
     c_c : int
         Sigmoid funcion parameter for chilling
     """
-    def __init__(self, parameters = {'t0':(-67,298),'C':(0,300),'F':(0,200),'b_f':(-20,0),
-                                     'c_f':(-100,100),'a_c':(0,20),'b_c':(-100,100),'c_c':(-50,50)}):
+    def __init__(self, parameters={}):
         _base_model.__init__(self)
+        self.all_required_parameters = {'t0':(-67,298),'C':(0,300),'F':(0,200),'b_f':(-20,0),
+                                        'c_f':(-100,100),'a_c':(0,20),'b_c':(-100,100),'c_c':(-50,50)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t0, C, F, b_f, c_f, a_c, b_c, c_c):
