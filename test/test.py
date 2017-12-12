@@ -1,6 +1,6 @@
 from pyPhenology import utils, models
 
-doy, temp = utils.load_test_data()
+doy, temp = utils.load_test_data(name='vaccinium')
 
 model_list={'Uniforc': models.Uniforc,
             'Unichill': models.Unichill,
@@ -16,3 +16,4 @@ for model_name, Model in model_list.items():
     # Test with 1 fixed parameters
     #model = models.Thermal_Time()
     #model.fit(doy, temp)
+    
