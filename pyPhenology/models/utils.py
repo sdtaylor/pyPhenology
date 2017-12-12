@@ -2,6 +2,30 @@ import numpy as np
 import pandas as pd
 from scipy import optimize
 
+def mean_temperature(temperature, doy_series, start_doy, end_doy):
+    """Mean temperature of a single time period.
+    ie. mean spring temperature.
+    
+    Parameters
+    ----------
+    temperature : Numpy array
+        (obs,doy) array of daily temperature values
+        
+    doy_series : Numpy array
+        1D array as produced by format_temperature(),
+        identifying the doy values in forcing[:,b]
+    
+    start_doy : int
+        The beginning of the time period
+        
+    end_doy : int
+        The end of the time period
+    """
+    assert start_doy<end_doy, 'start_doy must be < end_doy'
+    
+    spring_days = np.logical_and(doy_series>=start_doy,doy_series<=end_doy)
+    return temperature[:,spring_days].mean(axis=1)
+
 def sigmoid2(temperature, b, c):
     """The two parameter sigmoid function from Chuine 2000
     
