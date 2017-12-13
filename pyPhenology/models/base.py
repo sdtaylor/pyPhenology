@@ -19,9 +19,6 @@ class _base_model():
             print('estimating: '+str(self._parameters_to_estimate))
             print('should match len: '+str(self._scipy_bounds()))
             print('with fixed: '+str(self._fixed_parameters))
-            
-        # TODO: make this it's own function or class to allow other methods
-        # like basinhopping or brute force and configurable params
         
         self._fitted_params = utils.fit_parameters(function_to_minimize = self._scipy_error,
                                                    bounds = self._scipy_bounds(),
@@ -115,14 +112,20 @@ class _base_model():
         """
         labeled_parameters={}
         for i, (param,value) in enumerate(self._parameters_to_estimate.items()):
-            labeled_parameters[param]=parameters_array[i]
+            try:
+                labeled_parameters[param]=parameters_array[i]
+            except IndexError:
+                # If only a single value is being fit, some scipy.
+                # optimizer methods will use a single
+                # value instead of list of length 1. 
+                labeled_parameters[param]=[parameters_array][i]
         return labeled_parameters
     
     def _scipy_error(self,x):
         """Error function for use within scipy.optimize functions.        
         """
         parameters = self._translate_scipy_parameters(x)
-        
+
         # add any fixed paramters
         parameters.update(self._fixed_parameters)
         
