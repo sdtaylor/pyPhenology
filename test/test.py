@@ -9,6 +9,9 @@ model_list={'Uniforc': models.Uniforc,
             'Thermal_Time':models.Thermal_Time,
             'Alternating':models.Alternating}
 
+# Allow for quick fitting in testing. 
+testing_optim_params = {'maxiter':5, 'popsize':10, 'disp':True}
+
 for model_name, Model in model_list.items():
     print(model_name + ' - Initial validaiton')
     validation.validate_model(Model())
@@ -16,7 +19,7 @@ for model_name, Model in model_list.items():
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
     model=Model()
-    model.fit(DOY=doy, temperature=temp, verbose=True)
+    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
     model.predict(doy, temp)
 
     # Use estimated parameter values in other tests
@@ -32,7 +35,7 @@ for model_name, Model in model_list.items():
     param, value = all_parameters.popitem()
     single_param = {param:value}
     model = Model(parameters=single_param)
-    model.fit(DOY=doy, temperature=temp, verbose=True)
+    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
     model.predict(doy, temp)
     assert model.get_params()[param]==value, 'Fixed parameter does not equal final one: '+str(param)
 
@@ -40,7 +43,7 @@ for model_name, Model in model_list.items():
     print(model_name + ' - Estimate a single parameter')
     # all_parameters is now minus one due to popitem()
     model = Model(parameters=all_parameters)
-    model.fit(DOY=doy, temperature=temp, verbose=True)
+    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
     model.predict(doy, temp)
     for param, value in all_parameters.items():
         assert model.get_params()[param] == value, 'Fixed parameter does not equal final one: '+str(param)
