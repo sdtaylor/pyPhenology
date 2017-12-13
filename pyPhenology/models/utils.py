@@ -178,15 +178,21 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
     
     return DOY_with_temp[doy_series].values, doy_series
 
-class model_optimizer:
-    def __init__(self, method, **params):
-        assert method in ['DE','BH'], 'Uknown optimizer method: ' + str(method)
-        self.method=method
-        if method == 'DE':
-            self.optimizer = optimize.differential_evolution
-            
-            optimizer_output = None
-    def optimize_parameters(optimzer_func, bounds):
-        if method == 'DE':
-            optimizer_output = None
+def fit_parameters(function_to_minimize, bounds, 
+                   method, results_translator, optimizer_params):
+    assert method in ['DE','BH', 'BF'], 'Uknown optimizer method: ' + str(method)
+    if method == 'DE':
+        default_DE_params = {'maxiter':None, 
+                             'popsize':100, 
+                             'mutation':1.5, 
+                             'recombination':0.25,
+                             'disp':False}
+        
+        default_DE_params.update(optimizer_params)
+        
+        optimize_output = optimize.differential_evolution(function_to_minimize,
+                                                          bounds=bounds, 
+                                                          **default_DE_params)
+        
+        return results_translator(optimize_output['x'])
             

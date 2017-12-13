@@ -7,7 +7,7 @@ class _base_model():
     def __init__(self):
         self._fitted_params = {}
         
-    def fit(self, DOY, temperature, method='DE', verbose=False):
+    def fit(self, DOY, temperature, method='DE', optimizer_params={}, verbose=False):
         validation.validate_temperature(temperature)
         validation.validate_DOY(DOY)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
@@ -22,15 +22,12 @@ class _base_model():
             
         # TODO: make this it's own function or class to allow other methods
         # like basinhopping or brute force and configurable params
-        optimize_output = optimize.differential_evolution(self._scipy_error,
-                                                          bounds=self._scipy_bounds(), 
-                                                          disp=verbose, 
-                                                          maxiter=20, 
-                                                          popsize=10, 
-                                                          mutation=1.5, 
-                                                          recombination=0.25)
         
-        self._fitted_params = self._translate_scipy_parameters(optimize_output['x'])
+        self._fitted_params = utils.fit_parameters(function_to_minimize = self._scipy_error,
+                                                   bounds = self._scipy_bounds(),
+                                                   method=method,
+                                                   results_translator=self._translate_scipy_parameters,
+                                                   optimizer_params = optimizer_params)
         self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
