@@ -2,7 +2,7 @@ from pyPhenology import utils, models
 from pyPhenology.models import validation
 import pytest
 
-doy, temp = utils.load_test_data(name='vaccinium')
+doy, temp = utils.load_test_data()
 
 model_list={'Uniforc': models.Uniforc,
             'Unichill': models.Unichill,
@@ -60,6 +60,24 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model = Model(parameters={'not_a_parameter':0})
 
+############################################################
 # Make sure some known parameters are estimated correctly
-#fixed_gdd_model = models.Thermal_Time(parameters={'t1':0, 'T':0})
-#fixed_gdd_model.fit(DOY=doy, temperature=temp, verbose=True)
+# Using the Brute Force method in this way should produce
+# the same result every time.
+# The number match the estimates from the original model
+# codebase in github.com/sdtaylor/phenology_dataset_study
+###########################################################
+vaccinium_doy, vaccinium_temp = utils.load_test_data(name='vaccinium')
+
+leaves_doy = vaccinium_doy[vaccinium_doy.Phenophase_ID==371]
+flowers_doy = vaccinium_doy[vaccinium_doy.Phenophase_ID==501]
+
+fixed_gdd_model = models.Thermal_Time(parameters={'t1':0, 'T':0, 'F':(0,1000)})
+fixed_gdd_model.fit(DOY=leaves_doy, temperature=vaccinium_temp, verbose=True,
+                    optimizer_params={'Ns':1000, 'disp':True}, method='BF')
+assert int(fixed_gdd_model.get_params()['F']) == 273, 'Vaccinium leaves not estimated correctly'
+
+fixed_gdd_model = models.Thermal_Time(parameters={'t1':0, 'T':0, 'F':(0,500)})
+fixed_gdd_model.fit(DOY=flowers_doy, temperature=vaccinium_temp, verbose=True,
+                    optimizer_params={'Ns':1000, 'disp':True}, method='BF')
+assert int(fixed_gdd_model.get_params()['F']) == 447, 'Vaccinium flowers not estimated correctly'
