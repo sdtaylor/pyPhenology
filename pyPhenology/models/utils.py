@@ -196,18 +196,22 @@ def fit_parameters(function_to_minimize, bounds,
         fitted_parameters = results_translator(optimize_output['x'])
 
     elif method == 'BH':
-        raise NotImplementedError('Basin Hopping not yet working yet')
+        raise NotImplementedError('Basin Hopping not working yet')
     elif method == 'SE':
-        raise NotImplementedError('Simulated Annealing not yet working yet')
+        raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
         default_params = {'Ns':5,
                           'finish':None,
                           'disp':True}
         default_params.update(optimizer_params)
+        
+        # BF takes a tuple of tuples instead of a list of tuples like DE
+        bounds = tuple(bounds)
+
         optimize_output = optimize.brute(func = function_to_minimize,
                                          ranges = bounds,
                                          **default_params)
-        print(optimize_output)
+
         fitted_parameters =  results_translator(optimize_output)
     else:
         raise ValueError('Uknown optimizer method: '+str(method))
