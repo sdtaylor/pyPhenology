@@ -15,6 +15,11 @@ class _base_model():
         self.DOY_fitting = DOY.doy.values
         self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature, verbose=verbose)
         
+        if verbose:
+            print('estimating: '+str(self._parameters_to_estimate))
+            print('should match len: '+str(self._scipy_bounds()))
+            print('with fixed: '+str(self._fixed_parameters))
+            
         # TODO: make this it's own function or class to allow other methods
         # like basinhopping or brute force and configurable params
         optimize_output = optimize.differential_evolution(self._scipy_error,
@@ -54,25 +59,23 @@ class _base_model():
         parameters_to_estimate={}
         fixed_parameters={}
         
-        if len(passed_parameters)==0:
-            parameters_to_estimate = self.all_required_parameters
-        else:
-            for parameter, value in passed_parameters.items():
-                assert parameter in self.all_required_parameters, 'Unknown parameter: '+str(parameter)
-                
-                if isinstance(value, tuple):
-                    assert len(value)==2, 'Parameter tuple should have 2 values'
-                    parameters_to_estimate[parameter]=value
-                elif isinstance(value*1.0, float):
-                    fixed_parameters[parameter]=value
-                else:
-                    raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
-        
-            # Add in required stuff that wasn't specified in model call
-            for parameter, value in self.all_required_parameters.items():
-                if parameter not in parameters_to_estimate and parameter not in fixed_parameters:
-                    parameters_to_estimate[parameter]=value
-        
+        # This is all the required parameters updated with any
+        # passed parameters. This includes any invalid ones, 
+        # which will be checked for in a moment.
+        params = self.all_required_parameters.copy()
+        params.update(passed_parameters)
+
+        for parameter, value in params.items():
+            assert parameter in self.all_required_parameters, 'Unknown parameter: '+str(parameter)
+            
+            if isinstance(value, tuple):
+                assert len(value)==2, 'Parameter tuple should have 2 values'
+                parameters_to_estimate[parameter]=value
+            elif isinstance(value*1.0, float):
+                fixed_parameters[parameter]=value
+            else:
+                raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
+    
         self._parameters_to_estimate = OrderedDict(parameters_to_estimate)
         self._fixed_parameters = OrderedDict(fixed_parameters)
         
@@ -134,6 +137,59 @@ class _base_model():
     
     def score(self, metric='rmse'):
         pass
+
+
+class Alternating(_base_model):
+    """Alternating model, originally defined in Cannell & Smith 1983.
+    Phenological event happens the first day that forcing is greater 
+    than an exponential curve of number of chill days.
+    
+    Parameters
+    ----------
+    a : int | float
+        Intercept of chill day curve
+    
+    b : int | float
+        Slope of chill day curve
+    
+    c : int | float
+        scale parameter of chill day curve
+        
+    threshold : int | flaot
+        Degree threshold above which forcing accumulates, and
+        below which chilling accumulates. Set to 5 (assuming C)
+        by default.
+        
+    t1 : int
+        DOY which forcing and chilling accumulationg starts. Set
+        to 1 (Jan 1) by default.
+    """
+    def __init__(self, parameters={}):
+        _base_model.__init__(self)
+        self.all_required_parameters = {'a':(-5000,5000), 'b':(-5000,5000), 'c':(0,100),
+                                        'threshold':(5,5), 't1':(1,1)}
+        self._organize_parameters(parameters)
+    
+    def _apply_model(self, temperature, doy_series, a, b, c, threshold, t1):
+        chill_days = ((temperature < threshold)*1).copy()
+        chill_days[:,doy_series < t1]=0
+        chill_days = utils.forcing_accumulator(chill_days)
+
+        # Accumulated growing degree days from Jan 1
+        gdd = temperature.copy()
+        gdd[gdd < threshold]=0
+        gdd[:,doy_series < t1]=0
+        gdd = utils.forcing_accumulator(gdd)
+
+        # Phenological event happens the first day gdd is > chill_day curve
+        chill_day_curve = a + b * np.exp( c * chill_days)
+        difference = gdd - chill_day_curve
+
+        # The estimate is equal to the first day that
+        # gdd - chill_day_curve > 0
+        return utils.doy_estimator(difference, doy_series, threshold=0)
+
+
 
 class Thermal_Time(_base_model):
     """The classic growing degree day model using
