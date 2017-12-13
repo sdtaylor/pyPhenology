@@ -6,7 +6,8 @@ doy, temp = utils.load_test_data(name='vaccinium')
 
 model_list={'Uniforc': models.Uniforc,
             'Unichill': models.Unichill,
-            'Thermal_Time':models.Thermal_Time}
+            'Thermal_Time':models.Thermal_Time,
+            'Alternating':models.Alternating}
 
 for model_name, Model in model_list.items():
     print(model_name + ' - Initial validaiton')
@@ -43,6 +44,13 @@ for model_name, Model in model_list.items():
     model.predict(doy, temp)
     for param, value in all_parameters.items():
         assert model.get_params()[param] == value, 'Fixed parameter does not equal final one: '+str(param)
+    
+    # Expect error when predicting but not all parameters were
+    # passed, and no fitting has been done.
+    print(model_name + ' - Should not predict without fit')
+    with pytest.raises(AssertionError) as a:
+        model = Model(parameters=single_param)
+        model.predict(doy, temp)
     
     # Expect error when a bogus parameter gets passed
     print(model_name + ' - Should not accept unknown parameters')
