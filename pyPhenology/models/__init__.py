@@ -1,5 +1,6 @@
-from .base import Thermal_Time, Uniforc, Unichill
+from .base import Thermal_Time, Uniforc, Unichill, Alternating
 
 __all__ = ['Thermal_Time',
            'Uniforc',
-           'Unichill']
+           'Unichill',
+           'Alternating']
