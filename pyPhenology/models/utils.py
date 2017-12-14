@@ -202,7 +202,7 @@ def fit_parameters(function_to_minimize, bounds,
     elif method == 'BF':
         default_params = {'Ns':5,
                           'finish':None,
-                          'disp':True}
+                          'disp':False}
         default_params.update(optimizer_params)
         
         # BF takes a tuple of tuples instead of a list of tuples like DE

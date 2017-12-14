@@ -7,7 +7,7 @@ class _base_model():
     def __init__(self):
         self._fitted_params = {}
         
-    def fit(self, DOY, temperature, method='DE', optimizer_params={}, verbose=False):
+    def fit(self, DOY, temperature, method='DE', optimizer_params={}, verbose=False, debug=False):
         validation.validate_temperature(temperature)
         validation.validate_DOY(DOY)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
@@ -15,11 +15,13 @@ class _base_model():
         self.DOY_fitting = DOY.doy.values
         self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature, verbose=verbose)
         
-        if verbose:
+        if debug:
             print('estimating: '+str(self._parameters_to_estimate))
             print('should match len: '+str(self._scipy_bounds()))
             print('with fixed: '+str(self._fixed_parameters))
         
+        if verbose:
+            optimizer_params.update({'disp':True})
         self._fitted_params = utils.fit_parameters(function_to_minimize = self._scipy_error,
                                                    bounds = self._scipy_bounds(),
                                                    method=method,
