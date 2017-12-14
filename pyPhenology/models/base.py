@@ -110,15 +110,16 @@ class _base_model():
         it relies on self._parameters_to_estimate being an 
         OrdereddDict
         """
+        # If only a single value is being fit, some scipy.
+        # optimizer methods will use a single
+        # value instead of list of length 1. 
+        try:
+            _ = parameters_array[0]
+        except IndexError:
+            parameters_array = [parameters_array]
         labeled_parameters={}
         for i, (param,value) in enumerate(self._parameters_to_estimate.items()):
-            try:
-                labeled_parameters[param]=parameters_array[i]
-            except IndexError:
-                # If only a single value is being fit, some scipy.
-                # optimizer methods will use a single
-                # value instead of list of length 1. 
-                labeled_parameters[param]=[parameters_array][i]
+            labeled_parameters[param]=[parameters_array][i]
         return labeled_parameters
     
     def _scipy_error(self,x):
