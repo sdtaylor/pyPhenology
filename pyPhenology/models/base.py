@@ -121,7 +121,7 @@ class _base_model():
             parameters_array = [parameters_array]
         labeled_parameters={}
         for i, (param,value) in enumerate(self._parameters_to_estimate.items()):
-            labeled_parameters[param]=[parameters_array][i]
+            labeled_parameters[param]=parameters_array[i]
         return labeled_parameters
     
     def _scipy_error(self,x):
