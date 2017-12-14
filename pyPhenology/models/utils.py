@@ -201,7 +201,7 @@ def fit_parameters(function_to_minimize, bounds,
         raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
         default_params = {'Ns':5,
-                          'finish':None,
+                          'finish':optimize.fmin_bfgs,
                           'disp':False}
         default_params.update(optimizer_params)
         
