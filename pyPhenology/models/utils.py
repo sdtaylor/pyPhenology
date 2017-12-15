@@ -178,15 +178,43 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
     
     return DOY_with_temp[doy_series].values, doy_series
 
-class model_optimizer:
-    def __init__(self, method, **params):
-        assert method in ['DE','BH'], 'Uknown optimizer method: ' + str(method)
-        self.method=method
-        if method == 'DE':
-            self.optimizer = optimize.differential_evolution
-            
-            optimizer_output = None
-    def optimize_parameters(optimzer_func, bounds):
-        if method == 'DE':
-            optimizer_output = None
+def fit_parameters(function_to_minimize, bounds, 
+                   method, results_translator, optimizer_params):
+    assert method in ['DE','BH', 'BF'], 'Uknown optimizer method: ' + str(method)
+    if method == 'DE':
+        default_params = {'maxiter':None, 
+                          'popsize':100, 
+                          'mutation':1.5, 
+                          'recombination':0.25,
+                          'disp':False}
+        
+        default_params.update(optimizer_params)
+        
+        optimize_output = optimize.differential_evolution(function_to_minimize,
+                                                          bounds=bounds, 
+                                                          **default_params)
+        fitted_parameters = results_translator(optimize_output['x'])
+
+    elif method == 'BH':
+        raise NotImplementedError('Basin Hopping not working yet')
+    elif method == 'SE':
+        raise NotImplementedError('Simulated Annealing not working yet')
+    elif method == 'BF':
+        default_params = {'Ns':5,
+                          'finish':optimize.fmin_bfgs,
+                          'disp':False}
+        default_params.update(optimizer_params)
+        
+        # BF takes a tuple of tuples instead of a list of tuples like DE
+        bounds = tuple(bounds)
+
+        optimize_output = optimize.brute(func = function_to_minimize,
+                                         ranges = bounds,
+                                         **default_params)
+
+        fitted_parameters =  results_translator(optimize_output)
+    else:
+        raise ValueError('Uknown optimizer method: '+str(method))
+    
+    return fitted_parameters
             
