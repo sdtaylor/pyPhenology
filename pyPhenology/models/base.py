@@ -169,7 +169,7 @@ class Alternating(_base_model):
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
-        self.all_required_parameters = {'a':(-5000,5000), 'b':(-5000,5000), 'c':(0,100),
+        self.all_required_parameters = {'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0),
                                         'threshold':(5,5), 't1':(1,1)}
         self._organize_parameters(parameters)
     
@@ -248,7 +248,7 @@ class Uniforc(_base_model):
     """
     def __init__(self, parameters={} ):
         _base_model.__init__(self)
-        self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-100,100)}
+        self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t1, F, b, c):
@@ -297,8 +297,9 @@ class Unichill(_base_model):
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
-        self.all_required_parameters = {'t0':(-67,298),'C':(0,300),'F':(0,200),'b_f':(-20,0),
-                                        'c_f':(-100,100),'a_c':(0,20),'b_c':(-100,100),'c_c':(-50,50)}
+        self.all_required_parameters = {'t0':(-67,298),'C':(0,300),'F':(0,200),
+                                        'b_f':(-20,0),'c_f':(-50,50),
+                                        'a_c':(0,20),'b_c':(-20,20),'c_c':(-50,50)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t0, C, F, b_f, c_f, a_c, b_c, c_c):
