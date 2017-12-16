@@ -180,6 +180,60 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
 
 def fit_parameters(function_to_minimize, bounds, 
                    method, results_translator, optimizer_params):
+    """Internal functions to estimate model parameters. 
+    
+    Methods
+    -------
+    'DE', Differential evolution
+        Uses a large number of randomly specified parameters which converge
+        on a global optimum. 
+    
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
+    
+    'BF', Brute force
+        Searches for the best parameter set within a confined space. Can take
+        an extremely long time if used beyond 2 or 3 parameters.
+        
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html
+    
+    'SA', Simulated annealing
+        The most commonly used method in phenology modelling. Not yet implemented
+        here as scipy has discontinued it in favor of basin hopping.
+        
+        https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.optimize.anneal.html
+        
+    'BH, Basin hopping
+        Starts off in a search space randomly, "hopping" around until a suitable
+        minimum value is found. Note yet implimented.
+        
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.basinhopping.html
+            
+    Parameters
+    ----------
+    funtions_to_minimize : func
+        A minimizer function to pass to the optimizer model. Normally
+        models._base_model.scipy_error
+        
+    bounds : list
+        List of tuples specifying the upper and lower search space,
+        where each tuple represents a model parameter
+    
+    method : str
+        Optimization method to use
+    
+    results_translator : func
+        A function to translate the optimizer output to a dictionary
+    
+    optimzier_parms : dict
+        parameters to pass to the scipy optimizer
+        
+    Returns
+    -------
+    fitted_parameters : dict
+        Dictionary of fitted parameters
+    
+    """
+    
     assert method in ['DE','BH', 'BF'], 'Uknown optimizer method: ' + str(method)
     if method == 'DE':
         default_params = {'maxiter':None, 

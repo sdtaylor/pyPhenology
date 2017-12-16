@@ -7,7 +7,32 @@ class _base_model():
     def __init__(self):
         self._fitted_params = {}
         
-    def fit(self, DOY, temperature, method='DE', optimizer_params={}, verbose=False, debug=False):
+    def fit(self, DOY, temperature, method='DE', optimizer_params={}, 
+            verbose=False, debug=False):
+        """Estimate the parameters of a model.
+        
+        Parameters
+        ----------
+        DOY : dataframe
+            pandas dataframe in the format specific to this package
+        
+        temperature : dataframe
+            pandas dataframe in the format specific to this package
+        
+        method : str
+            Optimization method to use
+        
+        optimizer_params : dict
+            Arguments for the optimizer
+        
+        verbose : bool
+            display progress of the optimizer
+        
+        debug : bool
+            display various internals
+        
+        """
+        
         validation.validate_temperature(temperature)
         validation.validate_DOY(DOY)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
@@ -30,6 +55,31 @@ class _base_model():
         self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
+        """Predict the doy given temperature data and associated site/year info
+        All model parameters must be set either in the initial model call
+        or by running fit(). If site_years and temperature are not set, then
+        this will return predictions for the data used in fitting (if available)
+        
+        Parameters
+        ----------
+        site_years : dataframe, optional
+            pandas dataframe in the format specific to this package, but 
+            (optionally) without the doy column
+        
+        temperature : dataframe, optional
+            pandas dataframe in the format specific to this package
+            
+        return_type : str
+            What to return. If 'array' a 1D numpy array with the same ordering
+            as site_years. If 'df' then then return the site_years dataframe
+            with a new column 'doy_predicted'
+        
+        Returns
+        -------
+        predictions : df | array
+            Either a 1D array or a dataframe according to return_type
+        
+        """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
         validation.validate_temperature(temperature)

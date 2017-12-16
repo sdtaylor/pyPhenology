@@ -2,6 +2,26 @@ import pandas as pd
 import pkg_resources
 
 def load_test_data(name='vaccinium'):
+    """Pre-loaded phenology and associated
+    temperature data.
+
+    Available datasets
+    ------------------
+    'vaccinium'
+        Vaccinium corymbosum phenology from Harvard Forest
+        Both flowers (phenophase 501) and leaves (phenophase 371)
+    
+    Parameters
+    ----------
+    name : str
+        Name of the test dataset
+    
+    Returns
+    -------
+    doy, temp : tuple
+        Pandas dataframes of phenology observations
+        and associated temperatures.
+    """
     if name=='vaccinium':
         doy_file = 'data/vaccinium_doy.csv'
         temp_file= 'data/vaccinium_temperature.csv'
