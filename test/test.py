@@ -23,6 +23,18 @@ for model_name, Model in model_list.items():
     model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
     model.predict(doy, temp)
 
+    print(model_name + ' - do not predict without both doy and temp')
+    with pytest.raises(AssertionError) as a:
+        model.predict(site_years = doy)
+    with pytest.raises(AssertionError) as a:
+        model.predict(temperature = temp)
+    print(model_name + ' - make prediction with values from fitting')
+    predicted_array = model.predict(return_type='array')
+    predicted_df    = model.predict(return_type='df')
+    assert len(predicted_array.shape) == 1, 'predicted array not 1D'
+    assert len(predicted_array) == len(predicted_df) and \
+           len(predicted_array) == len(doy), 'predicted outputs length not matching'
+
     # Use estimated parameter values in other tests
     all_parameters = model.get_params()
     
@@ -30,6 +42,12 @@ for model_name, Model in model_list.items():
     print(model_name + ' - Fix all parameters')
     model = Model(parameters=all_parameters)
     model.predict(doy, temp)
+    
+    print(model_name + ' - Do not predict without site_years and temperature \
+                        when all parameters are fixed a initialization')
+    with pytest.raises(AssertionError) as a:
+        model.predict()
+    
     
     # Only a single parameter set to fixed
     print(model_name + ' - Fix a single parameter')
@@ -61,6 +79,7 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model = Model(parameters={'not_a_parameter':0})
 
+quit()
 ############################################################
 ############################################################
 # Make sure some known parameters are estimated correctly
