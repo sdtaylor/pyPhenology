@@ -72,15 +72,11 @@ class _base_model():
         temperature : dataframe, optional
             pandas dataframe in the format specific to this package
             
-        return_type : str
-            What to return. If 'array' a 1D numpy array with the same ordering
-            as site_years. If 'df' then then return the site_years dataframe
-            with a new column 'doy_predicted'
-        
         Returns
         -------
-        predictions : df | array
-            Either a 1D array or a dataframe according to return_type
+        predictions : array
+            1D array the same length of site_years. Or if site_years
+            is not used, the same lengh as DOY used in fitting.
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
@@ -107,13 +103,8 @@ class _base_model():
                                         doy_series.copy(),
                                         **self._fitted_params)
         
-        if return_type == 'array':
-            return predictions
-        elif return_type == 'df':
-            # need to be able to return the original fitting DF here
-            site_years['doy_predicted'] = predictions
-            return site_years
-    
+        return predictions
+        
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
         They can either be a fixed value, a range to estimate with,

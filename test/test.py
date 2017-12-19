@@ -16,7 +16,7 @@ testing_optim_params = {'maxiter':5, 'popsize':10, 'disp':True}
 for model_name, Model in model_list.items():
     print(model_name + ' - Initial validaiton')
     validation.validate_model(Model())
-        
+    
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
     model=Model()
@@ -29,12 +29,16 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model.predict(temperature = temp)
     print(model_name + ' - make prediction with values from fitting')
-    predicted_array = model.predict(return_type='array')
-    predicted_df    = model.predict(return_type='df')
-    assert len(predicted_array.shape) == 1, 'predicted array not 1D'
-    assert len(predicted_array) == len(predicted_df) and \
-           len(predicted_array) == len(doy), 'predicted outputs length not matching'
+    predicted = model.predict()
 
+    print(model_name + ' - prediction sample size matches input')
+    assert len(predicted.shape) == 1, 'predicted array not 1D'
+    assert len(predicted) == len(doy), 'predicted sample size not matching input from fit'
+
+    predicted = model.predict(site_years=doy[1:10], temperature=temp)
+    assert len(predicted.shape) == 1, 'predicted array not 1D'
+    assert len(predicted) == len(doy[1:10]), 'predicted sample size not matching input from predict'
+    
     # Use estimated parameter values in other tests
     all_parameters = model.get_params()
     
