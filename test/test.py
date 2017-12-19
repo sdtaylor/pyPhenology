@@ -83,7 +83,6 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model = Model(parameters={'not_a_parameter':0})
 
-quit()
 ############################################################
 ############################################################
 # Make sure some known parameters are estimated correctly
