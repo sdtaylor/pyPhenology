@@ -16,13 +16,29 @@ testing_optim_params = {'maxiter':5, 'popsize':10, 'disp':True}
 for model_name, Model in model_list.items():
     print(model_name + ' - Initial validaiton')
     validation.validate_model(Model())
-        
+    
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
     model=Model()
     model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
     model.predict(doy, temp)
 
+    print(model_name + ' - do not predict without both doy and temp')
+    with pytest.raises(AssertionError) as a:
+        model.predict(site_years = doy)
+    with pytest.raises(AssertionError) as a:
+        model.predict(temperature = temp)
+    print(model_name + ' - make prediction with values from fitting')
+    predicted = model.predict()
+
+    print(model_name + ' - prediction sample size matches input')
+    assert len(predicted.shape) == 1, 'predicted array not 1D'
+    assert len(predicted) == len(doy), 'predicted sample size not matching input from fit'
+
+    predicted = model.predict(site_years=doy[1:10], temperature=temp)
+    assert len(predicted.shape) == 1, 'predicted array not 1D'
+    assert len(predicted) == len(doy[1:10]), 'predicted sample size not matching input from predict'
+    
     # Use estimated parameter values in other tests
     all_parameters = model.get_params()
     
@@ -30,6 +46,12 @@ for model_name, Model in model_list.items():
     print(model_name + ' - Fix all parameters')
     model = Model(parameters=all_parameters)
     model.predict(doy, temp)
+    
+    print(model_name + ' - Do not predict without site_years and temperature \
+                        when all parameters are fixed a initialization')
+    with pytest.raises(AssertionError) as a:
+        model.predict()
+    
     
     # Only a single parameter set to fixed
     print(model_name + ' - Fix a single parameter')

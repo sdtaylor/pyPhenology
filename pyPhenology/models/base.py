@@ -6,6 +6,9 @@ from collections import OrderedDict
 class _base_model():
     def __init__(self):
         self._fitted_params = {}
+        self.DOY_fitting = None
+        self.temperature_fitting = None
+        self.doy_series = None
         
     def fit(self, DOY, temperature, method='DE', optimizer_params={}, 
             verbose=False, debug=False):
@@ -69,33 +72,39 @@ class _base_model():
         temperature : dataframe, optional
             pandas dataframe in the format specific to this package
             
-        return_type : str
-            What to return. If 'array' a 1D numpy array with the same ordering
-            as site_years. If 'df' then then return the site_years dataframe
-            with a new column 'doy_predicted'
-        
         Returns
         -------
-        predictions : df | array
-            Either a 1D array or a dataframe according to return_type
+        predictions : array
+            1D array the same length of site_years. Or if site_years
+            is not used, the same lengh as DOY used in fitting.
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
-        validation.validate_temperature(temperature)
-        validation.validate_DOY(site_years, for_prediction=True)
-        temp_array, doy_series = utils.format_temperature(site_years, temperature)
+        # Both of these need to be set, or neither.
+        args_are_none = [site_years is None, temperature is None]
+        if any(args_are_none) and not all(args_are_none):
+            raise AssertionError('Both site_years and temperature must be set \
+                                 together')
+        if all(args_are_none):
+            if self.DOY_fitting is not None and self.temperature_fitting is not None:
+                temp_array = self.temperature_fitting.copy()
+                site_years = self.DOY_fitting.copy()
+                doy_series = self.doy_series
+            else:
+                raise AssertionError('No site_years + temperature passed, and \
+                                     no fitting done. Nothing to predict')
+        else:
+            validation.validate_temperature(temperature)
+            validation.validate_DOY(site_years, for_prediction=True)
+            temp_array, doy_series = utils.format_temperature(site_years, temperature)
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
                                         **self._fitted_params)
         
-        if return_type == 'array':
-            return predictions
-        elif return_type == 'df':
-            site_years['doy_predicted'] = predictions
-            return site_years
-    
+        return predictions
+        
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
         They can either be a fixed value, a range to estimate with,
