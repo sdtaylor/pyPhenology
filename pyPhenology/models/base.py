@@ -139,20 +139,13 @@ class _base_model():
         if len(parameters_to_estimate)==0:
             self._fitted_params = fixed_parameters
     
-    def set_predict(self):
-        pass
-        # set parameters and predict in one go
-        
     def get_params(self):
+        #TODO: Put a check here to make sure params are fitted
         return self._fitted_params
     
-    def set_params(self, params):
-        for p in params:
-            assert p in self.parameters, 'unknown parameter: ' + str(p)
-        self._fitted_params = params
-
     def get_initial_bounds(self):
-        return self.bounds
+        #TODO: Probably just return params to estimate + fixed ones
+        raise NotImplementedError()
     
     def get_doy_fitting_estimates(self, **params):
         return self._apply_model(temperature = self.temperature_fitting.copy(), 
@@ -198,8 +191,7 @@ class _base_model():
         return [bounds for param, bounds  in list(self._parameters_to_estimate.items())]
     
     def score(self, metric='rmse'):
-        pass
-
+        raise NotImplementedError()
 
 class Alternating(_base_model):
     """Alternating model, originally defined in Cannell & Smith 1983.
