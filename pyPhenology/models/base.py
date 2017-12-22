@@ -244,6 +244,32 @@ class Alternating(_base_model):
         return utils.doy_estimator(difference, doy_series, threshold=0)
 
 
+class BootstrapModel():
+    """Fit a model using bootstrapping of the data.
+
+    """
+    def __init__(self, core_model, num_bootstraps):
+        validation.validate_model(core_model)
+        #TODO Ensure it's not already fit
+        self.model_list = [copy(core_model) for i in range(num_bootstraps)]
+    
+    def fit(self,doy, temp, **kwargs):
+        for model in self.model_list:
+            #TODO Do some random sampling of data here
+            model.fit(doy_shuffled, temp, **kwargs)
+
+    def predict(self, **kwargs):
+        predictions=[]
+        for model in self.model_list:
+            predictions.append(model.predict(**kwargs))
+
+    def get_params(self):
+        all_params=[]
+        for i, model in enumerate(self.model_list):
+            all_params.append(model.get_params())
+            all_params[-1].update({'bootstrap_num':i})
+
+        return all_params
 
 class Thermal_Time(_base_model):
     """The classic growing degree day model using
