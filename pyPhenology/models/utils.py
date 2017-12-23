@@ -75,7 +75,7 @@ def forcing_accumulator(temperature):
     """ The accumulated forcing for each observation
     and doy in the (obs, doy) array.
     """
-    return temperature.cumsum(axis=1)
+    return temperature.cumsum(axis=0)
 
 def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     """ Find the doy that some forcing threshold is met for a large
@@ -107,20 +107,17 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
         1D array of length obs with the doy values which
         first meet the threshold
     """
-    n_samples = forcing.shape[0]
-
     #If threshold is not met for a particular row, ensure that a large doy
     #gets returned so it produces a large error
-    forcing = np.column_stack((forcing, np.repeat(100000, n_samples)))
+    non_prediction_buffer = np.expand_dims(np.zeros_like(forcing[0]), axis=0)
+    non_prediction_buffer[:] = 10e5
+    forcing = np.concatenate((forcing, non_prediction_buffer), axis=0)
     doy_series = np.append(doy_series, non_prediction)
 
-    #Repeating the full doy index for each row in forcing array
-    doy_series = np.tile(doy_series, (n_samples,1))
-
-    #The doy for each row where F was met
-    doy_with_threshold_met = np.argmax(forcing>=threshold, axis=1)
+    #The index of the doy for each element where F was met
+    doy_with_threshold_met = np.argmax(forcing>=threshold, axis=0)
     
-    doy_final = doy_series[np.arange(n_samples), doy_with_threshold_met]
+    doy_final = np.take(doy_series, doy_with_threshold_met)
     
     return doy_final
 
@@ -176,7 +173,7 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
         DOY_with_temp.dropna(axis=0, inplace=True)
         if verbose: print('Dropped '+str(DOY_with_temp_n - len(DOY_with_temp)) + ' rows')
     
-    return DOY_with_temp[doy_series].values, doy_series
+    return DOY_with_temp[doy_series].values.T, doy_series
 
 def fit_parameters(function_to_minimize, bounds, 
                    method, results_translator, optimizer_params):
