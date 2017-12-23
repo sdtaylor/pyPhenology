@@ -38,7 +38,7 @@ def sigmoid2(temperature, b, c):
         Sigmoid fitting parameter
     
     c : int
-        Sigmoid fitting paramter
+        Sigmoid fitting parameter
     
     Returns
     -------
@@ -59,10 +59,10 @@ def sigmoid3(temperature, a, b, c):
         Sigmoid fitting parameter
     
     b : int
-        Sigmoid fitting paramter
+        Sigmoid fitting parameter
     
     b : int
-        Sigmoid fitting paramter
+        Sigmoid fitting parameter
         
     Returns
     -------

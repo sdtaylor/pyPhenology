@@ -124,9 +124,9 @@ class _base_model():
 
             # all parameters that were saved should be fixed values
             for parameter, value in passed_parameters.items():
-                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=paramter, v=value)
+                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=parameter, v=value)
         else:
-            assert isinstance(passed_parameters, dict), 'passed_paramters must be either a dictionary or string'
+            assert isinstance(passed_parameters, dict), 'passed_parameters must be either a dictionary or string'
 
         # This is all the required parameters updated with any
         # passed parameters. This includes any invalid ones, 
@@ -178,7 +178,7 @@ class _base_model():
         return error
     
     def _translate_scipy_parameters(self, parameters_array):
-        """Map paramters from a 1D array to a dictionary for
+        """Map parameters from a 1D array to a dictionary for
         use in phenology model functions. Ordering matters
         in unpacking the scipy_array since it isn't labelled. Thus
         it relies on self._parameters_to_estimate being an 
@@ -201,7 +201,7 @@ class _base_model():
         """
         parameters = self._translate_scipy_parameters(x)
 
-        # add any fixed paramters
+        # add any fixed parameters
         parameters.update(self._fixed_parameters)
         
         return self.get_error(**parameters)
