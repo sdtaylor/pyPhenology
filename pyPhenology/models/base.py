@@ -119,12 +119,12 @@ class _base_model():
         if isinstance(passed_parameters, str):
             passed_parameters = pd.read_csv(passed_parameters).to_dict('records')
             if len(passed_parameters)>1:
-                raise Warning('Greater than 1 entry in paramter file. Using the first')
+                raise Warning('Greater than 1 entry in parameter file. Using the first')
             passed_parameters = passed_parameters[0]
 
             # all parameters that were saved should be fixed values
             for parameter, value in passed_parameters.items():
-                assert isinstance(value*1.0, float), 'Expected a set value for paramter {p} in saved file, got {v}'.format(p=paramter, v=value)
+                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=paramter, v=value)
         else:
             assert isinstance(passed_parameters, dict), 'passed_paramters must be either a dictionary or string'
 
