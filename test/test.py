@@ -83,6 +83,14 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model = Model(parameters={'not_a_parameter':0})
 
+    #Save and load a parameter file
+    print(model_name + ' - Save and load parameter file')
+    model=Model()
+    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
+    model.save_params(model_name+'_params.csv')
+    model=Model(parameters=model_name+'_params.csv')
+    model.predict(doy, temp)
+
 ############################################################
 ############################################################
 # Make sure some known parameters are estimated correctly

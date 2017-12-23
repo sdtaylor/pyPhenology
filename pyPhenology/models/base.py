@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from . import utils, validation
 from scipy import optimize
 from collections import OrderedDict
@@ -113,7 +114,20 @@ class _base_model():
         """
         parameters_to_estimate={}
         fixed_parameters={}
-        
+
+        # Parameter can also be a file to load
+        if isinstance(passed_parameters, str):
+            passed_parameters = pd.read_csv(passed_parameters).to_dict('records')
+            if len(passed_parameters)>1:
+                raise Warning('Greater than 1 entry in parameter file. Using the first')
+            passed_parameters = passed_parameters[0]
+
+            # all parameters that were saved should be fixed values
+            for parameter, value in passed_parameters.items():
+                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=paramter, v=value)
+        else:
+            assert isinstance(passed_parameters, dict), 'passed_paramters must be either a dictionary or string'
+
         # This is all the required parameters updated with any
         # passed parameters. This includes any invalid ones, 
         # which will be checked for in a moment.
@@ -142,6 +156,12 @@ class _base_model():
     def get_params(self):
         #TODO: Put a check here to make sure params are fitted
         return self._fitted_params
+
+    def save_params(self, filename):
+        """Save the parameters for a model
+        """
+        assert len(self._fitted_params)>0, 'Parameters not fit, nothing to save'
+        pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
     
     def get_initial_bounds(self):
         #TODO: Probably just return params to estimate + fixed ones
