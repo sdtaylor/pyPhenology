@@ -9,7 +9,7 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
     Parameters
     ----------
     temperature : Numpy array
-        (obs,doy) array of daily temperature values
+        array of daily temperature values
         
     doy_series : Numpy array
         1D array as produced by format_temperature(),
@@ -32,7 +32,7 @@ def sigmoid2(temperature, b, c):
     Parameters
     ----------
     temperature : Numpy array
-        (obs,doy) array of daily temperature values
+        array of daily temperature values
     
     b : int
         Sigmoid fitting parameter
@@ -43,7 +43,7 @@ def sigmoid2(temperature, b, c):
     Returns
     -------
     temperature : Numpy array
-        (obs, doy) array of daily forcings derived from function
+        array of daily forcings derived from function
     """
     return 1 / (1 + np.exp(b*(temperature-c)))
 
@@ -67,7 +67,7 @@ def sigmoid3(temperature, a, b, c):
     Returns
     -------
     temperature : Numpy array
-        (obs, doy) array of daily forcings derived from function
+        array of daily forcings derived from function
     """
     return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
 
@@ -75,7 +75,7 @@ def forcing_accumulator(temperature):
     """ The accumulated forcing for each observation
     and doy in the (obs, doy) array.
     """
-    return temperature.cumsum(axis=1)
+    return temperature.cumsum(axis=0)
 
 def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     """ Find the doy that some forcing threshold is met for a large
@@ -84,14 +84,17 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     Parameters
     ----------
     forcing : Numpy array
-        (obs,doy) array where a is the number of replicates,
-        (site, year, individual, etc) and doy corresponds
-        to doy. values are the accumulated forcing for 
+        Either a 2d or 3d array holding timeseries of
+        daily mean temperature value of different replicates.
+        The 0 axis is always the time axis. Axis 1 in a 2d array
+        is the number of replicates. Axis 1 and 2 in a 3d array
+        are the spatial replicates (ie lat, lon)
+        values are the accumulated forcing for 
         each replicate,doy.
     
     doy_series : Numpy array
         1D array as produced by format_temperature(),
-        identifying the doy values in forcing[:,b]
+        identifying the doy values in forcing[0]
         
     threshold : float | int
         Threshold that must be met in forcing
@@ -107,26 +110,23 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
         1D array of length obs with the doy values which
         first meet the threshold
     """
-    n_samples = forcing.shape[0]
-
     #If threshold is not met for a particular row, ensure that a large doy
     #gets returned so it produces a large error
-    forcing = np.column_stack((forcing, np.repeat(100000, n_samples)))
+    non_prediction_buffer = np.expand_dims(np.zeros_like(forcing[0]), axis=0)
+    non_prediction_buffer[:] = 10e5
+    forcing = np.concatenate((forcing, non_prediction_buffer), axis=0)
     doy_series = np.append(doy_series, non_prediction)
 
-    #Repeating the full doy index for each row in forcing array
-    doy_series = np.tile(doy_series, (n_samples,1))
-
-    #The doy for each row where F was met
-    doy_with_threshold_met = np.argmax(forcing>=threshold, axis=1)
+    #The index of the doy for each element where F was met
+    doy_with_threshold_met = np.argmax(forcing>=threshold, axis=0)
     
-    doy_final = doy_series[np.arange(n_samples), doy_with_threshold_met]
+    doy_final = np.take(doy_series, doy_with_threshold_met)
     
     return doy_final
 
 def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
-    """Create a numpy array of shape (a,b), where a
-    is equal to the sample size in DOY, and b is
+    """Create a numpy array of shape (a,b), where b
+    is equal to the sample size in DOY, and a is
     equal to the number of days in the yearly time
     series of temperature (ie. Jan 1 - July 30).
     Using a numpy array in this way allows for very 
@@ -176,7 +176,7 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
         DOY_with_temp.dropna(axis=0, inplace=True)
         if verbose: print('Dropped '+str(DOY_with_temp_n - len(DOY_with_temp)) + ' rows')
     
-    return DOY_with_temp[doy_series].values, doy_series
+    return DOY_with_temp[doy_series].values.T, doy_series
 
 def fit_parameters(function_to_minimize, bounds, 
                    method, results_translator, optimizer_params):

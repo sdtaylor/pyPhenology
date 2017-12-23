@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from . import utils, validation
 from scipy import optimize
 from collections import OrderedDict
@@ -113,7 +114,20 @@ class _base_model():
         """
         parameters_to_estimate={}
         fixed_parameters={}
-        
+
+        # Parameter can also be a file to load
+        if isinstance(passed_parameters, str):
+            passed_parameters = pd.read_csv(passed_parameters).to_dict('records')
+            if len(passed_parameters)>1:
+                raise Warning('Greater than 1 entry in parameter file. Using the first')
+            passed_parameters = passed_parameters[0]
+
+            # all parameters that were saved should be fixed values
+            for parameter, value in passed_parameters.items():
+                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=paramter, v=value)
+        else:
+            assert isinstance(passed_parameters, dict), 'passed_paramters must be either a dictionary or string'
+
         # This is all the required parameters updated with any
         # passed parameters. This includes any invalid ones, 
         # which will be checked for in a moment.
@@ -142,6 +156,12 @@ class _base_model():
     def get_params(self):
         #TODO: Put a check here to make sure params are fitted
         return self._fitted_params
+
+    def save_params(self, filename):
+        """Save the parameters for a model
+        """
+        assert len(self._fitted_params)>0, 'Parameters not fit, nothing to save'
+        pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
     
     def get_initial_bounds(self):
         #TODO: Probably just return params to estimate + fixed ones
@@ -226,13 +246,13 @@ class Alternating(_base_model):
     
     def _apply_model(self, temperature, doy_series, a, b, c, threshold, t1):
         chill_days = ((temperature < threshold)*1).copy()
-        chill_days[:,doy_series < t1]=0
+        chill_days[doy_series < t1]=0
         chill_days = utils.forcing_accumulator(chill_days)
 
         # Accumulated growing degree days from Jan 1
         gdd = temperature.copy()
         gdd[gdd < threshold]=0
-        gdd[:,doy_series < t1]=0
+        gdd[doy_series < t1]=0
         gdd = utils.forcing_accumulator(gdd)
 
         # Phenological event happens the first day gdd is > chill_day curve
@@ -296,7 +316,7 @@ class Thermal_Time(_base_model):
         temperature[temperature<T]=0
     
         #Only accumulate forcing after t1
-        temperature[:,doy_series<t1]=0
+        temperature[doy_series<t1]=0
     
         accumulated_gdd=utils.forcing_accumulator(temperature)
     
@@ -332,7 +352,7 @@ class Uniforc(_base_model):
         temperature = utils.sigmoid2(temperature, b=b, c=c)
     
         #Only accumulate forcing after t1
-        temperature[:,doy_series<t1]=0
+        temperature[doy_series<t1]=0
     
         accumulateed_forcing=utils.forcing_accumulator(temperature)
     
@@ -380,6 +400,8 @@ class Unichill(_base_model):
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t0, C, F, b_f, c_f, a_c, b_c, c_c):
+        assert len(temperature.shape)==2, 'Unichill model currently only supports 2d temperature arrays'
+
         temp_chilling = temperature.copy()
         temp_forcing  = temperature.copy()
         
@@ -387,18 +409,18 @@ class Unichill(_base_model):
         temp_chilling =utils.sigmoid3(temp_chilling, a=a_c, b=b_c, c=c_c) 
     
         #Only accumulate chilling after t0
-        temp_chilling[:,doy_series<t0]=0
+        temp_chilling[doy_series<t0]=0
         accumulated_chill=utils.forcing_accumulator(temp_chilling)
         
         # Heat forcing accumulation starts when the chilling
-        # requirement, C, has been met. Enforce this by 
-        # setting everything prior to that date to 0
+        # requirement, C, has been met(t1 in the equation). 
+        # Enforce this by setting everything prior to that date to 0
         # TODO: optimize this so it doesn't use a for loop
-        F_begin = utils.doy_estimator(forcing = accumulated_chill,
-                                      doy_series=doy_series,
-                                      threshold=C)
-        for row in range(F_begin.shape[0]):
-            temp_forcing[row, doy_series<F_begin[row]]=0
+        t1_values = utils.doy_estimator(forcing = accumulated_chill,
+                                        doy_series=doy_series,
+                                        threshold=C)
+        for col, t1 in enumerate(t1_values):
+            temp_forcing[doy_series<t1, col]=0
     
         accumulated_forcing = utils.forcing_accumulator(temp_forcing)
         
