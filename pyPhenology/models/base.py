@@ -57,7 +57,8 @@ class _base_model():
                                                    optimizer_params = optimizer_params)
         self._fitted_params.update(self._fixed_parameters)
         
-    def predict(self, site_years=None, temperature=None, return_type='array'):
+    def predict(self, site_years=None, temperature=None,
+                      doy_series=None, temperature_array=None):
         """Predict the doy given temperature data and associated site/year info
         All model parameters must be set either in the initial model call
         or by running fit(). If site_years and temperature are not set, then
@@ -82,11 +83,28 @@ class _base_model():
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
         # Both of these need to be set, or neither.
-        args_are_none = [site_years is None, temperature is None]
-        if any(args_are_none) and not all(args_are_none):
-            raise AssertionError('Both site_years and temperature must be set \
+        df_prediction = [site_years is not None, temperature is not None]
+        if any(df_prediction) and not all(df_prediction):
+            raise AssertionError('Both site_years and temperature_df must be set \
                                  together')
-        if all(args_are_none):
+        array_prediction = [doy_series is not None, temperature_array is not None]
+        if any(array_prediction) and not all(array_prediction):
+            raise AssertionError('Both doy_series and temperature_array must be set \
+                                 together')
+        if not any(df_prediction) and not any(array_prediction):
+            raise AssertionError('only array or dataframe options can be set, not both')
+
+        if all(df_prediction):
+            validation.validate_temperature(temperature)
+            validation.validate_DOY(site_years, for_prediction=True)
+            temp_array, doy_series = utils.format_temperature(site_years, temperature)
+
+        elif all(array_prediction):
+            assert len(doy_series.shape)==1, 'doy_series should be a 1D array'
+            assert len(doy_series)==temperature_array.shape[0], 'doy_series length should match axis 0 length in temperature_array'
+            temp_array = temperature_array
+
+        else:
             if self.DOY_fitting is not None and self.temperature_fitting is not None:
                 temp_array = self.temperature_fitting.copy()
                 site_years = self.DOY_fitting.copy()
@@ -94,10 +112,6 @@ class _base_model():
             else:
                 raise AssertionError('No site_years + temperature passed, and \
                                      no fitting done. Nothing to predict')
-        else:
-            validation.validate_temperature(temperature)
-            validation.validate_DOY(site_years, for_prediction=True)
-            temp_array, doy_series = utils.format_temperature(site_years, temperature)
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
