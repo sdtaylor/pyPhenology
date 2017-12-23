@@ -5,22 +5,48 @@ import sys
 
 doy, temp = utils.load_test_data()
 
-model_list={'Uniforc': models.Uniforc,
-            'Unichill': models.Unichill,
-            'Thermal_Time':models.Thermal_Time,
-            'Alternating':models.Alternating}
+quick_optimization = {'maxiter':5, 'popsize':10, 'disp':True}
 
-# Allow for quick fitting in testing. 
-testing_optim_params = {'maxiter':5, 'popsize':10, 'disp':True}
 
-for model_name, Model in model_list.items():
+model_test_cases=[]
+model_test_cases.append({'model_name':'BootstrapModel',
+                         'model_func': models.BootstrapModel,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{'num_bootstraps':10,
+                                           'core_model':models.Thermal_Time}})
+model_test_cases.append({'model_name':'Uniforc',
+                         'model_func': models.Uniforc,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{}})
+model_test_cases.append({'model_name':'Unichill',
+                         'model_func': models.Uniforc,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{}})
+model_test_cases.append({'model_name':'Thermal_Time',
+                         'model_func': models.Thermal_Time,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{}})
+model_test_cases.append({'model_name':'Alternating',
+                         'model_func': models.Alternating,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{}})
+
+for test_case in model_test_cases:
+    model_name = test_case['model_name']
+    Model = test_case['model_func']
+    initial_params = test_case['initial_params']
+    fit_params = test_case['fit_params']
+    
     print(model_name + ' - Initial validaiton')
-    validation.validate_model(Model())
+    if model_name!='BootstrapModel':
+        validation.validate_model(Model(**initial_params))
+    else:
+        'Skipping for bootstrap model'
     
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
-    model=Model()
-    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
+    model=Model(**initial_params)
+    model.fit(DOY=doy, temperature=temp, verbose=True, **fit_params)
     model.predict(doy, temp)
 
     print(model_name + ' - do not predict without both doy and temp')
@@ -41,10 +67,11 @@ for model_name, Model in model_list.items():
     
     # Use estimated parameter values in other tests
     all_parameters = model.get_params()
+
     
     # Test with all parameters set to a fixed value
     print(model_name + ' - Fix all parameters')
-    model = Model(parameters=all_parameters)
+    model = Model(parameters=all_parameters, **initial_params)
     model.predict(doy, temp)
     
     print(model_name + ' - Do not predict without site_years and temperature \
@@ -52,43 +79,54 @@ for model_name, Model in model_list.items():
     with pytest.raises(AssertionError) as a:
         model.predict()
     
+    # For the bootstrap use just the first bootstrap value from here
+    if model_name=='BootstrapModel':
+        all_parameters = all_parameters[0]
     
     # Only a single parameter set to fixed
     print(model_name + ' - Fix a single parameter')
     param, value = all_parameters.popitem()
     single_param = {param:value}
-    model = Model(parameters=single_param)
-    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
+    model = Model(parameters=single_param, **initial_params)
+    model.fit(DOY=doy, temperature=temp, verbose=True, **fit_params)
     model.predict(doy, temp)
-    assert model.get_params()[param]==value, 'Fixed parameter does not equal final one: '+str(param)
+    
+    fitted_params_with_one_fixed = model.get_params()
+    if model_name=='BootstrapModel':
+        fitted_params_with_one_fixed = fitted_params_with_one_fixed[0]
+    assert fitted_params_with_one_fixed[param]==value, 'Fixed parameter does not equal final one: '+str(param)
 
     # Estimate only a single parameter
     print(model_name + ' - Estimate a single parameter')
     # all_parameters is now minus one due to popitem()
-    model = Model(parameters=all_parameters)
-    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
+    model = Model(parameters=all_parameters, **initial_params)
+    model.fit(DOY=doy, temperature=temp, verbose=True, **fit_params)
     model.predict(doy, temp)
+    
+    fitted_params_with_most_fixed = model.get_params()
+    if model_name=='BootstrapModel':
+        fitted_params_with_most_fixed = fitted_params_with_most_fixed[0]
     for param, value in all_parameters.items():
-        assert model.get_params()[param] == value, 'Fixed parameter does not equal final one: '+str(param)
+        assert fitted_params_with_most_fixed[param] == value, 'Fixed parameter does not equal final one: '+str(param)
     
     # Expect error when predicting but not all parameters were
     # passed, and no fitting has been done.
     print(model_name + ' - Should not predict without fit')
     with pytest.raises(AssertionError) as a:
-        model = Model(parameters=single_param)
+        model = Model(parameters=single_param, **initial_params)
         model.predict(doy, temp)
     
     # Expect error when a bogus parameter gets passed
     print(model_name + ' - Should not accept unknown parameters')
     with pytest.raises(AssertionError) as a:
-        model = Model(parameters={'not_a_parameter':0})
+        model = Model(parameters={'not_a_parameter':0}, **initial_params)
 
     #Save and load a parameter file
     print(model_name + ' - Save and load parameter file')
-    model=Model()
-    model.fit(DOY=doy, temperature=temp, verbose=True, optimizer_params=testing_optim_params)
+    model=Model(**initial_params)
+    model.fit(DOY=doy, temperature=temp, verbose=True, **fit_params)
     model.save_params(model_name+'_params.csv')
-    model=Model(parameters=model_name+'_params.csv')
+    model=Model(parameters=model_name+'_params.csv', **initial_params)
     model.predict(doy, temp)
 
 ############################################################
