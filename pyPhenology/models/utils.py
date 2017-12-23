@@ -9,7 +9,7 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
     Parameters
     ----------
     temperature : Numpy array
-        (obs,doy) array of daily temperature values
+        array of daily temperature values
         
     doy_series : Numpy array
         1D array as produced by format_temperature(),
@@ -32,7 +32,7 @@ def sigmoid2(temperature, b, c):
     Parameters
     ----------
     temperature : Numpy array
-        (obs,doy) array of daily temperature values
+        array of daily temperature values
     
     b : int
         Sigmoid fitting parameter
@@ -43,7 +43,7 @@ def sigmoid2(temperature, b, c):
     Returns
     -------
     temperature : Numpy array
-        (obs, doy) array of daily forcings derived from function
+        array of daily forcings derived from function
     """
     return 1 / (1 + np.exp(b*(temperature-c)))
 
@@ -67,7 +67,7 @@ def sigmoid3(temperature, a, b, c):
     Returns
     -------
     temperature : Numpy array
-        (obs, doy) array of daily forcings derived from function
+        array of daily forcings derived from function
     """
     return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
 
@@ -84,14 +84,17 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     Parameters
     ----------
     forcing : Numpy array
-        (obs,doy) array where a is the number of replicates,
-        (site, year, individual, etc) and doy corresponds
-        to doy. values are the accumulated forcing for 
+        Either a 2d or 3d array holding timeseries of
+        daily mean temperature value of different replicates.
+        The 0 axis is always the time axis. Axis 1 in a 2d array
+        is the number of replicates. Axis 1 and 2 in a 3d array
+        are the spatial replicates (ie lat, lon)
+        values are the accumulated forcing for 
         each replicate,doy.
     
     doy_series : Numpy array
         1D array as produced by format_temperature(),
-        identifying the doy values in forcing[:,b]
+        identifying the doy values in forcing[0]
         
     threshold : float | int
         Threshold that must be met in forcing
@@ -122,8 +125,8 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     return doy_final
 
 def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
-    """Create a numpy array of shape (a,b), where a
-    is equal to the sample size in DOY, and b is
+    """Create a numpy array of shape (a,b), where b
+    is equal to the sample size in DOY, and a is
     equal to the number of days in the yearly time
     series of temperature (ie. Jan 1 - July 30).
     Using a numpy array in this way allows for very 
