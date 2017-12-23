@@ -12,7 +12,7 @@ def validate_temperature(temperature):
     temperature : The same dataframe but with only the valid columns
     """
     assert isinstance(temperature, pd.DataFrame), 'temperature should be a pandas dataframe'
-    valid_columns = ['temperature','year','site_id']
+    valid_columns = ['temperature','year','site_id','doy']
     for column in valid_columns:
         assert column in temperature.columns, 'missing required temperature column: '+column
     
