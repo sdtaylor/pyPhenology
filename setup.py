@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='pyPhenology',
       version='0.0.1',
@@ -6,5 +6,5 @@ setup(name='pyPhenology',
       url='https://github.com/sdtaylor/pyPhenology',
       author='Shawn Taylor',
       license='MIT',
-      packages=['pyPhenology'],
+      packages=find_packages(),
       zip_safe=False)
