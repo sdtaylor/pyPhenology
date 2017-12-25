@@ -193,8 +193,8 @@ def format_data(DOY, temp_data, for_prediction=False, verbose=True):
     else:
         return observed_doy, temperature_array, doy_series
 
-def fit_parameters(function_to_minimize, bounds, 
-                   method, results_translator, optimizer_params):
+def fit_parameters(function_to_minimize, bounds, method, results_translator,
+                   optimizer_params, verbose=False):
     """Internal functions to estimate model parameters. 
     
     Methods
@@ -285,5 +285,8 @@ def fit_parameters(function_to_minimize, bounds,
     else:
         raise ValueError('Uknown optimizer method: '+str(method))
     
+    if verbose:
+        print('Optimizer method: {x}\n'.format(x=method))
+        print('Optimizer parameters: \n {x}\n'.format(x=default_params))
     return fitted_parameters
             

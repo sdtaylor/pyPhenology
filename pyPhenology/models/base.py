@@ -46,23 +46,30 @@ class _base_model():
         self.DOY_fitting, self.temperature_fitting, self.doy_series = utils.format_data(DOY, temperature, verbose=verbose)
         
         if debug:
+            verbose=True
             self.debug=True
             self.model_timings=[]
             print('estimating params:\n {x} \n '.format(x=self._parameters_to_estimate))
             print('array passed to optimizer:\n {x} \n'.format(x=self._scipy_bounds()))
             print('fixed params:\n {x} \n '.format(x=self._fixed_parameters))
-        
         if verbose:
-            optimizer_params.update({'disp':True})
+            fitting_start = time.time()
+
         self._fitted_params = utils.fit_parameters(function_to_minimize = self._scipy_error,
                                                    bounds = self._scipy_bounds(),
                                                    method=method,
                                                    results_translator=self._translate_scipy_parameters,
-                                                   optimizer_params = optimizer_params)
+                                                   optimizer_params = optimizer_params,
+                                                   verbose=verbose)
+        if verbose:
+            total_fit_time = round(time.time() - fitting_start,2)
+            print('Total model fitting time: {s} sec.\n'.format(s=total_fit_time))
+            
         if debug:
             n_runs = len(self.model_timings)
             mean_time = np.mean(self.model_timings).round(2)
-            print('Model time: {t} of {n} runs'.format(t=mean_time, n=n_runs))
+            print('Model iterations: {n}'.format(n=n_runs))
+            print('Mean timing: {t} sec/iteration \n\n'.format(t=mean_time))
             self.debug=False
         self._fitted_params.update(self._fixed_parameters)
         
@@ -101,8 +108,8 @@ class _base_model():
                 site_years = self.DOY_fitting.copy()
                 doy_series = self.doy_series
             else:
-                raise AssertionError('No site_years + temperature passed, and \
-                                     no fitting done. Nothing to predict')
+                raise AssertionError('No site_years + temperature passed, and'+ \
+                                     'no fitting done. Nothing to predict')
         else:
             validation.validate_temperature(temperature)
             validation.validate_DOY(site_years, for_prediction=True)
