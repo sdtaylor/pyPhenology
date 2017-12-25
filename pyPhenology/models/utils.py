@@ -12,7 +12,7 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
         array of daily temperature values
         
     doy_series : Numpy array
-        1D array as produced by format_temperature(),
+        1D array as produced by format_data(),
         identifying the doy values in forcing[:,b]
     
     start_doy : int
@@ -93,7 +93,7 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
         each replicate,doy.
     
     doy_series : Numpy array
-        1D array as produced by format_temperature(),
+        1D array as produced by format_data(),
         identifying the doy values in forcing[0]
         
     threshold : float | int
@@ -124,7 +124,7 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     
     return doy_final
 
-def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
+def format_data(DOY, temp_data, for_prediction=False, verbose=True):
     """Create a numpy array of shape (a,b), where b
     is equal to the sample size in DOY, and a is
     equal to the number of days in the yearly time
@@ -143,21 +143,24 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
         A Dataframe with columns['temperature','year','site_id']
         which matches to the sites and years in DOY.
     
-    drop_missing : bool
-        Drop observations in DOY which do not have a complete
-        temperature time series in temp_data.
-    
+    for_prediction : bool
+        Do not return observed_doy, or expect a doy column in DOY.
+        
     verbose : bool
         Show details of processing
 
     Returns
     -------
+    observed_doy : Numpy array
+        a 1D array of the doy of each observation
+        
     temperature_array : Numpy array
         a 2D array described above
     
     doy_series : Numpy array
         1D array with length equal to the number of columns
         in temperature_array. Represents the doy values.
+        (ie. doy 0 = Jan 1)
     
     """
     doy_series = temp_data.doy.dropna().unique()
@@ -169,14 +172,26 @@ def format_temperature(DOY, temp_data, drop_missing=True, verbose=True):
     temp_data.drop(-67, axis=1, inplace=True)
     doy_series = doy_series[1:]
     
+    # Give each DOY observation a temperature time series
     DOY_with_temp = DOY.merge(temp_data, on=['site_id','year'], how='left')
     
-    if drop_missing:
-        DOY_with_temp_n = len(DOY_with_temp)
+    # Deal with any site/years that don't have tempterature data
+    original_sample_size = len(DOY_with_temp)
+    rows_with_missing_data = DOY_with_temp.isnull().any(axis=1)
+    missing_info = DOY_with_temp[['site_id','year']][rows_with_missing_data].drop_duplicates()
+    if len(missing_info)>0:
         DOY_with_temp.dropna(axis=0, inplace=True)
-        if verbose: print('Dropped '+str(DOY_with_temp_n - len(DOY_with_temp)) + ' rows')
+        n_dropped = original_sample_size - len(DOY_with_temp)
+        raise RuntimeWarning('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size) + \
+                             '\n Missing data from: \n' + str(missing_info))
     
-    return DOY_with_temp[doy_series].values.T, doy_series
+    observed_doy = DOY_with_temp.doy.values
+    temperature_array = DOY_with_temp[doy_series].values.T
+    
+    if for_prediction:
+        return temperature_array, doy_series
+    else:
+        return observed_doy, temperature_array, doy_series
 
 def fit_parameters(function_to_minimize, bounds, 
                    method, results_translator, optimizer_params):

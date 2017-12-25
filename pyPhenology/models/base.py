@@ -41,9 +41,8 @@ class _base_model():
         validation.validate_temperature(temperature)
         validation.validate_DOY(DOY)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
-        
-        self.DOY_fitting = DOY.doy.values
-        self.temperature_fitting, self.doy_series = utils.format_temperature(DOY, temperature, verbose=verbose)
+    
+        self.DOY_fitting, self.temperature_fitting, self.doy_series = utils.format_data(DOY, temperature, verbose=verbose)
         
         if debug:
             print('estimating: '+str(self._parameters_to_estimate))
@@ -101,7 +100,7 @@ class _base_model():
         else:
             validation.validate_temperature(temperature)
             validation.validate_DOY(site_years, for_prediction=True)
-            temp_array, doy_series = utils.format_temperature(site_years, temperature)
+            temp_array, doy_series = utils.format_data(site_years, temperature, for_prediction=True)
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
