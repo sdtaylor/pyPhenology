@@ -24,7 +24,7 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
     assert start_doy<end_doy, 'start_doy must be < end_doy'
     
     spring_days = np.logical_and(doy_series>=start_doy,doy_series<=end_doy)
-    return temperature[:,spring_days].mean(axis=1)
+    return temperature[spring_days].mean(axis=0)
 
 def sigmoid2(temperature, b, c):
     """The two parameter sigmoid function from Chuine 2000

@@ -30,6 +30,11 @@ model_test_cases.append({'model_name':'Alternating',
                          'model_func': models.Alternating,
                          'fit_params':{'optimizer_params':quick_optimization},
                          'initial_params':{}})
+model_test_cases.append({'model_name':'MSB',
+                         'model_func': models.MSB,
+                         'fit_params':{'optimizer_params':quick_optimization},
+                         'initial_params':{}})
+
 
 for test_case in model_test_cases:
     model_name = test_case['model_name']
