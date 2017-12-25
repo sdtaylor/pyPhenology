@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from . import utils, validation
-from scipy import optimize
+import time
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -11,6 +11,7 @@ class _base_model():
         self.DOY_fitting = None
         self.temperature_fitting = None
         self.doy_series = None
+        self.debug=False
         
     def fit(self, DOY, temperature, method='DE', optimizer_params={}, 
             verbose=False, debug=False):
@@ -45,11 +46,11 @@ class _base_model():
         self.DOY_fitting, self.temperature_fitting, self.doy_series = utils.format_data(DOY, temperature, verbose=verbose)
         
         if debug:
-            print('estimating: '+str(self._parameters_to_estimate))
-            print('should match len: '+str(self._scipy_bounds()))
-            print('with fixed: '+str(self._fixed_parameters))
-            print('doy_cols' + str(DOY.columns))
-            print('temp_cols' + str(temperature.columns))
+            self.debug=True
+            self.model_timings=[]
+            print('estimating params:\n {x} \n '.format(x=self._parameters_to_estimate))
+            print('array passed to optimizer:\n {x} \n'.format(x=self._scipy_bounds()))
+            print('fixed params:\n {x} \n '.format(x=self._fixed_parameters))
         
         if verbose:
             optimizer_params.update({'disp':True})
@@ -58,6 +59,11 @@ class _base_model():
                                                    method=method,
                                                    results_translator=self._translate_scipy_parameters,
                                                    optimizer_params = optimizer_params)
+        if debug:
+            n_runs = len(self.model_timings)
+            mean_time = np.mean(self.model_timings).round(2)
+            print('Model time: {t} of {n} runs'.format(t=mean_time, n=n_runs))
+            self.debug=False
         self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
@@ -170,9 +176,15 @@ class _base_model():
         raise NotImplementedError()
     
     def get_doy_fitting_estimates(self, **params):
-        return self._apply_model(temperature = self.temperature_fitting.copy(), 
-                                 doy_series = self.doy_series.copy(),
-                                 **params)
+        if self.debug:
+            start = time.time()
+    
+        output =self._apply_model(temperature = self.temperature_fitting.copy(), 
+                                  doy_series = self.doy_series.copy(),
+                                  **params)
+        if self.debug:
+            self.model_timings.append(time.time() - start)
+        return output
     
     def get_error(self, **kargs):
         doy_estimates = self.get_doy_fitting_estimates(**kargs)
