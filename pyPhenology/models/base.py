@@ -73,7 +73,7 @@ class _base_model():
             self.debug=False
         self._fitted_params.update(self._fixed_parameters)
         
-    def predict(self, to_predict=None, temperature=None):
+    def predict(self, to_predict=None, temperature=None, doy_series=None):
         """Predict the DOY given temperature data and associated site/year info
         All model parameters must be set either in the initial model call
         or by running fit(). If to_predict and temperature are not set, then
@@ -97,12 +97,29 @@ class _base_model():
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
+        """
+        valid arg combinations
+        {'to_predict':np.ndarray,'temperature':None,'doy_series':np.ndarray}
+        {'to_predict':pd.DataFrame,'temperature':pd.DataFrame,doy_series':None}
+        {'to_predict':None,'temperature':None,'doy_series':None}
+        """
         
-        # Both of these need to be set, or neither.
-        args_are_none = [to_predict is None, temperature is None]
-        if any(args_are_none) and not all(args_are_none):
-            raise TypeError('Both to_predict and temperature must be set together')
-        if all(args_are_none):
+        if isinstance(to_predict, np.ndarray) and temperature is None and isinstance(doy_series, np.ndarray):
+            # to_predict is a pre-formatted temperature array
+            if len(doy_series) != to_predict.shape[0]:
+                raise ValueError('to_predict axis 0 does not match doy_series')
+            if np.any(np.isnan(to_predict)):
+                raise ValueError('Nan values in to_predict array')
+            temp_array = to_predict
+            
+        elif isinstance(to_predict, pd.DataFrame) and isinstance(temperature, pd.DataFrame) and doy_series is None:
+            # New data to predict
+            validation.validate_temperature(temperature)
+            validation.validate_observations(to_predict, for_prediction=True)
+            temp_array, doy_series = utils.format_data(to_predict, temperature, for_prediction=True)
+            
+        elif to_predict is None and  temperature is None and doy_series is None:
+            # Making predictions on data used for fitting
             if self.obs_fitting is not None and self.temperature_fitting is not None:
                 temp_array = self.temperature_fitting.copy()
                 to_predict = self.obs_fitting.copy()
@@ -111,9 +128,9 @@ class _base_model():
                 raise TypeError('No to_predict + temperature passed, and'+ \
                                 'no fitting done. Nothing to predict')
         else:
-            validation.validate_temperature(temperature)
-            validation.validate_observations(to_predict, for_prediction=True)
-            temp_array, doy_series = utils.format_data(to_predict, temperature, for_prediction=True)
+            raise TypeError('Invalid arguments. to_predict and temperature' + \
+                            'must both be pandas dataframes of new data to predict,'+\
+                            'or set to None to predict the data used for fitting')
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
