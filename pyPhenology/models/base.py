@@ -73,17 +73,18 @@ class _base_model():
             self.debug=False
         self._fitted_params.update(self._fixed_parameters)
         
-    def predict(self, site_years=None, temperature=None, return_type='array'):
+    def predict(self, to_predict=None, temperature=None):
         """Predict the DOY given temperature data and associated site/year info
         All model parameters must be set either in the initial model call
-        or by running fit(). If site_years and temperature are not set, then
+        or by running fit(). If to_predict and temperature are not set, then
         this will return predictions for the data used in fitting (if available)
         
         Parameters
         ----------
-        site_years : dataframe, optional
-            pandas dataframe in the format specific to this package, but 
-            (optionally) without the doy column
+        to_predict : dataframe, optional
+            pandas dataframe of site/year combinations to predicte from
+            the given temperature data. just like the observations 
+            dataframe used in fit() but (optionally) without the doy column
         
         temperature : dataframe, optional
             pandas dataframe in the format specific to this package
@@ -91,28 +92,28 @@ class _base_model():
         Returns
         -------
         predictions : array
-            1D array the same length of site_years. Or if site_years
+            1D array the same length of to_predict. Or if to_predict
             is not used, the same lengh as observations used in fitting.
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
         
         # Both of these need to be set, or neither.
-        args_are_none = [site_years is None, temperature is None]
+        args_are_none = [to_predict is None, temperature is None]
         if any(args_are_none) and not all(args_are_none):
-            raise TypeError('Both site_years and temperature must be set together')
+            raise TypeError('Both to_predict and temperature must be set together')
         if all(args_are_none):
             if self.obs_fitting is not None and self.temperature_fitting is not None:
                 temp_array = self.temperature_fitting.copy()
-                site_years = self.obs_fitting.copy()
+                to_predict = self.obs_fitting.copy()
                 doy_series = self.doy_series
             else:
-                raise TypeError('No site_years + temperature passed, and'+ \
+                raise TypeError('No to_predict + temperature passed, and'+ \
                                 'no fitting done. Nothing to predict')
         else:
             validation.validate_temperature(temperature)
-            validation.validate_observations(site_years, for_prediction=True)
-            temp_array, doy_series = utils.format_data(site_years, temperature, for_prediction=True)
+            validation.validate_observations(to_predict, for_prediction=True)
+            temp_array, doy_series = utils.format_data(to_predict, temperature, for_prediction=True)
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
@@ -320,7 +321,7 @@ class BootstrapModel():
             obs_shuffled = observations.sample(frac=1, replace=True).copy()
             model.fit(obs_shuffled, temperature, **kwargs)
 
-    def predict(self,site_years=None, temperature=None, aggregation='mean', **kwargs):
+    def predict(self,to_predict=None, temperature=None, aggregation='mean', **kwargs):
         """Make predictions from the bootstrapped models.
         Predictions will be made using each of the bootstrapped models, with
         the final results being the mean or median (or other) of all bootstraps.
@@ -336,7 +337,7 @@ class BootstrapModel():
         # need to wait till predict takes arrays directly
         predictions=[]
         for model in self.model_list:
-            predictions.append(model.predict(site_years=site_years, 
+            predictions.append(model.predict(to_predict=to_predict, 
                                              temperature=temperature,
                                              **kwargs))
         
