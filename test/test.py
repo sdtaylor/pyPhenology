@@ -59,7 +59,7 @@ for test_case in model_test_cases:
 
     print(model_name + ' - do not predict without both obs and temp')
     with pytest.raises(TypeError) as a:
-        model.predict(site_years = obs)
+        model.predict(to_predict = obs)
     with pytest.raises(TypeError) as a:
         model.predict(temperature = temp)
     print(model_name + ' - make prediction with values from fitting')
@@ -69,7 +69,7 @@ for test_case in model_test_cases:
     assert len(predicted.shape) == 1, 'predicted array not 1D'
     assert len(predicted) == len(obs), 'predicted sample size not matching input from fit'
 
-    predicted = model.predict(site_years=obs[1:10], temperature=temp)
+    predicted = model.predict(to_predict=obs[1:10], temperature=temp)
     assert len(predicted.shape) == 1, 'predicted array not 1D'
     assert len(predicted) == len(obs[1:10]), 'predicted sample size not matching input from predict'
     
