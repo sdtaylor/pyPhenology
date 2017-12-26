@@ -58,9 +58,9 @@ for test_case in model_test_cases:
     model.predict(doy, temp)
 
     print(model_name + ' - do not predict without both doy and temp')
-    with pytest.raises(AssertionError) as a:
+    with pytest.raises(TypeError) as a:
         model.predict(site_years = doy)
-    with pytest.raises(AssertionError) as a:
+    with pytest.raises(TypeError) as a:
         model.predict(temperature = temp)
     print(model_name + ' - make prediction with values from fitting')
     predicted = model.predict()
@@ -84,7 +84,7 @@ for test_case in model_test_cases:
     
     print(model_name + ' - Do not predict without site_years and temperature \
                         when all parameters are fixed a initialization')
-    with pytest.raises(AssertionError) as a:
+    with pytest.raises(TypeError) as a:
         model.predict()
     
     # For the bootstrap use just the first bootstrap value from here

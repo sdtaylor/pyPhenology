@@ -100,16 +100,15 @@ class _base_model():
         # Both of these need to be set, or neither.
         args_are_none = [site_years is None, temperature is None]
         if any(args_are_none) and not all(args_are_none):
-            raise AssertionError('Both site_years and temperature must be set \
-                                 together')
+            raise TypeError('Both site_years and temperature must be set together')
         if all(args_are_none):
             if self.DOY_fitting is not None and self.temperature_fitting is not None:
                 temp_array = self.temperature_fitting.copy()
                 site_years = self.DOY_fitting.copy()
                 doy_series = self.doy_series
             else:
-                raise AssertionError('No site_years + temperature passed, and'+ \
-                                     'no fitting done. Nothing to predict')
+                raise TypeError('No site_years + temperature passed, and'+ \
+                                'no fitting done. Nothing to predict')
         else:
             validation.validate_temperature(temperature)
             validation.validate_DOY(site_years, for_prediction=True)
@@ -139,9 +138,11 @@ class _base_model():
 
             # all parameters that were saved should be fixed values
             for parameter, value in passed_parameters.items():
-                assert isinstance(value*1.0, float), 'Expected a set value for parameter {p} in saved file, got {v}'.format(p=parameter, v=value)
+                if not isinstance(value*1.0, float):
+                    raise TypeError('Expected a set value for parameter {p} in saved file, got {v}'.format(p=parameter, v=value))
         else:
-            assert isinstance(passed_parameters, dict), 'passed_parameters must be either a dictionary or string'
+            if not isinstance(passed_parameters, dict):
+                raise TypeError('passed_parameters must be either a dictionary or string')
 
         # This is all the required parameters updated with any
         # passed parameters. This includes any invalid ones, 
@@ -158,7 +159,7 @@ class _base_model():
             elif isinstance(value*1.0, float):
                 fixed_parameters[parameter]=value
             else:
-                raise Exception('unkown parameter value: '+str(type(value)) + ' for '+parameter)
+                raise TypeError('unkown parameter value: '+str(type(value)) + ' for '+parameter)
     
         self._parameters_to_estimate = OrderedDict(parameters_to_estimate)
         self._fixed_parameters = OrderedDict(fixed_parameters)
