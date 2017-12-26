@@ -253,6 +253,10 @@ class _base_model():
     def score(self, metric='rmse'):
         raise NotImplementedError()
 
+
+
+
+
 class Alternating(_base_model):
     """Alternating model, originally defined in Cannell & Smith 1983.
     Phenological event happens the first day that forcing is greater 
@@ -383,7 +387,7 @@ class BootstrapModel():
         params = self.get_params()
         pd.DataFrame(params).to_csv(filename, index=False)
 
-class Thermal_Time(_base_model):
+class ThermalTime(_base_model):
     """The classic growing degree day model using
     a fixed threshold above which forcing accumulates.
     

@@ -9,35 +9,21 @@ quick_optimization = {'maxiter':5, 'popsize':10, 'disp':True}
 
 
 model_test_cases=[]
+# Bootstrap requires some special arguments
 model_test_cases.append({'model_name':'BootstrapModel',
                          'model_func': models.BootstrapModel,
                          'fit_params':{'optimizer_params':quick_optimization},
                          'initial_params':{'num_bootstraps':10,
-                                           'core_model':models.Thermal_Time}})
-model_test_cases.append({'model_name':'Uniforc',
-                         'model_func': models.Uniforc,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
-model_test_cases.append({'model_name':'Unichill',
-                         'model_func': models.Uniforc,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
-model_test_cases.append({'model_name':'Thermal_Time',
-                         'model_func': models.Thermal_Time,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
-model_test_cases.append({'model_name':'Alternating',
-                         'model_func': models.Alternating,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
-model_test_cases.append({'model_name':'MSB',
-                         'model_func': models.MSB,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
-model_test_cases.append({'model_name':'Linear',
-                         'model_func': models.Linear,
-                         'fit_params':{'optimizer_params':quick_optimization},
-                         'initial_params':{}})
+                                           'core_model':models.ThermalTime}})
+
+# The rest can all be tested the same way
+model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB','Linear']
+
+for name in model_names:
+    model_test_cases.append({'model_name':name,
+                             'model_func': utils.load_model(name),
+                             'fit_params':{'optimizer_params':quick_optimization},
+                             'initial_params':{}})
 
 for test_case in model_test_cases:
     model_name = test_case['model_name']
@@ -180,7 +166,7 @@ flowers_obs = vaccinium_obs[vaccinium_obs.Phenophase_ID==501]
 
 test_cases=[]
 test_cases.append({'test_name' : 'Thermal Time Vaccinium Leaves',
-                   'model' : models.Thermal_Time,
+                   'model' : models.ThermalTime,
                    'fitting_obs':leaves_obs,
                    'fitting_temp':vaccinium_temp,
                    'known_model_params':{'F':273},
@@ -188,7 +174,7 @@ test_cases.append({'test_name' : 'Thermal Time Vaccinium Leaves',
                    'optimizer_parameters':{'Ns':1000, 'finish':None}})
 
 test_cases.append({'test_name' : 'Thermal Time Vaccinium Flowers',
-                   'model' : models.Thermal_Time,
+                   'model' : models.ThermalTime,
                    'fitting_obs':flowers_obs,
                    'fitting_temp':vaccinium_temp,
                    'known_model_params':{'F':448},

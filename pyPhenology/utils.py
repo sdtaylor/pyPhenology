@@ -1,5 +1,6 @@
 import pandas as pd
 import pkg_resources
+from . import models
 
 def load_test_data(name='vaccinium'):
     """Pre-loaded phenology and associated
@@ -33,3 +34,21 @@ def load_test_data(name='vaccinium'):
     obs = pd.read_csv(obs_file)
     temp= pd.read_csv(temp_file)
     return obs, temp
+
+def load_model(name):
+    if not isinstance(name, str):
+        raise TypeError('name must be string, got' + type(name))
+    if name=='ThermalTime':
+        return models.ThermalTime
+    elif name=='Uniforc':
+        return models.Uniforc
+    elif name=='Unichill':
+        return models.Unichill
+    elif name=='Alternating':
+        return models.Alternating
+    elif name=='MSB':
+        return models.MSB
+    elif name=='Linear':
+        return models.Linear
+    else:
+        raise ValueError('Unknown model name: '+name)

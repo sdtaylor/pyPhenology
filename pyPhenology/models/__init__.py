@@ -1,7 +1,7 @@
-from .base import Thermal_Time, Uniforc, Unichill, Alternating, \
+from .base import ThermalTime, Uniforc, Unichill, Alternating, \
                   MSB, BootstrapModel, Linear
 
-__all__ = ['Thermal_Time',
+__all__ = ['ThermalTime',
            'Uniforc',
            'Unichill',
            'Alternating',
