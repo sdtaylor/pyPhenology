@@ -126,7 +126,7 @@ for test_case in model_test_cases:
     
     # Expect error when a bogus parameter gets passed
     print(model_name + ' - Should not accept unknown parameters')
-    with pytest.raises(TypeError) as a:
+    with pytest.raises(AssertionError) as a:
         model = Model(parameters={'not_a_parameter':0}, **initial_params)
 
     #Save and load a parameter file
