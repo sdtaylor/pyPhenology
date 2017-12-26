@@ -18,18 +18,18 @@ def load_test_data(name='vaccinium'):
     
     Returns
     -------
-    doy, temp : tuple
+    obs, temp : tuple
         Pandas dataframes of phenology observations
         and associated temperatures.
     """
     if name=='vaccinium':
-        doy_file = 'data/vaccinium_doy.csv'
+        obs_file = 'data/vaccinium_obs.csv'
         temp_file= 'data/vaccinium_temperature.csv'
     else:
         raise ValueError('Uknown dataset name: ' + str(name))
         
-    doy_file = pkg_resources.resource_stream(__name__, doy_file)
+    obs_file = pkg_resources.resource_stream(__name__, obs_file)
     temp_file = pkg_resources.resource_stream(__name__, temp_file)
-    doy = pd.read_csv(doy_file)
+    obs = pd.read_csv(obs_file)
     temp= pd.read_csv(temp_file)
-    return doy, temp
+    return obs, temp

@@ -8,18 +8,18 @@ from copy import deepcopy
 class _base_model():
     def __init__(self):
         self._fitted_params = {}
-        self.DOY_fitting = None
+        self.obs_fitting = None
         self.temperature_fitting = None
         self.doy_series = None
         self.debug=False
         
-    def fit(self, DOY, temperature, method='DE', optimizer_params={}, 
+    def fit(self, observations, temperature, method='DE', optimizer_params={}, 
             verbose=False, debug=False):
         """Estimate the parameters of a model.
         
         Parameters
         ----------
-        DOY : dataframe
+        observations : dataframe
             pandas dataframe in the format specific to this package
         
         temperature : dataframe
@@ -40,10 +40,10 @@ class _base_model():
         """
         
         validation.validate_temperature(temperature)
-        validation.validate_DOY(DOY)
+        validation.validate_observations(observations)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
     
-        self.DOY_fitting, self.temperature_fitting, self.doy_series = utils.format_data(DOY, temperature, verbose=verbose)
+        self.obs_fitting, self.temperature_fitting, self.doy_series = utils.format_data(observations, temperature, verbose=verbose)
         
         if debug:
             verbose=True
@@ -74,7 +74,7 @@ class _base_model():
         self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, site_years=None, temperature=None, return_type='array'):
-        """Predict the doy given temperature data and associated site/year info
+        """Predict the DOY given temperature data and associated site/year info
         All model parameters must be set either in the initial model call
         or by running fit(). If site_years and temperature are not set, then
         this will return predictions for the data used in fitting (if available)
@@ -92,7 +92,7 @@ class _base_model():
         -------
         predictions : array
             1D array the same length of site_years. Or if site_years
-            is not used, the same lengh as DOY used in fitting.
+            is not used, the same lengh as observations used in fitting.
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
@@ -102,16 +102,16 @@ class _base_model():
         if any(args_are_none) and not all(args_are_none):
             raise TypeError('Both site_years and temperature must be set together')
         if all(args_are_none):
-            if self.DOY_fitting is not None and self.temperature_fitting is not None:
+            if self.obs_fitting is not None and self.temperature_fitting is not None:
                 temp_array = self.temperature_fitting.copy()
-                site_years = self.DOY_fitting.copy()
+                site_years = self.obs_fitting.copy()
                 doy_series = self.doy_series
             else:
                 raise TypeError('No site_years + temperature passed, and'+ \
                                 'no fitting done. Nothing to predict')
         else:
             validation.validate_temperature(temperature)
-            validation.validate_DOY(site_years, for_prediction=True)
+            validation.validate_observations(site_years, for_prediction=True)
             temp_array, doy_series = utils.format_data(site_years, temperature, for_prediction=True)
         
         predictions = self._apply_model(temp_array.copy(),
@@ -196,7 +196,7 @@ class _base_model():
     
     def get_error(self, **kargs):
         doy_estimates = self.get_doy_fitting_estimates(**kargs)
-        error = np.sqrt(np.mean((doy_estimates - self.DOY_fitting)**2))
+        error = np.sqrt(np.mean((doy_estimates - self.obs_fitting)**2))
         return error
     
     def _translate_scipy_parameters(self, parameters_array):
@@ -311,14 +311,14 @@ class BootstrapModel():
         else:
             raise TypeError('parameters must be str or dict, got: ' + str(type(parameters)))
     
-    def fit(self,DOY, temperature, **kwargs):
+    def fit(self,observations, temperature, **kwargs):
         #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
         # need to wait till fit takes arrays directly
-        validation.validate_DOY(DOY)
+        validation.validate_observations(observations)
         validation.validate_temperature(temperature)
         for model in self.model_list:
-            doy_shuffled = DOY.sample(frac=1, replace=True).copy()
-            model.fit(doy_shuffled, temperature, **kwargs)
+            obs_shuffled = observations.sample(frac=1, replace=True).copy()
+            model.fit(obs_shuffled, temperature, **kwargs)
 
     def predict(self,site_years=None, temperature=None, aggregation='mean', **kwargs):
         """Make predictions from the bootstrapped models.
@@ -372,7 +372,7 @@ class Thermal_Time(_base_model):
     Parameters
     ----------
     t1 : int
-        The doy which forcing accumulating beings
+        The DOY which forcing accumulating beings
     
     T : int
         The threshold above which forcing accumulates
@@ -406,7 +406,7 @@ class Uniforc(_base_model):
     Parameters
     ----------
     t1 : int
-        The doy which forcing accumulating beings
+        The DOY which forcing accumulating beings
     
     F : int, > 0
         The total forcing units required
@@ -443,7 +443,7 @@ class Unichill(_base_model):
     Parameters
     ----------
     t0 : int
-        The doy which chilling accumulating beings
+        The DOY which chilling accumulating beings
     
     C : int, > 0
         The total chilling units required
@@ -565,7 +565,7 @@ class MSB(_base_model):
         return utils.doy_estimator(difference, doy_series, threshold=0)
 
 class Linear(_base_model):
-    """A linear regression where doy ~ mean_spring_tempearture
+    """A linear regression where DOY ~ mean_spring_tempearture
     
     Parameters
     ----------
@@ -576,10 +576,10 @@ class Linear(_base_model):
         Slope of the model
         
     spring_start : int
-        The start day of spring, defaults to Jan 1 (doy 0)
+        The start day of spring, defaults to Jan 1 (DOY 0)
     
     spring_end : int
-        The last day of spring, defaults to March 30 (doy 90)
+        The last day of spring, defaults to March 30 (DOY 90)
 
     """
     def __init__(self, parameters={}):

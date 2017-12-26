@@ -124,9 +124,9 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
     
     return doy_final
 
-def format_data(DOY, temp_data, for_prediction=False, verbose=True):
+def format_data(observations, temp_data, for_prediction=False, verbose=True):
     """Create a numpy array of shape (a,b), where b
-    is equal to the sample size in DOY, and a is
+    is equal to the sample size in observations, and a is
     equal to the number of days in the yearly time
     series of temperature (ie. Jan 1 - July 30).
     Using a numpy array in this way allows for very 
@@ -134,17 +134,17 @@ def format_data(DOY, temp_data, for_prediction=False, verbose=True):
     
     Parameters
     ----------
-    DOY : Pandas Dataframe
+    observations : Pandas Dataframe
         A data frame with columns ['doy','year','site_id'],
         where every row is an observation for an observed
         phenological event.
     
     temp_data : Pandas Dataframe
         A Dataframe with columns['temperature','year','site_id']
-        which matches to the sites and years in DOY.
+        which matches to the sites and years in observations.
     
     for_prediction : bool
-        Do not return observed_doy, or expect a doy column in DOY.
+        Do not return observed_doy, or expect a doy column in observations.
         
     verbose : bool
         Show details of processing
@@ -172,21 +172,21 @@ def format_data(DOY, temp_data, for_prediction=False, verbose=True):
     temp_data.drop(-67, axis=1, inplace=True)
     doy_series = doy_series[1:]
     
-    # Give each DOY observation a temperature time series
-    DOY_with_temp = DOY.merge(temp_data, on=['site_id','year'], how='left')
+    # Give each observation a temperature time series
+    obs_with_temp = observations.merge(temp_data, on=['site_id','year'], how='left')
     
     # Deal with any site/years that don't have tempterature data
-    original_sample_size = len(DOY_with_temp)
-    rows_with_missing_data = DOY_with_temp.isnull().any(axis=1)
-    missing_info = DOY_with_temp[['site_id','year']][rows_with_missing_data].drop_duplicates()
+    original_sample_size = len(obs_with_temp)
+    rows_with_missing_data = obs_with_temp.isnull().any(axis=1)
+    missing_info = obs_with_temp[['site_id','year']][rows_with_missing_data].drop_duplicates()
     if len(missing_info)>0:
-        DOY_with_temp.dropna(axis=0, inplace=True)
-        n_dropped = original_sample_size - len(DOY_with_temp)
+        obs_with_temp.dropna(axis=0, inplace=True)
+        n_dropped = original_sample_size - len(obs_with_temp)
         raise RuntimeWarning('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size) + \
                              '\n Missing data from: \n' + str(missing_info))
     
-    observed_doy = DOY_with_temp.doy.values
-    temperature_array = DOY_with_temp[doy_series].values.T
+    observed_doy = obs_with_temp.doy.values
+    temperature_array = obs_with_temp[doy_series].values.T
     
     if for_prediction:
         return temperature_array, doy_series

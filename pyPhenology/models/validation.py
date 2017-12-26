@@ -19,29 +19,29 @@ def validate_temperature(temperature):
     
     return temperature[valid_columns]
 
-def validate_DOY(DOY, for_prediction=False):
-    """ Validate a DOY dataframe to the format used in this package.
+def validate_observations(observations, for_prediction=False):
+    """ Validate an observations dataframe to the format used in this package.
     
     Parameters
     ----------
-    DOY : Pandas Dataframe
+    observations : Pandas Dataframe
     
     for_prediction : bool
         If being used to in model.predict(), then one less colum is required
         
     Returns
     -------
-    DOY : The same dataframe but with only the valid columns
+    observations : The same dataframe but with only the valid columns
     """
-    if not isinstance(DOY, pd.DataFrame):
-        raise TypeError('DOY should be a pandas dataframe')
+    if not isinstance(observations, pd.DataFrame):
+        raise TypeError('observations should be a pandas dataframe')
     valid_columns = ['year','site_id']
     if not for_prediction: valid_columns.append('doy')
     
     for column in valid_columns:
-        assert column in DOY.columns, 'missing required DOY column: '+column
+        assert column in observations.columns, 'missing required observations column: '+column
     
-    return DOY[valid_columns]
+    return observations[valid_columns]
 
 
 def validate_model(model_class):
