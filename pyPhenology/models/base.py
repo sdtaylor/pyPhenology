@@ -108,8 +108,23 @@ class _base_model():
             # to_predict is a pre-formatted temperature array
             if len(doy_series) != to_predict.shape[0]:
                 raise ValueError('to_predict axis 0 does not match doy_series')
-            if np.any(np.isnan(to_predict)):
-                raise ValueError('Nan values in to_predict array')
+            
+            # Don't allow any nan values in 2d array
+            if len(to_predict.shape)==2:
+                if np.any(np.isnan(to_predict)):
+                    raise ValueError('Nan values in to_predict array')
+                    
+            # A 3d array implies spatial data, where nan values are allowed if
+            # that location is *only* nan. (ie, somewhere over water)
+            elif len(to_predict.shape)==3:
+                invalid_entries = np.logical_and(np.isnan(to_predict).any(0),
+                                                 ~np.isnan(to_predict).all(0))
+                if np.any(invalid_entries):
+                    raise ValueError('Nan values in some timeseries of 3d to_predict array')
+                
+            else:
+                raise ValueError('to_predict array is unknown shape')
+                
             temp_array = to_predict
             
         elif isinstance(to_predict, pd.DataFrame) and isinstance(temperature, pd.DataFrame) and doy_series is None:
