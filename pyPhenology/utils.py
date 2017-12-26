@@ -26,7 +26,7 @@ def load_test_data(name='vaccinium'):
         doy_file = 'data/vaccinium_doy.csv'
         temp_file= 'data/vaccinium_temperature.csv'
     else:
-        raise Exception('Uknown dataset name: ' + str(name))
+        raise ValueError('Uknown dataset name: ' + str(name))
         
     doy_file = pkg_resources.resource_stream(__name__, doy_file)
     temp_file = pkg_resources.resource_stream(__name__, temp_file)

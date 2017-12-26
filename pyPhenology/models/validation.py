@@ -11,7 +11,8 @@ def validate_temperature(temperature):
     -------
     temperature : The same dataframe but with only the valid columns
     """
-    assert isinstance(temperature, pd.DataFrame), 'temperature should be a pandas dataframe'
+    if not isinstance(temperature, pd.DataFrame):
+        raise TypeError('temperature should be a pandas dataframe')
     valid_columns = ['temperature','year','site_id','doy']
     for column in valid_columns:
         assert column in temperature.columns, 'missing required temperature column: '+column
@@ -32,7 +33,8 @@ def validate_DOY(DOY, for_prediction=False):
     -------
     DOY : The same dataframe but with only the valid columns
     """
-    assert isinstance(DOY, pd.DataFrame), 'DOY should be a pandas dataframe'
+    if not isinstance(DOY, pd.DataFrame):
+        raise TypeError('DOY should be a pandas dataframe')
     valid_columns = ['year','site_id']
     if not for_prediction: valid_columns.append('doy')
     

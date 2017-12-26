@@ -248,8 +248,8 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         Dictionary of fitted parameters
     
     """
-    
-    assert method in ['DE','BH', 'BF'], 'Uknown optimizer method: ' + str(method)
+    if not isinstance(method, str):
+        raise TypeError('method should be string, got ' + type(method))
     if method == 'DE':
         default_params = {'maxiter':None, 
                           'popsize':100, 
