@@ -5,7 +5,7 @@ import sys
 
 obs, temp = utils.load_test_data()
 
-quick_optimization = {'maxiter':5, 'popsize':10, 'disp':True}
+quick_optimization = {'maxiter':5, 'popsize':10, 'disp':False}
 
 
 model_test_cases=[]
@@ -22,8 +22,15 @@ model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB','Linear']
 for name in model_names:
     model_test_cases.append({'model_name':name,
                              'model_func': utils.load_model(name),
-                             'fit_params':{'optimizer_params':quick_optimization},
+                             'fit_params':{'optimizer_params':quick_optimization,
+                                           'debug':True},
                              'initial_params':{}})
+
+divider = '#'*90
+
+print(divider)
+print('Model test cases')
+print(divider)
 
 for test_case in model_test_cases:
     model_name = test_case['model_name']
@@ -122,6 +129,7 @@ for test_case in model_test_cases:
     model.save_params(model_name+'_params.csv')
     model=Model(parameters=model_name+'_params.csv', **initial_params)
     model.predict(obs, temp)
+    print(divider)
 
 ############################################################
 ############################################################
@@ -171,7 +179,7 @@ test_cases.append({'test_name' : 'Thermal Time Vaccinium Leaves',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params':{'F':273},
                    'fitting_ranges':{'t1':0, 'T':0, 'F':(0,1000)},
-                   'optimizer_parameters':{'Ns':1000, 'finish':None}})
+                   'optimizer_parameters':{'Ns':1000, 'finish':None, 'disp':False}})
 
 test_cases.append({'test_name' : 'Thermal Time Vaccinium Flowers',
                    'model' : models.ThermalTime,
@@ -179,7 +187,7 @@ test_cases.append({'test_name' : 'Thermal Time Vaccinium Flowers',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params':{'F':448},
                    'fitting_ranges':{'t1':0, 'T':0, 'F':(0,1000)},
-                   'optimizer_parameters':{'Ns':1000, 'finish':None}})
+                   'optimizer_parameters':{'Ns':1000, 'finish':None, 'disp':False}})
 
 test_cases.append({'test_name' : 'Alternating Vaccinium Leaves',
                    'model' : models.Alternating,
@@ -187,7 +195,7 @@ test_cases.append({'test_name' : 'Alternating Vaccinium Leaves',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params': {'a':620, 'b':-141, 'c':0},
                    'fitting_ranges':{'a':(600,700), 'b':(-200,-100), 'c':(0.009,0.02), 't1':0, 'threshold':5},
-                   'optimizer_parameters':{'Ns':30}})
+                   'optimizer_parameters':{'Ns':30, 'disp':False}})
 
 test_cases.append({'test_name' : 'Alternating Vaccinium Flowers',
                    'model' : models.Alternating,
@@ -195,7 +203,7 @@ test_cases.append({'test_name' : 'Alternating Vaccinium Flowers',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params': {'a':1010, 'b':-465, 'c':0},
                    'fitting_ranges':{'a':(1000,1100), 'b':(-500,-400), 'c':(0.001,0.01), 't1':0, 'threshold':5},
-                   'optimizer_parameters':{'Ns':30}})
+                   'optimizer_parameters':{'Ns':30, 'disp':False}})
 
 test_cases.append({'test_name' : 'Uniforc Vaccinium Leaves',
                    'model' : models.Uniforc,
@@ -203,7 +211,7 @@ test_cases.append({'test_name' : 'Uniforc Vaccinium Leaves',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params': {'t1':78, 'b':-2, 'c':8, 'F':8},
                    'fitting_ranges':{'t1':(50,100), 'b':(-5,5), 'c':(0,20), 'F':(0,20)},
-                   'optimizer_parameters':{'Ns':15}})
+                   'optimizer_parameters':{'Ns':15, 'disp':False}})
     
 test_cases.append({'test_name' : 'Uniforc Vaccinium Flowers',
                    'model' : models.Uniforc,
@@ -211,8 +219,12 @@ test_cases.append({'test_name' : 'Uniforc Vaccinium Flowers',
                    'fitting_temp':vaccinium_temp,
                    'known_model_params': {'t1':35, 'b':0, 'c':8, 'F':21},
                    'fitting_ranges':{'t1':(25,50), 'b':(-5,5), 'c':(0,20), 'F':(10,30)},
-                   'optimizer_parameters':{'Ns':15}})
+                   'optimizer_parameters':{'Ns':15, 'disp':False}})
     
+print(divider)
+print('Known value test cases')
+print(divider)
+
 for case in test_cases:
     print('Testing known values: '+case['test_name'])
     model = case['model'](parameters = case['fitting_ranges'])
@@ -222,3 +234,4 @@ for case in test_cases:
     check_known_values(estimated_params = model.get_params(), 
                        known_params = case['known_model_params'],
                        message = case['test_name'])
+    print(divider)
