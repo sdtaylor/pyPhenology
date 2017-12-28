@@ -62,12 +62,12 @@ class _base_model():
                                                    optimizer_params = optimizer_params,
                                                    verbose=verbose)
         if verbose:
-            total_fit_time = round(time.time() - fitting_start,2)
+            total_fit_time = round(time.time() - fitting_start,5)
             print('Total model fitting time: {s} sec.\n'.format(s=total_fit_time))
             
         if debug:
             n_runs = len(self.model_timings)
-            mean_time = np.mean(self.model_timings).round(2)
+            mean_time = np.mean(self.model_timings).round(5)
             print('Model iterations: {n}'.format(n=n_runs))
             print('Mean timing: {t} sec/iteration \n\n'.format(t=mean_time))
             self.debug=False
