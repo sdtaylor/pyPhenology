@@ -52,3 +52,36 @@ def load_model(name):
         return models.Linear
     else:
         raise ValueError('Unknown model name: '+name)
+    
+
+def check_data(observations, temperature, drop_missing=True, for_prediction=False):
+    """Make sure observation and temperature data.frames are
+    valid before submitting them to models.
+    If observations are missing temperature data, optionally return
+    a dataframe with those observations dropped.
+    """
+    models.validation.validate_observations(observations, for_prediction=for_prediction)
+    models.validation.validate_temperature(temperature)
+    original_obs_columns = observations.columns.values
+    
+    minimal_temp = temperature[['site_id','year']].drop_duplicates()
+    minimal_temp['present']=1
+    
+    observations_with_temp = observations.merge(minimal_temp, on=['site_id','year'], how='left')
+    
+    original_sample_size = len(observations_with_temp)
+    rows_with_missing_data = observations_with_temp.isnull().any(axis=1)
+    missing_info = observations_with_temp[['site_id','year']][rows_with_missing_data].drop_duplicates()
+    print(len(missing_info))
+    if len(missing_info)>0 and drop_missing:
+        observations_with_temp.dropna(axis=0, inplace=True)
+        n_dropped = original_sample_size - len(observations_with_temp)
+        print('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size))
+        print('\n Missing data from: \n' + str(missing_info))
+        return observations_with_temp[original_obs_columns], temperature
+    elif len(missing_info)>0:
+        print('Missing temperature values detected')
+        print('\n Missing data from: \n' + str(missing_info))
+        return observations, temperature
+    else:
+        return observations, temperature
