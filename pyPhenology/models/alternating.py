@@ -29,8 +29,8 @@ class Alternating(_base_model):
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
-        self.all_required_parameters = {'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0),
-                                        'threshold':(5,5), 't1':(1,1)}
+        self.all_required_parameters = {'threshold':5, 't1':1,
+                                        'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, a, b, c, threshold, t1):
@@ -82,8 +82,8 @@ class MSB(_base_model):
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
-        self.all_required_parameters = {'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0),
-                                        'd':(-100,100), 'threshold':(5,5), 't1':(1,1)}
+        self.all_required_parameters = {'threshold':5, 't1':1, 'd':(-100,100),
+                                        'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0)}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, a, b, c, d, threshold, t1):
