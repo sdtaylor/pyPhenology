@@ -85,13 +85,15 @@ for test_case in model_test_cases:
         all_parameters = all_parameters[0]
     
     # Set only a single parameter to fixed. Chosen from the 
-    # parameters estimated above. don't have to do for bootstrap.
+    # parameters estimated above. don't have to do that for bootstrap.
     # Make sure to get a tuple parameter (one thats estimatable)
     if model_name!='BootstrapModel':
         for param, value in model.all_required_parameters.items():
             if isinstance(value, tuple):
                 value = all_parameters.pop(param)
                 break
+    else:
+        param, value = all_parameters.popitem()
 
     print(model_name + ' - Fix a single parameter')
     single_param = {param:value}
