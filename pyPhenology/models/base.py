@@ -3,6 +3,7 @@ import pandas as pd
 from . import utils, validation
 import time
 from collections import OrderedDict
+from warnings import warn
 
 class _base_model():
     def __init__(self):
@@ -165,7 +166,7 @@ class _base_model():
         if isinstance(passed_parameters, str):
             passed_parameters = pd.read_csv(passed_parameters).to_dict('records')
             if len(passed_parameters)>1:
-                raise Warning('Greater than 1 entry in parameter file. Using the first')
+                warn('Greater than 1 entry in parameter file. Using the first')
             passed_parameters = passed_parameters[0]
 
             # all parameters that were saved should be fixed values

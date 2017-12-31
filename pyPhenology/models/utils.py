@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import optimize
+from warnings import warn
 
 def mean_temperature(temperature, doy_series, start_doy, end_doy):
     """Mean temperature of a single time period.
@@ -182,8 +183,8 @@ def format_data(observations, temp_data, for_prediction=False, verbose=True):
     if len(missing_info)>0:
         obs_with_temp.dropna(axis=0, inplace=True)
         n_dropped = original_sample_size - len(obs_with_temp)
-        raise RuntimeWarning('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size) + \
-                             '\n Missing data from: \n' + str(missing_info))
+        warn('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size) + \
+             '\n Missing data from: \n' + str(missing_info))
     
     observed_doy = obs_with_temp.doy.values
     temperature_array = obs_with_temp[doy_series].values.T
