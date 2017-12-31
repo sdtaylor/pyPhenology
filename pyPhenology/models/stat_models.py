@@ -22,7 +22,7 @@ class Linear(_base_model):
     def __init__(self, parameters={}):
         _base_model.__init__(self)
         self.all_required_parameters = {'intercept':(-67,298),'slope':(-25,25),
-                                        'spring_start':(0,0), 'spring_end':(90,90)}
+                                        'spring_start':0, 'spring_end':90}
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, intercept, slope, 
@@ -31,3 +31,4 @@ class Linear(_base_model):
                                                   start_doy = spring_start,
                                                   end_doy = spring_end)
         return mean_spring_temp * slope + intercept
+
