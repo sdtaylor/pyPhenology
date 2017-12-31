@@ -64,10 +64,13 @@ def check_data(observations, temperature, drop_missing=True, for_prediction=Fals
     models.validation.validate_temperature(temperature)
     original_obs_columns = observations.columns.values
     
-    minimal_temp = temperature[['site_id','year']].drop_duplicates()
-    minimal_temp['present']=1
+    temperature_pivoted = temperature.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
     
-    observations_with_temp = observations.merge(minimal_temp, on=['site_id','year'], how='left')
+    # This first day of temperature data causes NA issues because of leap years
+    # TODO: generalize this a bit more
+    temperature_pivoted.drop(-67, axis=1, inplace=True)
+    
+    observations_with_temp = observations.merge(temperature_pivoted, on=['site_id','year'], how='left')
     
     original_sample_size = len(observations_with_temp)
     rows_with_missing_data = observations_with_temp.isnull().any(axis=1)
