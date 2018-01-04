@@ -13,7 +13,8 @@ class _base_model():
         self.doy_series = None
         self.debug=False
         
-    def fit(self, observations, temperature, method='DE', optimizer_params={}, 
+    def fit(self, observations, temperature, doy_series=None,
+            method='DE', optimizer_params={}, 
             verbose=False, debug=False):
         """Estimate the parameters of a model.
         
@@ -43,7 +44,13 @@ class _base_model():
         validation.validate_observations(observations)
         assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
     
-        self.obs_fitting, self.temperature_fitting, self.doy_series = utils.format_data(observations, temperature, verbose=verbose)
+        self.obs_fitting, self.temperature_fitting, self.doy_series = None, None, None
+        data =  self._organize_input_data(observations=observations,
+                                          temperature=temperature,
+                                          doy_series=doy_series,
+                                          for_prediction=False)
+        
+        self.obs_fitting, self.temperature_fitting, self.doy_series = data
         
         if debug:
             verbose=True
@@ -81,14 +88,19 @@ class _base_model():
         
         Parameters
         ----------
-        to_predict : dataframe, optional
+        to_predict : dataframe | array, optional
             pandas dataframe of site/year combinations to predicte from
             the given temperature data. just like the observations 
-            dataframe used in fit() but (optionally) without the doy column
+            dataframe used in fit() but (optionally) without the doy column.
+            Also optionally a numpy array already in the format required,
+            in which case doy_series is required.
         
         temperature : dataframe, optional
             pandas dataframe in the format specific to this package
-            
+        
+        doy_series : array
+            1D array representing the day of year (DOY) of the 0 axis
+            in to_predict IF to_predict is a pre-formatted array.
         Returns
         -------
         predictions : array
@@ -97,61 +109,69 @@ class _base_model():
         
         """
         assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
-        """
-        valid arg combinations
-        {'to_predict':np.ndarray,'temperature':None,'doy_series':np.ndarray}
-        {'to_predict':pd.DataFrame,'temperature':pd.DataFrame,doy_series':None}
-        {'to_predict':None,'temperature':None,'doy_series':None}
-        """
-        
-        if isinstance(to_predict, np.ndarray) and temperature is None and isinstance(doy_series, np.ndarray):
-            # to_predict is a pre-formatted temperature array
-            if len(doy_series) != to_predict.shape[0]:
-                raise ValueError('to_predict axis 0 does not match doy_series')
-            
-            # Don't allow any nan values in 2d array
-            if len(to_predict.shape)==2:
-                if np.any(np.isnan(to_predict)):
-                    raise ValueError('Nan values in to_predict array')
-                    
-            # A 3d array implies spatial data, where nan values are allowed if
-            # that location is *only* nan. (ie, somewhere over water)
-            elif len(to_predict.shape)==3:
-                invalid_entries = np.logical_and(np.isnan(to_predict).any(0),
-                                                 ~np.isnan(to_predict).all(0))
-                if np.any(invalid_entries):
-                    raise ValueError('Nan values in some timeseries of 3d to_predict array')
-                
-            else:
-                raise ValueError('to_predict array is unknown shape')
-                
-            temp_array = to_predict
-            
-        elif isinstance(to_predict, pd.DataFrame) and isinstance(temperature, pd.DataFrame) and doy_series is None:
-            # New data to predict
-            validation.validate_temperature(temperature)
-            validation.validate_observations(to_predict, for_prediction=True)
-            temp_array, doy_series = utils.format_data(to_predict, temperature, for_prediction=True)
-            
-        elif to_predict is None and  temperature is None and doy_series is None:
-            # Making predictions on data used for fitting
-            if self.obs_fitting is not None and self.temperature_fitting is not None:
-                temp_array = self.temperature_fitting.copy()
-                to_predict = self.obs_fitting.copy()
-                doy_series = self.doy_series
-            else:
-                raise TypeError('No to_predict + temperature passed, and'+ \
-                                'no fitting done. Nothing to predict')
-        else:
-            raise TypeError('Invalid arguments. to_predict and temperature' + \
-                            'must both be pandas dataframes of new data to predict,'+\
-                            'or set to None to predict the data used for fitting')
+        temp_array, doy_series = self._organize_input_data(observations=to_predict,
+                                                           temperature=temperature,
+                                                           doy_series=doy_series,
+                                                           for_prediction=True)
         
         predictions = self._apply_model(temp_array.copy(),
                                         doy_series.copy(),
                                         **self._fitted_params)
         
         return predictions
+        
+    def _organize_input_data(self, observations, temperature, doy_series, for_prediction):
+        """ Validate the input data for either predict() or fit()
+        valid arg combinations
+        {'to_predict':np.ndarray,'temperature':None,'doy_series':np.ndarray}
+        {'to_predict':pd.DataFrame,'temperature':pd.DataFrame,doy_series':None}
+        {'to_predict':None,'temperature':None,'doy_series':None}
+        """
+        
+        if isinstance(observations, np.ndarray) and temperature is None and isinstance(doy_series, np.ndarray):
+            # observations is a pre-formatted temperature array
+            if len(doy_series) != observations.shape[0]:
+                raise ValueError('observations axis 0 does not match doy_series')
+            
+            # Don't allow any nan values in 2d array
+            if len(observations.shape)==2:
+                if np.any(np.isnan(observations)):
+                    raise ValueError('Nan values in observations array')
+                    
+            # A 3d array implies spatial data, where nan values are allowed if
+            # that location is *only* nan. (ie, somewhere over water)
+            elif len(observations.shape)==3:
+                invalid_entries = np.logical_and(np.isnan(observations).any(0),
+                                                 ~np.isnan(observations).all(0))
+                if np.any(invalid_entries):
+                    raise ValueError('Nan values in some timeseries of 3d observations array')
+                
+            else:
+                raise ValueError('observations array is unknown shape')
+                
+            temp_array = observations
+            to_return = observations, doy_series
+            
+        elif isinstance(observations, pd.DataFrame) and isinstance(temperature, pd.DataFrame) and doy_series is None:
+            # Observations and temperature a dataframes to put into correct format
+            validation.validate_temperature(temperature)
+            validation.validate_observations(observations, for_prediction=True)
+            to_return = utils.format_data(observations, temperature, for_prediction=for_prediction)
+            
+        elif observations is None and  temperature is None and doy_series is None:
+            # Nothing passed is used when making predictions on data used for fitting.
+            # will error out if nothing passed for fitting.
+            if self.obs_fitting is not None and self.temperature_fitting is not None:
+                to_return = self.temperature_fitting.copy(), self.doy_series
+            else:
+                raise TypeError('No observations + temperature passed, and'+ \
+                                'no fitting done. Nothing to predict')
+        else:
+            raise TypeError('Invalid arguments. observations and temperature' + \
+                            'must both be pandas dataframes of new data to predict,'+\
+                            'or set to None to predict the data used for fitting')
+        
+        return to_return
         
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
