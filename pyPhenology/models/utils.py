@@ -194,6 +194,12 @@ def format_data(observations, temp_data, for_prediction=False, verbose=True):
     else:
         return observed_doy, temperature_array, doy_series
 
+def get_loss_function(method):
+    if method == 'rmse':
+        return lambda obs, pred: np.sqrt(np.mean((obs - pred)**2))
+    else:
+        raise ValueError('Unknown loss method: ' + method)
+
 def fit_parameters(function_to_minimize, bounds, method, results_translator,
                    optimizer_params, verbose=False):
     """Internal functions to estimate model parameters. 
