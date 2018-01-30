@@ -6,12 +6,20 @@ from collections import OrderedDict
 from warnings import warn
 
 class _base_model():
-    def __init__(self):
+    def __init__(self, loss_function='rmse'):
         self._fitted_params = {}
         self.obs_fitting = None
         self.temperature_fitting = None
         self.doy_series = None
         self.debug=False
+        
+        if isinstance(loss_function, str):
+            self.loss_function = utils.get_loss_function(method=loss_function)
+        elif callable(loss_function):
+            #validation.validate_loss_function(loss_function)
+            self.loss_function = loss_function
+        else:
+            raise TypeError('Unknown loss_function. Must be string or custom function')
         
     def fit(self, observations, temperature, method='DE', optimizer_params={}, 
             verbose=False, debug=False):
@@ -228,8 +236,10 @@ class _base_model():
         return output
     
     def get_error(self, **kargs):
+        #TODO: make this more of a use callable function
+        # and  make _scipy_error work by itself
         doy_estimates = self.get_doy_fitting_estimates(**kargs)
-        error = np.sqrt(np.mean((doy_estimates - self.obs_fitting)**2))
+        error = self.loss_function(self.obs_fitting, doy_estimates)
         return error
     
     def _translate_scipy_parameters(self, parameters_array):
