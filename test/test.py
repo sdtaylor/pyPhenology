@@ -178,8 +178,8 @@ def check_known_values(estimated_params, known_params, message):
 # Use a specific species dataset that should never change
 vaccinium_obs, vaccinium_temp = utils.load_test_data(name='vaccinium')
 
-leaves_obs = vaccinium_obs[vaccinium_obs.Phenophase_ID==371]
-flowers_obs = vaccinium_obs[vaccinium_obs.Phenophase_ID==501]
+leaves_obs = vaccinium_obs[vaccinium_obs.phenophase==371]
+flowers_obs = vaccinium_obs[vaccinium_obs.phenophase==501]
 
 # thorough but still relatively quick
 thorough_DE_optimization = {'method':'DE', 'debug':True,
