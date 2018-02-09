@@ -77,7 +77,8 @@ class Unichill(_base_model):
         self._organize_parameters(parameters)
     
     def _apply_model(self, temperature, doy_series, t0, C, F, b_f, c_f, a_c, b_c, c_c):
-        assert len(temperature.shape)==2, 'Unichill model currently only supports 2d temperature arrays'
+        if len(temperature.shape)>2:
+            raise NotImplementedError('Unichill model currently only supports 2d temperature arrays')
 
         temp_chilling = temperature.copy()
         temp_forcing  = temperature.copy()

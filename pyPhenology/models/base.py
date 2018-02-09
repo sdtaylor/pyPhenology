@@ -49,7 +49,8 @@ class _base_model():
         
         validation.validate_temperature(temperature)
         validation.validate_observations(observations)
-        assert len(self._parameters_to_estimate)>0, 'No parameters to estimate'
+        if len(self._parameters_to_estimate)==0:
+            raise RuntimeError('No parameters to estimate')
     
         self.obs_fitting, self.temperature_fitting, self.doy_series = utils.format_data(observations, temperature, verbose=verbose)
         
@@ -104,7 +105,9 @@ class _base_model():
             is not used, the same lengh as observations used in fitting.
         
         """
-        assert len(self._fitted_params) == len(self.all_required_parameters), 'Not all parameters set'
+        if len(self._fitted_params) != len(self.all_required_parameters):
+            raise RuntimeError('Not all parameters set')
+            
         """
         valid arg combinations
         {'to_predict':np.ndarray,'temperature':None,'doy_series':np.ndarray}
@@ -192,10 +195,12 @@ class _base_model():
         params.update(passed_parameters)
 
         for parameter, value in params.items():
-            assert parameter in self.all_required_parameters, 'Unknown parameter: '+str(parameter)
+            if parameter not in self.all_required_parameters:
+                raise RuntimeError('Unknown parameter: '+str(parameter))
             
             if isinstance(value, tuple):
-                assert len(value)==2, 'Parameter tuple should have 2 values'
+                if len(value)!=2:
+                    raise RuntimeError('Parameter tuple should have 2 values')
                 parameters_to_estimate[parameter]=value
             elif isinstance(value*1.0, float):
                 fixed_parameters[parameter]=value
@@ -217,7 +222,8 @@ class _base_model():
     def save_params(self, filename):
         """Save the parameters for a model
         """
-        assert len(self._fitted_params)>0, 'Parameters not fit, nothing to save'
+        if len(self._fitted_params)==0:
+            raise RuntimeError('Parameters not fit, nothing to save')
         pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
     
     def get_initial_bounds(self):

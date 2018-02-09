@@ -22,7 +22,8 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
     end_doy : int
         The end of the time period
     """
-    assert start_doy<end_doy, 'start_doy must be < end_doy'
+    if start_doy>end_doy:
+        raise RuntimeError('start_doy must be < end_doy')
     
     spring_days = np.logical_and(doy_series>=start_doy,doy_series<=end_doy)
     return temperature[spring_days].mean(axis=0)
@@ -259,7 +260,7 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         raise TypeError('method should be string, got ' + type(method))
     if method == 'DE':
         default_params = {'maxiter':None, 
-                          'popsize':100, 
+                          'popsize':20, 
                           'mutation':1.5, 
                           'recombination':0.25,
                           'disp':False}

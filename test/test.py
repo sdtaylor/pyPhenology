@@ -122,13 +122,13 @@ for test_case in model_test_cases:
     # Expect error when predicting but not all parameters were
     # passed, and no fitting has been done.
     print(model_name + ' - Should not predict without fit')
-    with pytest.raises(AssertionError) as a:
+    with pytest.raises(RuntimeError) as a:
         model = Model(parameters=single_param, **initial_params)
         model.predict(obs, temp)
     
     # Expect error when a bogus parameter gets passed
     print(model_name + ' - Should not accept unknown parameters')
-    with pytest.raises(AssertionError) as a:
+    with pytest.raises(RuntimeError) as a:
         model = Model(parameters={'not_a_parameter':0}, **initial_params)
 
     #Save and load a parameter file
