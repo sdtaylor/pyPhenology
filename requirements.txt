@@ -1,4 +1,4 @@
-scipy>=0.13 --only-binary :all:
+scipy>=1.0 --only-binary :all:
 numpy>=1.8 --only-binary :all:
-pandas --only-binary :all:
+pandas>=0.18 --only-binary :all:
 pytest
