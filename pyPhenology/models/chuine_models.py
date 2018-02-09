@@ -2,25 +2,42 @@ from . import utils
 from .base import _base_model
 
 class Uniforc(_base_model):
-    """Single phase forcing model using a 
-    sigmoid function for forcing units.
-    Chuine 2000
+    """Uniforc model
+    
+    Single phase forcing model using a sigmoid function for forcing units.
+    
+    Event happens on :math:`DOY` when the following is met:
+        
+    .. math::
+        \sum_{t=t_{1}}^{DOY}R_{f}(T_{i})\geq F^{*} 
+    
+    where:
+    
+    .. math::
+        R_{f}(T_{i}) = \\frac{1}{1 + e^{b(T_{i}-c)}}
+
     
     Parameters
     ----------
     t1 : int
-        The DOY which forcing accumulating beings
+        :math:`t_{1}` - The DOY which forcing accumulating beings
     
     F : int, > 0
-        The total forcing units required
+        :math:`F^{*}` - The total forcing units required
         
     b : int
-        Sigmoid function parameter
+        :math:`b` - Sigmoid function parameter
     
     c : int
-        Sigmoid function parameter
+        :math:`c` - Sigmoid function parameter
+        
+        
+    Notes
+    -----
+    Chuine, I. (2000). A Unified Model for Budburst of Trees. Journal of Theoretical Biology, 207(3), 337–347. http://doi.org/10.1006/jtbi.2000.2178
+    
     """
-    def __init__(self, parameters={} ):
+    def __init__(self, parameters={'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)} ):
         _base_model.__init__(self)
         self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)}
         self._organize_parameters(parameters)
