@@ -13,6 +13,7 @@ Welcome to pyPhenology's documentation!
    install
    quickstart
    data_structures
+   models
    control_parameters
    optimizers
    examples

@@ -17,7 +17,7 @@ phenology observations as well as an associated site and year for each. temp is 
 for each site and year represented in observations. Both of these are required for building models.
 Read more about how phenology data is structured in this package here.
 
-Initialize and fit a Thermal Time (link to model) model, which has 3 parameters:
+Initialize and fit a Thermal Time (link to model) model, which has 3 parameters::
 
     model = models.ThermalTime()
     model.fit(observations, temp)

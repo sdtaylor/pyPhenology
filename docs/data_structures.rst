@@ -44,6 +44,8 @@ temperature for every day of the winter and spring leading up to the phenophase 
 These should columns in a data.frame like the observations. The example vaccinium
 dataset has temperature observations::
 
+    temp.head()
+
        site_id  temperature    year  doy
     0        1        -3.86  1989.0  0.0
     1        1        -4.71  1989.0  1.0
