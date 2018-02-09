@@ -15,7 +15,8 @@ def validate_temperature(temperature):
         raise TypeError('temperature should be a pandas dataframe')
     valid_columns = ['temperature','year','site_id','doy']
     for column in valid_columns:
-        assert column in temperature.columns, 'missing required temperature column: '+column
+        if column not in temperature.columns:
+            raise ValueError('missing required temperature column: '+column)
     
     return temperature[valid_columns]
 
@@ -39,7 +40,8 @@ def validate_observations(observations, for_prediction=False):
     if not for_prediction: valid_columns.append('doy')
     
     for column in valid_columns:
-        assert column in observations.columns, 'missing required observations column: '+column
+        if column not in observations.columns:
+            raise ValueError('missing required observations column: '+column)
     
     return observations[valid_columns]
 
@@ -47,4 +49,5 @@ def validate_observations(observations, for_prediction=False):
 def validate_model(model_class):
     required_attributes = ['_apply_model','all_required_parameters']
     for attribute in required_attributes:
-        assert hasattr(model_class, attribute), 'Missing model attribute: ' + str(attribute)
+        if not hasattr(model_class, attribute):
+            raise RuntimeError('Missing model attribute: ' + str(attribute))

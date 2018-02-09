@@ -79,6 +79,7 @@ class BootstrapModel():
         return all_params
 
     def save_params(self, filename):
-        assert len(self.model_list[0]._fitted_params)>0, 'Parameters not fit, nothing to save'
+        if len(self.model_list[0]._fitted_params)==0:
+            raise RuntimeError('Parameters not fit, nothing to save')
         params = self.get_params()
         pd.DataFrame(params).to_csv(filename, index=False)
