@@ -15,29 +15,32 @@ class Uniforc(_base_model):
     
     .. math::
         R_{f}(T_{i}) = \\frac{1}{1 + e^{b(T_{i}-c)}}
-
     
-    Parameters
-    ----------
-    t1 : int
-        :math:`t_{1}` - The DOY which forcing accumulating beings
-    
-    F : int, > 0
-        :math:`F^{*}` - The total forcing units required
+    Parameters:
+        t1 : int
+            | :math:`t_{1}` - The DOY which forcing accumulating beings
+            | default : (-67,298)
         
-    b : int
-        :math:`b` - Sigmoid function parameter
-    
-    c : int
-        :math:`c` - Sigmoid function parameter
+        F : int, > 0
+            | :math:`F^{*}` - The total forcing units required
+            | default : (0,200)
+            
+        b : int, < 0
+            | :math:`b` - Sigmoid function parameter
+            | default : (-20,0)
+        
+        c : int
+            | :math:`c` - Sigmoid function parameter
+            | default (-50,50)
         
         
-    Notes
-    -----
-    Chuine, I. (2000). A Unified Model for Budburst of Trees. Journal of Theoretical Biology, 207(3), 337–347. http://doi.org/10.1006/jtbi.2000.2178
+    Notes:
+        Chuine, I. (2000). A Unified Model for Budburst of Trees. 
+        Journal of Theoretical Biology, 207(3), 337–347. 
+        http://doi.org/10.1006/jtbi.2000.2178
     
     """
-    def __init__(self, parameters={'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)} ):
+    def __init__(self, parameters={} ):
         _base_model.__init__(self)
         self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)}
         self._organize_parameters(parameters)
@@ -55,36 +58,51 @@ class Uniforc(_base_model):
                                    threshold=F)
 
 class Unichill(_base_model):
-    """Two phase forcing model using a 
-    sigmoid function for forcing units 
-    and chilling. 
-    Chuine 2000
+    """Unichill two-hase model.
     
-    Parameters
-    ----------
-    t0 : int
-        The DOY which chilling accumulating beings
+    Two phase forcing model using a sigmoid function for forcing and
+    chilling units. 
     
-    C : int, > 0
-        The total chilling units required
+    TODO: unichill equation
+    
+    Parameters:
+        t0 : int
+            | The DOY which chilling accumulating beings
+            | default : (-67,298)
+        
+        C : int, > 0
+            | The total chilling units required
+            | default : (0,300)
 
-    F : int, > 0
-        The total forcing units required
+        F : int, > 0
+            | The total forcing units required
+            | default : (0,200)
+            
+        b_f : int, < 0
+            | Sigmoid function parameter for forcing
+            | default : (-20,0)
         
-    b_f : int
-        Sigmoid function parameter for forcing
-    
-    c_f : int
-        Sigmoid function parameter for forcing
-        
-    a_c : int
-        Sigmoid funcion parameter for chilling
-        
-    b_c : int
-        Sigmoid funcion parameter for chilling
-        
-    c_c : int
-        Sigmoid funcion parameter for chilling
+        c_f : int
+            | Sigmoid function parameter for forcing
+            | default : (-50,50)
+            
+        a_c : int, > 0
+            | Sigmoid funcion parameter for chilling
+            | default : (0,20)
+            
+        b_c : int
+            | Sigmoid funcion parameter for chilling
+            | default : (-20,20)
+            
+        c_c : int
+            | Sigmoid funcion parameter for chilling
+            | default : (-50,50)
+            
+    Notes:
+        Chuine, I. (2000). A Unified Model for Budburst of Trees. 
+        Journal of Theoretical Biology, 207(3), 337–347. 
+        http://doi.org/10.1006/jtbi.2000.2178
+            
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)

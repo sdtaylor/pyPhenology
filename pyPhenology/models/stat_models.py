@@ -2,21 +2,33 @@ from . import utils
 from .base import _base_model
 
 class Linear(_base_model):
-    """A linear regression where DOY ~ mean_spring_tempearture
+    """Linear Regression Model
     
-    Parameters
-    ----------
-    intercept : int | float
-        y intercept of the model
+    A 2 parameter regression model with :math:`DOY` as
+    the response variable. 
+
+    .. math::
+        DOY = \\beta_{1} + \\beta_{2}T_{mean}
     
-    slope : int | float
-        Slope of the model
+    where :math:`T_{mean}` is the mean spring temperature.
+    The start and end of spring is configurable.
+    
+    Parameters:
+        intercept : int | float
+            | :math:`\\beta_{1}`, intercept of the model
+            | default : (-67,298)
         
-    spring_start : int
-        The start day of spring, defaults to Jan 1 (DOY 0)
-    
-    spring_end : int
-        The last day of spring, defaults to March 30 (DOY 90)
+        slope : int | float
+            | :math:`\\beta_{1}`, Slope of the model
+            | default : (-25,25)
+            
+        spring_start : int
+            | The start day of spring
+            | default : 1 (Jan 1)
+        
+        spring_end : int
+            | The last day of spring
+            | default : 90 \(March 30\)
 
     """
     def __init__(self, parameters={}):
