@@ -3,29 +3,48 @@ from . import utils
 from .base import _base_model
 
 class Alternating(_base_model):
-    """Alternating model, originally defined in Cannell & Smith 1983.
+    """Alternating model.
+    
+    Originally defined in Cannell & Smith 1983.
+    
     Phenological event happens the first day that forcing is greater 
     than an exponential curve of number of chill days.
     
-    Parameters
-    ----------
-    a : int | float
-        Intercept of chill day curve
+    .. math::
+        \\sum_{t=t1}^{DOY}R_{f}(T_{i})\\geq a + be^{cNCD(t)}
     
-    b : int | float
-        Slope of chill day curve
+    where:
     
-    c : int | float
-        scale parameter of chill day curve
+    .. math::
+        R_{f}(T_{i}) = max(T_{i}-threshold, 0)
+    
+    Parameters:
+        a : int | float
+            | :math:`a` - Intercept of chill day curve
+            | default : (-1000,1000)
         
-    threshold : int | flaot
-        Degree threshold above which forcing accumulates, and
-        below which chilling accumulates. Set to 5 (assuming C)
-        by default.
+        b : int | float, > 0
+            | :math:`b` - Slope of chill day curve
+            | default : (0,5000)
         
-    t1 : int
-        DOY which forcing and chilling accumulationg starts. Set
-        to 1 (Jan 1) by default.
+        c : int | float, < 0
+            | :math:`c` - scale parameter of chill day curve
+            | default : (-5,0)
+            
+        threshold : int | flaot
+            | :math:`threshold` - Degree threshold above which forcing accumulates, and below which chilling accumulates.
+            | default : 5
+            
+        t1 : int
+            | :math:`` - DOY which forcing and chilling accumulationg starts.
+            | default : 1 (Jan 1)
+
+    Notes:
+        Cannell, M. G. R., & Smith, R. I. (1983). 
+        Thermal Time, Chill Days and Prediction of Budburst in Picea sitchensis.
+        The Journal of Applied Ecology, 20(3), 951.
+        https://doi.org/10.2307/2403139
+
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
@@ -53,32 +72,52 @@ class Alternating(_base_model):
         return utils.doy_estimator(difference, doy_series, threshold=0)
     
 class MSB(_base_model):
-    """Macroscale Species-specific Budburst model. Jeong et al. 2013
-    Extension of the Alternating model which add a correction (d)
-    using the mean spring temperature 
+    """Macroscale Species-specific Budburst model.
     
-    Parameters
-    ----------
-    a : int | float
-        Intercept of chill day curve
+    Extension of the Alternating model which adds a correction (:math:`d`)
+    using the mean spring temperature.
     
-    b : int | float
-        Slope of chill day curve
-    
-    c : int | float
-        scale parameter of chill day curve
-    
-    d : int | float
-        Correction factor
+    .. math::
+        \sum_{t=t1}^{DOY}R_{f}(T_{i})\geq a + be^{cNCD_{i}} +dT_{mean}
         
-    threshold : int | flaot
-        Degree threshold above which forcing accumulates, and
-        below which chilling accumulates. Set to 5 (assuming C)
-        by default.
+    where:
+    
+    .. math::
+        R_{f}(T_{i}) = max(T_{i}-threshold, 0)
         
-    t1 : int
-        DOY which forcing and chilling accumulationg starts. Set
-        to 1 (Jan 1) by default.
+    Spring is DOY 1-60 as described in Jeong et al. 2013.
+    
+    Parameters:
+        a : int | float
+            | :math:`a` - Intercept of chill day curve
+            | default : (-1000,1000)
+        
+        b : int | float, > 0
+            | :math:`b` - Slope of chill day curve
+            | default : (0,5000)
+        
+        c : int | float, < 0
+            | :math:`c` - scale parameter of chill day curve
+            | default : (-5,0)
+        
+        d : int | float
+            | :math:`d` - Correction factor using spring temperature
+            
+        threshold : int | flaot
+            | :math:`threshold` - Degree threshold above which forcing 
+              accumulates, and below which chilling accumulates.
+            | default : 5
+            
+        t1 : int
+            | :math:`` - DOY which forcing and chilling accumulationg starts.
+            | default : 1 (Jan 1)
+    
+    Notes:
+        Jeong, S.-J., Medvigy, D., Shevliakova, E., & Malyshev, S. (2013). 
+        Predicting changes in temperate forest budburst using continental-scale observations and models.
+        Geophysical Research Letters, 40(2), 359–364.
+        https://doi.org/10.1029/2012Gl054431
+
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
@@ -102,7 +141,7 @@ class MSB(_base_model):
         # Make the spring temps the same shape as chill_day_curve
         # for easy addition.
         mean_spring_temp = utils.mean_temperature(temperature, doy_series,
-                                                  start_doy=0, end_doy=60)
+                                                  start_doy=1, end_doy=60)
         mean_spring_temp *= d
         # Add in correction based on per site spring temperature
         chill_day_curve += mean_spring_temp

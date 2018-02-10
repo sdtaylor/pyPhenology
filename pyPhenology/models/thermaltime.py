@@ -2,19 +2,29 @@ from . import utils
 from .base import _base_model
 
 class ThermalTime(_base_model):
-    """The classic growing degree day model using
-    a fixed threshold above which forcing accumulates.
+    """Thermal Time Model
     
-    Parameters
-    ----------
-    t1 : int
-        The DOY which forcing accumulating beings
+    The classic growing degree day model using a fixed temperature
+    threshold above which forcing accumulates.
     
-    T : int
-        The threshold above which forcing accumulates
+    Event happens on :math:`DOY` when the following is met:
     
-    F : int, > 0
-        The total forcing units required
+    .. math::
+        \sum_{t=t_{1}}^{DOY}R_{f}(T_{i})\geq F^{*}
+    
+    Parameters:
+        t1 : int
+            | :math:`t_{1}` - The DOY which forcing accumulating beings
+            | default : (-67,298)
+        
+        T : int
+            | :math:`T` - The threshold above which forcing accumulates
+            | default : (-25,25)
+        
+        F : int, > 0
+            | :math:`F^{*}` - The total forcing units required
+            | default : (0,1000)
+        
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)

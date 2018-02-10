@@ -6,9 +6,43 @@ from copy import deepcopy
 
 class BootstrapModel():
     """Fit a model using bootstrapping of the data.
+    
+    Bootstrapping is a technique to estimate model uncertainty. Many
+    models of the same form are fit, but each use a random selection,
+    with replacement, of the data.
+    
+    Note that the core model must be passed uninitialzed::
+        
+        from pyPhenology import models
+        
+        thermaltime_bootstrapped = models.BootstrapModel(core_model = models.ThermalTime)
+        
+    Starting parameters for the core model can be adjusted as normal.
+    For example to fix the start day of the ThermalTime model::
+    
+        thermaltime_bootstrapped = models.BootstrapModel(core_model = models.ThermalTime,
+                                                         parameters = {'t1':1})
+    
 
     """
     def __init__(self, core_model, num_bootstraps, parameters={}):
+        """Bootstrap Model
+        
+        Parameters:
+            core_model : pyPhenology model
+                The model to fit n number of times. Must be uninitialized
+            
+            num_bootstraps : int
+                Number of times to fit the model
+            
+            parameters : dictionary | filename, optional
+                Parameter search ranges or fixed values for the core model.
+                If a filename, then it must be a bootstrap model save via
+                ``save_params()``
+        
+        """
+        
+        
         validation.validate_model(core_model())
         
         self.model_list=[]
@@ -30,6 +64,7 @@ class BootstrapModel():
             raise TypeError('parameters must be str or dict, got: ' + str(type(parameters)))
     
     def fit(self,observations, temperature, **kwargs):
+        """Fit the underlying core models"""
         #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
         # need to wait till fit takes arrays directly
         validation.validate_observations(observations)
@@ -40,14 +75,15 @@ class BootstrapModel():
 
     def predict(self,to_predict=None, temperature=None, aggregation='mean', **kwargs):
         """Make predictions from the bootstrapped models.
-        Predictions will be made using each of the bootstrapped models, with
-        the final results being the mean or median (or other) of all bootstraps.
         
-        Parameters
-        ----------
-        aggregation : str
-            Either 'mean','median', or 'none'. 'none' return *all* predictions
-            in an array of size (num_bootstraps, num_samples)
+        Predictions will be made using each of the bootstrapped models.
+        The final results will be the mean or median of all bootstraps, or all bootstrapped
+        model results in 2d array.
+        
+        Parameters:
+            aggregation : str
+                Either 'mean','median', or 'none'. 'none' return *all* predictions
+                in an array of size (num_bootstraps, num_samples)
         
         """
         #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
@@ -71,6 +107,7 @@ class BootstrapModel():
         return predictions
 
     def get_params(self):
+        
         all_params=[]
         for i, model in enumerate(self.model_list):
             all_params.append(deepcopy(model.get_params()))
@@ -79,6 +116,17 @@ class BootstrapModel():
         return all_params
 
     def save_params(self, filename):
+        """Save model parameters
+        
+        Note this will save details on all bootstrapped models, and 
+        can only be loaded again as a bootstrap model.
+        
+        Parameters:
+            filename : str
+                filename to save model to.
+        
+        """
+        
         if len(self.model_list[0]._fitted_params)==0:
             raise RuntimeError('Parameters not fit, nothing to save')
         params = self.get_params()
