@@ -73,29 +73,34 @@ See the official documentation for more details
     mutation constant. must be `0 < x < 2`. Can be a constant (float) or a range (tuple). Higher mean longer fitting times.
 * ``recombination`` : float
     probability of a member progressing to the next generation. must be `0 < x < 1`. Lower means longer fitting times.
+* ``disp`` : boolean
+    Display output as the model is fit. 
 
 Presets
 ^^^^^^^
-* ``testing``
+* ``testing``::
     
-    * ``maxiter`` : 5
-    * ``popsize`` : 10
-    * ``mutation`` : (0.5,1)
-    * ``recombination`` : 0.25
+    {'maxiter':5, 
+     'popsize':10, 
+     'mutation':(0.5,1),
+     'recombination':0.25,
+     'disp':False}
 
-* ``practical``
+* ``practical``::
     
-    * ``maxiter`` : 1000
-    * ``popsize`` : 50
-    * ``mutation`` : (0.5,1)
-    * ``recombination`` : 0.25
+    {'maxiter':1000, 
+     'popsize':50, 
+     'mutation':(0.5,1),
+     'recombination':0.25,
+     'disp':False}
 
-* ``intensive``
+* ``intensive``::
     
-    * ``maxiter`` : 10000
-    * ``popsize`` : 100
-    * ``mutation`` : (0.1,1)
-    * ``recombination`` 0.25
+    {'maxiter':10000, 
+     'popsize':100, 
+     'mutation':(0.1,1),
+     'recombination':0.25,
+     'disp':False}
 
 .. _optimizer_bf:
 
@@ -116,24 +121,28 @@ See the official documentation for more details
     Function to find the local best solution from the best search space solution. This is set to ``optimize.fmin_bfgs`` in the
     presets, which is the scipy bfgs minimizer. See more options 
     `here <https://docs.scipy.org/doc/scipy-1.0.0/reference/optimize.html#local-optimization>`__. 
-
+* ``disp`` : boolean
+    Display output as the model is fit. 
 
 Presets
 ^^^^^^^^
-* ``testing``
+* ``testing``::
 
-    * ``Ns`` : 2
-    * ``finish`` : ``optimize.fmin_bfgs``
+    {'Ns':2,
+     'finish':optimize.fmin_bfgs,
+     'disp':False}
     
-* ``practical``
+* ``practical``::
 
-    * ``Ns`` : 20
-    * ``finish`` : ``optimize.fmin_bfgs``
+    {'Ns':20,
+     'finish':optimize.fmin_bfgs,
+     'disp':False}
 
-* ``intensive``
+* ``intensive``::
 
-    * ``Ns`` : 40
-    * ``finish`` : ``optimize.fmin_bfgs``
+    {'Ns':40,
+     'finish':optimize.fmin_bfgs,
+     'disp':False}
 
 Brute Force Notes
 ^^^^^^^^^^^^^^^^^
