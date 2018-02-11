@@ -32,10 +32,3 @@ continental scale phenology maps on http://phenology.naturecast.org
 License
 =======
 pyPhenology uses the open source `MIT License <https://opensource.org/licenses/MIT>`__
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

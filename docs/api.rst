@@ -4,6 +4,8 @@
 API
 ===
 
+Details for anything not outlined in :ref:`model_api`.
+
 Utilities
 ---------
 

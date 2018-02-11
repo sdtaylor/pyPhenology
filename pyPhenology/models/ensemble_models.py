@@ -37,7 +37,7 @@ class BootstrapModel():
             
             parameters : dictionary | filename, optional
                 Parameter search ranges or fixed values for the core model.
-                If a filename, then it must be a bootstrap model save via
+                If a filename, then it must be a bootstrap model saved via
                 ``save_params()``
         
         """
@@ -64,7 +64,18 @@ class BootstrapModel():
             raise TypeError('parameters must be str or dict, got: ' + str(type(parameters)))
     
     def fit(self,observations, temperature, **kwargs):
-        """Fit the underlying core models"""
+        """Fit the underlying core models
+        
+        Parameters:
+            observations : dataframe
+                pandas dataframe of phenology observations
+            
+            temperature : dataframe
+                pandas dataframe of associated temperatures
+                
+            kwargs :
+                Other arguments passed to core model fitting (eg. optimzer methods)
+        """
         #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
         # need to wait till fit takes arrays directly
         validation.validate_observations(observations)
@@ -123,7 +134,9 @@ class BootstrapModel():
         
         Parameters:
             filename : str
-                filename to save model to.
+                Filename to save model to. Note this can be loaded again by
+                passing the filename in the ``paramters`` argument, but only
+                with the BootstrapModel.
         
         """
         

@@ -23,27 +23,28 @@ class _base_model():
         
     def fit(self, observations, temperature, method='DE', optimizer_params='practical', 
             verbose=False, debug=False):
-        """Estimate the parameters of a model.
+        """Estimate the parameters of a model
         
-        Parameters
-        ----------
-        observations : dataframe
-            pandas dataframe in the format specific to this package
-        
-        temperature : dataframe
-            pandas dataframe in the format specific to this package
-        
-        method : str
-            Optimization method to use
-        
-        optimizer_params : dict
-            Arguments for the optimizer
-        
-        verbose : bool
-            display progress of the optimizer
-        
-        debug : bool
-            display various internals
+        Parameters:
+            observations : dataframe
+                pandas dataframe of phenology observations
+            
+            temperature : dataframe
+                pandas dataframe of associated temperatures
+            
+            method : str
+                Optimization method to use. Either 'DE' or 'BF' for differential
+                eovlution or brute force methods.
+            
+            optimizer_params : dict | str
+                Arguments for the scipy optimizer, or one of 3 presets 'testing',
+                'practical', or 'intensive'.
+            
+            verbose : bool
+                display progress of the optimizer
+            
+            debug : bool
+                display various internals
         
         """
         
@@ -83,26 +84,26 @@ class _base_model():
         self._fitted_params.update(self._fixed_parameters)
         
     def predict(self, to_predict=None, temperature=None, doy_series=None):
-        """Predict the DOY given temperature data and associated site/year info
+        """Make predictions
+        
+        Predict the DOY given temperature data and associated site/year info.
         All model parameters must be set either in the initial model call
         or by running fit(). If to_predict and temperature are not set, then
         this will return predictions for the data used in fitting (if available)
         
-        Parameters
-        ----------
-        to_predict : dataframe, optional
-            pandas dataframe of site/year combinations to predicte from
-            the given temperature data. just like the observations 
-            dataframe used in fit() but (optionally) without the doy column
-        
-        temperature : dataframe, optional
-            pandas dataframe in the format specific to this package
+        Parameters:
+            to_predict : dataframe, optional
+                pandas dataframe of site/year combinations to predicte from
+                the given temperature data. just like the observations 
+                dataframe used in fit() but (optionally) without the doy column
             
-        Returns
-        -------
-        predictions : array
-            1D array the same length of to_predict. Or if to_predict
-            is not used, the same lengh as observations used in fitting.
+            temperature : dataframe, optional
+                pandas dataframe in the format specific to this package
+            
+        Returns:
+            predictions : array
+                1D array the same length of to_predict. Or if to_predict
+                is not used, the same lengh as observations used in fitting.
         
         """
         if len(self._fitted_params) != len(self.all_required_parameters):
@@ -216,11 +217,26 @@ class _base_model():
             self._fitted_params = fixed_parameters
     
     def get_params(self):
+        """Get the fitted parameters
+        
+        Parameters:
+            None
+        
+        Returns:
+            Dictionary of parameters.
+        """
         #TODO: Put a check here to make sure params are fitted
         return self._fitted_params
 
     def save_params(self, filename):
         """Save the parameters for a model
+        
+        A model can be loaded again by passing the filename to the ``parameters``
+        argument on initialization.
+        
+        Parameters:
+            filename : str
+                Filename to save parameter file
         """
         if len(self._fitted_params)==0:
             raise RuntimeError('Parameters not fit, nothing to save')
