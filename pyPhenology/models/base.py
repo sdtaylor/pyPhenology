@@ -21,7 +21,7 @@ class _base_model():
         else:
             raise TypeError('Unknown loss_function. Must be string or custom function')
         
-    def fit(self, observations, temperature, method='DE', optimizer_params={}, 
+    def fit(self, observations, temperature, method='DE', optimizer_params='practical', 
             verbose=False, debug=False):
         """Estimate the parameters of a model.
         

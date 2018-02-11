@@ -5,14 +5,11 @@ import sys
 
 obs, temp = utils.load_test_data()
 
-quick_DE_optimization = {'maxiter':5, 'popsize':10, 'disp':False}
-
-
 model_test_cases=[]
 # Bootstrap requires some special arguments
 model_test_cases.append({'model_name':'BootstrapModel',
                          'model_func': models.BootstrapModel,
-                         'fit_params':{'optimizer_params':quick_DE_optimization},
+                         'fit_params':{'optimizer_params':'testing'},
                          'initial_params':{'num_bootstraps':10,
                                            'core_model':models.ThermalTime}})
 
@@ -22,7 +19,7 @@ model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB','Linear']
 for name in model_names:
     model_test_cases.append({'model_name':name,
                              'model_func': utils.load_model(name),
-                             'fit_params':{'optimizer_params':quick_DE_optimization,
+                             'fit_params':{'optimizer_params':'testing',
                                            'debug':True},
                              'initial_params':{}})
 
@@ -185,7 +182,9 @@ flowers_obs = vaccinium_obs[vaccinium_obs.phenophase==501]
 thorough_DE_optimization = {'method':'DE', 'debug':True,
                             'optimizer_params':{'seed':1,
                                                 'popsize':20,
-                                                'maxiter':100}}
+                                                'maxiter':100,
+                                                'mutation':1.5,
+                                                'recombination':0.25}}
 
 test_cases=[]
 test_cases.append({'test_name' : 'Thermal Time Vaccinium Leaves',
