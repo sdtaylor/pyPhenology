@@ -202,6 +202,9 @@ class _base_model():
                 if len(value)!=2:
                     raise RuntimeError('Parameter tuple should have 2 values')
                 parameters_to_estimate[parameter]=value
+            elif isinstance(value, slice):
+                # Note: Slices valid for brute force method only.
+                parameters_to_estimate[parameter]=value
             elif isinstance(value*1.0, float):
                 fixed_parameters[parameter]=value
             else:
