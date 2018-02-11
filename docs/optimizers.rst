@@ -52,6 +52,8 @@ custimized methods will only work with a specific argument. For example the ``po
 Optimizers
 ==========
 
+.. _optimizer_de:
+
 Differential Evolution
 ----------------------
 Differential evolution uses a population of models each randomly initialized to different parameter values within the respective search spaces. 
@@ -95,7 +97,7 @@ Presets
     * ``mutation`` : (0.1,1)
     * ``recombination`` 0.25
 
-
+.. _optimizer_bf:
 
 Brute Force
 -----------
@@ -109,7 +111,7 @@ Key Arguments
 See the official documentation for more details  
 
 * ``Ns`` : int
-    Number of grid points within search space to search over.
+    Number of grid points within search space to search over. See below.
 * ``finish`` : function
     Function to find the local best solution from the best search space solution. This is set to ``optimize.fmin_bfgs`` in the
     presets, which is the scipy bfgs minimizer. See more options 
@@ -133,32 +135,27 @@ Presets
     * ``Ns`` : 40
     * ``finish`` : ``optimize.fmin_bfgs``
 
-
-Brute Force Notes (could use some clearing up)
+Brute Force Notes
 ^^^^^^^^^^^^^^^^^
-Using the brute force method with defaults for the Uniforc model like so::
+The ``Ns`` argument defines the number of points to test with each search parameter. For example consider the following search spaces for a
+three parameter model::
 
-    from pyPhenology import models, utils
-    observations, temp = utils.load_test_data(name='vaccinium')
+    {'t1': (-10,10), 'T':(0,10), 'F': (0,1000),}
 
-    model = models.Uniforc()
-    model.fit(observations, temp, method='BF')
+Using ``Ns=20`` will search all combinations of::
 
-Will use the default optimizer arguments listed under ``practical`` with the default Uniforc search space of  ``{{'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)}``.
-The ``Ns`` argument of 20 will create 20 grid points equally spaced within the (low,high) search range of each parameter. Thus the total model evaluations are
-equal to :math:`4 * 20 = 120`. A high ``Ns`` value along with a large number of parameters to estimate can create extremely long fitting times.
+    t1=[-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9] 
+    T=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5]
+    F=[0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950]
 
+which results in :math:`20^3` model evalutaions. In this way model fitting time increases exponentially with the number of parameters in a model. 
 
-Alternatively you can set the search range using slices instead of (low,high)::
+Alternatively you can set the search range using slices of (low, high, step) instead of (low,high). This allows for more control over the search space for
+each paramter. For example::
 
-     {'t1': slice(-67,298,1),'F': slice(0,200,1),'b': slice(-20,0,1),'c': slice(-50,50,2)}
-     
-Slices are in the form (low, high, step). This creates are more realistic search space for each parameter. ``t1`` has units of days so 
-the step should not be greater than 1. ``T`` and ``F`` are in degrees so searching beyond a step of 0.1 will likely not improve results
-considerably. The total number of model evaluations for using this setup is :math:`(375)`
+     {'t1': slice(-10, 10, 1),'T': slice(0,10, 1),'F':(0,1000, 5)}
 
-
-
-
-
-
+Note that using slices this way only works for the brute force method. This can create more realistic search space for each parameter.
+But in this example the number of evalutaions is still high, :math:`20*10*200=40000`.
+It's recommended that Brute Force is only used for models with a low number of parameters, otherwise Differential Evolution is 
+quicker and more robust. 

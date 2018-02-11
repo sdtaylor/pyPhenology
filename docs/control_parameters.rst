@@ -66,13 +66,11 @@ For example the Thermal Time model with narrow search range for ``t1`` and ``F``
     
     {'t1': 4.9538373877994291, 'F': 270.006971948699, 'T': 5}
     
-The above works for the optimization methods Differential Evolution (the default), and Basin Hopping.  
-For the brute force method you must specify slice.
-
-TODO
+The above works well for the optimization method :ref:`optimizer_de` (the default).
+For the brute force method you can also specify slice in the form (low,high, step) see :ref:`optimizer_bf`
 
 Saving and loading model parameters
------------------------
+-----------------------------------
 
 Fitted parameters from a model can be obtained in a dictionary via the ``model.get_params()`` method as shown above.
 They can also be saved to a file::
