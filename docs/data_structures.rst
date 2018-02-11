@@ -1,3 +1,5 @@
+.. _data_structure:
+
 ##############
 Data Structure
 ##############
