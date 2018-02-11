@@ -201,6 +201,47 @@ def get_loss_function(method):
     else:
         raise ValueError('Unknown loss method: ' + method)
 
+def validate_optimizer_parameters(optimizer_method, optimizer_params):
+    sensible_defaults = {'DE': {'testing':{'maxiter':5, 
+                                           'popsize':10, 
+                                           'mutation':(0.5,1),
+                                           'recombination':0.25,
+                                           'disp':False},
+                              'practical':{'maxiter':1000, 
+                                           'popsize':50, 
+                                           'mutation':(0.5,1),
+                                           'recombination':0.25,
+                                           'disp':False},
+                              'intensive':{'maxiter':10000, 
+                                           'popsize':100, 
+                                           'mutation':(0.1,1),
+                                           'recombination':0.25,
+                                           'disp':False},
+                                },
+                        'BF': {'testing':  {'Ns':2,
+                                            'finish':optimize.fmin_bfgs,
+                                            'disp':False},
+                               'practical': {'Ns':20,
+                                            'finish':optimize.fmin_bfgs,
+                                            'disp':False},
+                               'intensive': {'Ns':40,
+                                            'finish':optimize.fmin_bfgs,
+                                            'disp':False}}
+                        }
+                        
+    if isinstance(optimizer_params, str):
+        try:
+            optimizer_params = sensible_defaults[optimizer_method][optimizer_params]
+        except KeyError:
+            raise ValueError('Unknown sensible parameter string: ' + optimizer_params)
+    
+    elif isinstance(optimizer_params, dict):
+        pass
+    else:
+        raise TypeError('Invalid optimizer parameters. Must be str or dictionary')
+    
+    return optimizer_params
+
 def fit_parameters(function_to_minimize, bounds, method, results_translator,
                    optimizer_params, verbose=False):
     """Internal functions to estimate model parameters. 
@@ -258,18 +299,14 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
     """
     if not isinstance(method, str):
         raise TypeError('method should be string, got ' + type(method))
-    if method == 'DE':
-        default_params = {'maxiter':None, 
-                          'popsize':20, 
-                          'mutation':1.5, 
-                          'recombination':0.25,
-                          'disp':False}
         
-        default_params.update(optimizer_params)
+    if method == 'DE':
+        optimizer_params = validate_optimizer_parameters(optimizer_method=method,
+                                                         optimizer_params=optimizer_params)
         
         optimize_output = optimize.differential_evolution(function_to_minimize,
                                                           bounds=bounds, 
-                                                          **default_params)
+                                                          **optimizer_params)
         fitted_parameters = results_translator(optimize_output['x'])
 
     elif method == 'BH':
@@ -277,17 +314,15 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
     elif method == 'SE':
         raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
-        default_params = {'Ns':5,
-                          'finish':optimize.fmin_bfgs,
-                          'disp':False}
-        default_params.update(optimizer_params)
+        optimizer_params = validate_optimizer_parameters(optimizer_method=method,
+                                                         optimizer_params=optimizer_params)
         
         # BF takes a tuple of tuples instead of a list of tuples like DE
         bounds = tuple(bounds)
 
         optimize_output = optimize.brute(func = function_to_minimize,
                                          ranges = bounds,
-                                         **default_params)
+                                         **optimizer_params)
 
         fitted_parameters =  results_translator(optimize_output)
     else:
@@ -295,6 +330,7 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
     
     if verbose:
         print('Optimizer method: {x}\n'.format(x=method))
-        print('Optimizer parameters: \n {x}\n'.format(x=default_params))
+        print('Optimizer parameters: \n {x}\n'.format(x=optimizer_params))
+        
     return fitted_parameters
             
