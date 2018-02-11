@@ -19,6 +19,10 @@ they must be initialized after loading, which allows you to :ref:`set the parame
     model1 = Model1()
     model2 = Model2()
 
+The :any:`BootstrapModel` must still be loaded directly. But it can accept core models loaded via ``load_model``::
+
+    model = models.BootstrapModel(core_model = utils.load_model('Alternating'))
+
 Test Data
 =========
 A set of observations for `Vaccinium corymbosum` from the from Harvard Forest is available for use
