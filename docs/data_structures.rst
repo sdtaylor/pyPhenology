@@ -40,7 +40,7 @@ temperature for every day of the winter and spring leading up to the phenophase 
 
 * site_id: A site identifier for each location. 
 * year: The year of the temperature timeseries
-* temperatuer: The observed daily mean temperature in degrees Celcius.
+* temperature: The observed daily mean temperature in degrees Celcius.
 * doy: The julien date of the mean temperature
 
 These should columns in a data.frame like the observations. The example vaccinium
@@ -65,4 +65,4 @@ Notes
 ^^^^^
 * If you have only a single site, make a "dummy" site_id column set to 1 for both temperature and
   observation dataframes.
-* If you have only a single year
+* If you have only a single year then it still must be represented in the year column of both data.frames.

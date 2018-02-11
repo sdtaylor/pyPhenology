@@ -4,7 +4,7 @@ Optimizer Methods
 
 Parameters of phenology models have a complex search space and are commonly fit with `global optimization <https://en.wikipedia.org/wiki/Global_optimization>`__ algorithms. 
 To estimate parameters pyPhenology uses optimizers built-in to `scipy <https://docs.scipy.org/doc/scipy/reference/optimize.html#global-optimization>`__.
-Optimizers available here are:
+Optimizers available are:
 
 * Differential evolution (the default)
 * Brute force
@@ -32,8 +32,8 @@ Optimizer arguments can be set two ways. The first is using some preset defaults
 
     model.fit(observations, temp, method='DE', optimizer_params='practical')
 
-* ``testing``  Designed for testing code. Results from this should not be used for analysis. 
-* ``practical`` Default. Should produce realistic results on desktop systems in a relatively short period. (name of this open to suggestions)
+* ``testing``  Designed to be quick for testing code. Results from this should not be used for analysis. 
+* ``practical`` Default. Should produce realistic results on desktop systems in a relatively short period.
 * ``exhaustive`` Designed to find the absolute optimal solution. Can potentially take hours to days.
 
 
@@ -45,8 +45,8 @@ The 2nd is using a dictionary for customized optimizer arguments::
                                                                 
 All the arguments in the scipy optimizer functions are available via the ``optimizer_params`` argument in ``fit``. The important
 ones are described below, but also look at the available options in the scipy documentation. Any arguments not set will be
-set to the default specifed in the scipy package. Note that the preset defaults can be used with all optimizer methods, but using
-custimized methods will only work with a specific argument. For example the ``popsize`` argument above will only work with method ``DE``.
+set to the default specifed in the scipy package. Note that the three presets can be used with all optimizer methods, but using
+custimized methods will only work for that specific method. For example the ``popsize`` argument above will only work with method ``DE``.
 
 
 Optimizers
@@ -57,13 +57,14 @@ Optimizers
 Differential Evolution
 ----------------------
 Differential evolution uses a population of models each randomly initialized to different parameter values within the respective search spaces. 
-Each "member" is adjusted slightly based on the performance of the best model.
+Each "member" is adjusted slightly based on the performance of the best model. This process is repeated until the ``maxiter`` value is reached
+or a convergence threshold is met. 
 
 `Differential evolution Scipy documentation <https://docs.scipy.org/doc/scipy-1.0.0/reference/generated/scipy.optimize.differential_evolution.html>`__
 
 Key arguments
 ^^^^^^^^^^^^^
-See the official documentation for more details  
+See the official documentation for more in depth details.  
 
 * ``maxiter`` : int
     the maximum number of itations. higher means potentially longer fitting times. 
