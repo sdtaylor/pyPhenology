@@ -226,11 +226,11 @@ class _base_model():
             raise RuntimeError('Parameters not fit, nothing to save')
         pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
     
-    def get_initial_bounds(self):
+    def _get_initial_bounds(self):
         #TODO: Probably just return params to estimate + fixed ones
         raise NotImplementedError()
     
-    def get_doy_fitting_estimates(self, **params):
+    def _get_doy_fitting_estimates(self, **params):
         if self.debug:
             start = time.time()
     
@@ -241,10 +241,10 @@ class _base_model():
             self.model_timings.append(time.time() - start)
         return output
     
-    def get_error(self, **kargs):
+    def _get_error(self, **kargs):
         #TODO: make this more of a use callable function
         # and  make _scipy_error work by itself
-        doy_estimates = self.get_doy_fitting_estimates(**kargs)
+        doy_estimates = self._get_doy_fitting_estimates(**kargs)
         error = self.loss_function(self.obs_fitting, doy_estimates)
         return error
     
@@ -275,11 +275,11 @@ class _base_model():
         # add any fixed parameters
         parameters.update(self._fixed_parameters)
         
-        return self.get_error(**parameters)
+        return self._get_error(**parameters)
     
     def _scipy_bounds(self):
         """Bounds structured for scipy.optimize input"""
         return [bounds for param, bounds  in list(self._parameters_to_estimate.items())]
     
-    def score(self, metric='rmse'):
+    def _score(self, metric='rmse'):
         raise NotImplementedError()
