@@ -2,6 +2,7 @@
 Examples
 ########
 
+.. _example_model_selection_aic:
 
 Model selection via AIC
 =======================
