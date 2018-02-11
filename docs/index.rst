@@ -3,12 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyPhenology's documentation!
+pyPhenology
 =======================================
 
+pyPheonology is a software package for building plant phenology models. It has numpy
+at it's core, making model building and prediction extremely fast. The core code was written to model 
+phenology observations from the National Phenology Network, where abundant species have several
+thousand observations. The API is inspired by scikit-learn, so all models can work interchangeably
+with the same code (eg: :ref:`example_model_selection_aic`). pyPhenology is currently used to build the
+continental scale phenology maps on http://phenology.naturecast.org
+
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Documentation:
    
    install
    quickstart
@@ -16,13 +24,11 @@ Welcome to pyPhenology's documentation!
    models
    control_parameters
    optimizers
+   utils
    examples
+   api
    
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+License
+=======
+pyPhenology uses the open source `MIT License <https://opensource.org/licenses/MIT>`__

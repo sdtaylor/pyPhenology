@@ -6,22 +6,19 @@ def load_test_data(name='vaccinium'):
     """Pre-loaded phenology and associated
     temperature data.
 
-    Available datasets
-    ------------------
-    'vaccinium'
-        Vaccinium corymbosum phenology from Harvard Forest
-        Both flowers (phenophase 501) and leaves (phenophase 371)
+    Available datasets:
+        'vaccinium'
+            Vaccinium corymbosum phenology from Harvard Forest
+            Both flowers (phenophase 501) and leaves (phenophase 371)
     
-    Parameters
-    ----------
-    name : str
-        Name of the test dataset
+    Parameters:
+        name : str
+            Name of the test dataset
     
-    Returns
-    -------
-    obs, temp : tuple
-        Pandas dataframes of phenology observations
-        and associated temperatures.
+    Returns:
+        obs, temp : tuple
+            Pandas dataframes of phenology observations
+            and associated temperatures.
     """
     if name=='vaccinium':
         obs_file = 'data/vaccinium_obs.csv'
@@ -36,6 +33,10 @@ def load_test_data(name='vaccinium'):
     return obs, temp
 
 def load_model(name):
+    """Load a model via a string string
+    
+    Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB','Linear']``
+    """
     if not isinstance(name, str):
         raise TypeError('name must be string, got' + type(name))
     if name=='ThermalTime':
