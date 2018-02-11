@@ -26,6 +26,7 @@ continental scale phenology maps on http://phenology.naturecast.org
    optimizers
    utils
    examples
+   api
    
 
 License
