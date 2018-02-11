@@ -1,3 +1,5 @@
+.. _controlling_parameter_estimation:
+
 ================================
 Controlling Parameter Estimation
 ================================
@@ -10,6 +12,8 @@ Initial parameters can be adjusted in two ways.
 * Any or all parameters can be set to a fixed value
 
 Both of these are done via the parameters argument in the initial model call.
+
+.. _setting_parameters:
 
 Setting parameters to fixed values
 ----------------------------------
@@ -68,6 +72,8 @@ For example the Thermal Time model with narrow search range for ``t1`` and ``F``
     
 The above works well for the optimization method :ref:`optimizer_de` (the default).
 For the brute force method you can also specify slice in the form (low,high, step) see :ref:`optimizer_bf`
+
+.. _parameter_saving_loading:
 
 Saving and loading model parameters
 -----------------------------------

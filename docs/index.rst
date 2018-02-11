@@ -24,6 +24,7 @@ continental scale phenology maps on http://phenology.naturecast.org
    models
    control_parameters
    optimizers
+   utils
    examples
    
 
