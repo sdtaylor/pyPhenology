@@ -123,18 +123,12 @@ class Unichill(_base_model):
     
         #Only accumulate chilling after t0
         temp_chilling[doy_series<t0]=0
-        accumulated_chill=utils.forcing_accumulator(temp_chilling)
+
+        # forcing (heat) accumulation starts once chilling requirement (C)
+        # has been met
+        chill_requirement_not_met = utils.forcing_accumulator(temp_chilling) < C
+        temp_forcing[chill_requirement_not_met] =0
         
-        # Heat forcing accumulation starts when the chilling
-        # requirement, C, has been met(t1 in the equation). 
-        # Enforce this by setting everything prior to that date to 0
-        # TODO: optimize this so it doesn't use a for loop
-        t1_values = utils.doy_estimator(forcing = accumulated_chill,
-                                        doy_series=doy_series,
-                                        threshold=C)
-        for col, t1 in enumerate(t1_values):
-            temp_forcing[doy_series<t1, col]=0
-    
         accumulated_forcing = utils.forcing_accumulator(temp_forcing)
         
         return utils.doy_estimator(forcing = accumulated_forcing,
