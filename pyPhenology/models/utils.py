@@ -28,6 +28,24 @@ def mean_temperature(temperature, doy_series, start_doy, end_doy):
     spring_days = np.logical_and(doy_series>=start_doy,doy_series<=end_doy)
     return temperature[spring_days].mean(axis=0)
 
+def triangle_response(temperature, t_min, t_max, t_opt):
+    """Triangle function
+    
+    Used to simulate and optimal temperature between a low and high temperature.
+    """
+    outside_triangle = np.logical_or(temperature<t_min, temperature>t_max)
+    temperature[outside_triangle]=0
+    
+    left_side = np.logical_and(temperature >= t_min, temperature < t_opt)
+    temperature[left_side] -= t_min
+    temperature[left_side] /= (t_opt - t_min)
+    
+    right_side= np.logical_and(temperature >= t_opt, temperature <= t_max)
+    temperature[right_side] -= t_opt
+    temperature[right_side] /= (t_max - t_opt)
+    
+    return temperature
+
 def sigmoid2(temperature, b, c):
     """The two parameter sigmoid function from Chuine 2000
     
