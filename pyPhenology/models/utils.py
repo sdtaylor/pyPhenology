@@ -79,7 +79,7 @@ def forcing_accumulator(temperature):
     """
     return temperature.cumsum(axis=0)
 
-def doy_estimator(forcing, doy_series, threshold, non_prediction=-999):
+def doy_estimator(forcing, doy_series, threshold, non_prediction=999):
     """ Find the doy that some forcing threshold is met for a large
     number of sites.
     
