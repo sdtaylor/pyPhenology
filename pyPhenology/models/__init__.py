@@ -3,6 +3,7 @@ from .chuine_models import Uniforc, Unichill
 from .alternating import Alternating, MSB
 from .ensemble_models import BootstrapModel
 from .stat_models import Linear
+from .sequential import Sequential
 from .example_model import Model
 
 __all__ = ['ThermalTime',
@@ -11,5 +12,6 @@ __all__ = ['ThermalTime',
            'Alternating',
            'MSB',
            'BootstrapModel',
-           'Linear'
+           'Linear',
+           'Sequential',
            'Model']
