@@ -163,7 +163,7 @@ which results in :math:`20^3` model evalutaions. In this way model fitting time 
 Alternatively you can set the search range using slices of (low, high, step) instead of (low,high). This allows for more control over the search space for
 each paramter. For example::
 
-     {'t1': slice(-10, 10, 1),'T': slice(0,10, 1),'F':(0,1000, 5)}
+     {'t1': slice(-10, 10, 1),'T': slice(0,10, 1),'F': slice(0,1000, 5)}
 
 Note that using slices this way only works for the brute force method. This can create more realistic search space for each parameter.
 But in this example the number of evalutaions is still high, :math:`20*10*200=40000`.
