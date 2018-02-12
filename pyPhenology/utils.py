@@ -2,34 +2,74 @@ import pandas as pd
 import pkg_resources
 from . import models
 
-def load_test_data(name='vaccinium'):
-    """Pre-loaded phenology and associated
-    temperature data.
+def load_test_data(name='vaccinium', phenophase='both'):
+    """Pre-loaded phenology data
+    
+    Datasets are available with the package. They include multiple phenophases
+    and associated daily mean temperature data derived from the PRISM 
+    climate dataset. 
+    
+    Without any arguments it will return the vaccinium dataset for both
+    phenophases.
 
     Available datasets:
         'vaccinium'
             Vaccinium corymbosum phenology from Harvard Forest
             Both flowers (phenophase 501) and leaves (phenophase 371)
+        'aspen'
+            Populus tremuloides (aspen) phenology from the National Phenology
+            Dataset. Both flowers  (phenophase 501) and leaves (phenophase 371)
     
     Parameters:
-        name : str
+        name : str, optional
             Name of the test dataset
+        
+        phenophase : str | int, optional
+            Name of the phenophase. Either 'budburst','flowers', or 'both'.
+            Or the phenophase id (371 or 501)
     
     Returns:
         obs, temp : tuple
             Pandas dataframes of phenology observations
             and associated temperatures.
     """
+    
+    if not isinstance(name, str):
+        raise TypeError('Unknown name type. Expected str, got '+type(name))
+    
     if name=='vaccinium':
         obs_file = 'data/vaccinium_obs.csv'
         temp_file= 'data/vaccinium_temperature.csv'
+    elif name=='aspen':
+        obs_file = 'data/aspen_obs.csv'
+        temp_file= 'data/aspen_temperature.csv.gz'
     else:
         raise ValueError('Uknown dataset name: ' + str(name))
-        
-    obs_file = pkg_resources.resource_stream(__name__, obs_file)
-    temp_file = pkg_resources.resource_stream(__name__, temp_file)
+    
+    if isinstance(phenophase, int):
+        if phenophase not in [371,501]:
+            raise ValueError('uknown phenophase: ' + str(phenophase))
+        phenophase_ids = [phenophase]
+    elif isinstance(phenophase, str):
+        if phenophase == 'budburst':
+            phenophase_ids = [371]
+        elif phenophase == 'flowers':
+            phenophase_ids = [501]
+        elif phenophase == 'both':
+            phenophase_ids = [371,501]
+        else:
+            raise ValueError('unknown phenophase: '+phenophase)
+    else:
+        raise TypeError('unknown phenophase type. Expected str or int, got '+str(type(phenophase)))
+    
+    obs_file = pkg_resources.resource_filename(__name__, obs_file)
+    temp_file = pkg_resources.resource_filename(__name__, temp_file)
     obs = pd.read_csv(obs_file)
+    print(temp_file)
     temp= pd.read_csv(temp_file)
+    
+    obs = obs[obs.phenophase.isin(phenophase_ids)]
+    
     return obs, temp
 
 def load_model(name):
