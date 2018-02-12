@@ -34,7 +34,7 @@ Optimizer arguments can be set two ways. The first is using some preset defaults
 
 * ``testing``  Designed to be quick for testing code. Results from this should not be used for analysis. 
 * ``practical`` Default. Should produce realistic results on desktop systems in a relatively short period.
-* ``exhaustive`` Designed to find the absolute optimal solution. Can potentially take hours to days.
+* ``intensive`` Designed to find the absolute optimal solution. Can potentially take hours to days.
 
 
 The 2nd is using a dictionary for customized optimizer arguments::
