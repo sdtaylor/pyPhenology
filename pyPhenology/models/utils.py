@@ -33,7 +33,6 @@ def triangle_response(temperature, t_min, t_opt, t_max):
     
     Used to simulate and optimal temperature between a low and high temperature.
     """
-    
     outside_triangle = np.logical_or(temperature<=t_min, temperature>=t_max)
     left_side = np.logical_and(temperature > t_min, temperature <= t_opt)
     right_side= np.logical_and(temperature > t_opt, temperature < t_max)
