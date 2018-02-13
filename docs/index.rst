@@ -11,7 +11,7 @@ at it's core, making model building and prediction extremely fast. The core code
 phenology observations from the National Phenology Network, where abundant species have several
 thousand observations. The API is inspired by scikit-learn, so all models can work interchangeably
 with the same code (eg: :ref:`example_model_selection_aic`). pyPhenology is currently used to build the
-continental scale phenology maps on http://phenology.naturecast.org
+continental scale phenology forecasts on http://phenology.naturecast.org
 
 
 .. toctree::
@@ -27,7 +27,10 @@ continental scale phenology maps on http://phenology.naturecast.org
    utils
    examples
    api
-   
+
+Get in touch
+===========
+See the `GitHub Repo <https://github.com/sdtaylor/pyPhenology>`__ to see the source code or submit issues and feature requests.
 
 License
 =======
