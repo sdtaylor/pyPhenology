@@ -29,6 +29,7 @@ Primary Models
     Unichill
     Linear
     MSB
+    Sequential
 
 
 
