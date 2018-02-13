@@ -75,7 +75,7 @@ def load_test_data(name='vaccinium', phenophase='both'):
 def load_model(name):
     """Load a model via a string string
     
-    Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB','Linear']``
+    Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB','Sequential','Linear']``
     """
     if not isinstance(name, str):
         raise TypeError('name must be string, got' + type(name))
@@ -89,6 +89,8 @@ def load_model(name):
         return models.Alternating
     elif name=='MSB':
         return models.MSB
+    elif name=='Sequential':
+        return models.Sequential
     elif name=='Linear':
         return models.Linear
     else:
