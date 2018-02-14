@@ -52,6 +52,8 @@ for test_case in model_test_cases:
     print(model_name + '- estimate using brute force')
     model.fit(observations=obs, temperature=temp, verbose=True,
               method='BF', optimizer_params='testing')
+    model.fit(observations=obs, temperature=temp, verbose=True,
+              method='BH', optimizer_params='testing')
 
     print(model_name + ' - do not predict without both obs and temp')
     with pytest.raises(TypeError) as a:
