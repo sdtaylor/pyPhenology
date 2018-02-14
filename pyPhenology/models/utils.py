@@ -329,7 +329,30 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         fitted_parameters = results_translator(optimize_output['x'])
 
     elif method == 'BH':
-        raise NotImplementedError('Basin Hopping not working yet')
+        # optimize.bashinhopping takes an initial guess value, so here
+        # choose one randomly from the (low,high) search ranges given
+        initial_guess = [float(np.random.randint(l, h)) for l,h in bounds]
+        
+        # optimize.basinhopping does not constrain estimates, so this
+        # wrapper function will return a large loss for anything
+        # not in the defined boudns
+        def bounded_loss(x):
+            #print('in')
+            #print(x)
+            out_of_bounds=False
+            for i, x_val in enumerate(x):
+                if x_val < bounds[i][0] or x_val > bounds[i][0]:
+                    out_of_bounds=True
+            if out_of_bounds:
+                return np.inf
+            else:
+                return function_to_minimize(x)
+        
+        optimize_output = optimize.basinhopping(bounded_loss,
+                                                x0 = initial_guess,
+                                                **optimizer_params)
+        fitted_parameters = results_translator(optimize_output['x'])
+        
     elif method == 'SE':
         raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
