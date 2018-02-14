@@ -65,7 +65,6 @@ def load_test_data(name='vaccinium', phenophase='both'):
     obs_file = pkg_resources.resource_filename(__name__, obs_file)
     temp_file = pkg_resources.resource_filename(__name__, temp_file)
     obs = pd.read_csv(obs_file)
-    print(temp_file)
     temp= pd.read_csv(temp_file)
     
     obs = obs[obs.phenophase.isin(phenophase_ids)]
