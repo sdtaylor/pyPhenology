@@ -41,3 +41,8 @@ model.get_params()
 {'t1': 26.369813953905265, 'F': 333.76534368004388, 'T': 0}
 ```
 
+## Acknowledgments
+
+Development of this software was funded by
+[the Gordon and Betty Moore Foundation's Data-Driven Discovery Initiative](http://www.moore.org/programs/science/data-driven-discovery) through
+[Grant GBMF4563](http://www.moore.org/grants/list/GBMF4563) to Ethan P. White.
