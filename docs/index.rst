@@ -29,9 +29,13 @@ continental scale phenology forecasts on http://phenology.naturecast.org
    api
 
 Get in touch
-===========
+============
 See the `GitHub Repo <https://github.com/sdtaylor/pyPhenology>`__ to see the source code or submit issues and feature requests.
 
 License
 =======
 pyPhenology uses the open source `MIT License <https://opensource.org/licenses/MIT>`__
+
+Acknowledgments
+===============
+Development of this software was funded by `the Gordon and Betty Moore Foundation's Data-Driven Discovery Initiative <http://www.moore.org/programs/science/data-driven-discovery>`__ through `Grant GBMF4563 <http://www.moore.org/grants/list/GBMF4563>`__ to Ethan P. White.
