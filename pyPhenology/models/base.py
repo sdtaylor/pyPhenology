@@ -106,8 +106,7 @@ class _base_model():
                 is not used, the same lengh as observations used in fitting.
         
         """
-        if len(self._fitted_params) != len(self.all_required_parameters):
-            raise RuntimeError('Not all parameters set')
+        self._check_parameter_completeness()
             
         """
         valid arg combinations
@@ -249,24 +248,6 @@ class _base_model():
         #TODO: Probably just return params to estimate + fixed ones
         raise NotImplementedError()
     
-    def _get_doy_fitting_estimates(self, **params):
-        if self.debug:
-            start = time.time()
-    
-        output =self._apply_model(temperature = self.temperature_fitting.copy(), 
-                                  doy_series = self.doy_series.copy(),
-                                  **params)
-        if self.debug:
-            self.model_timings.append(time.time() - start)
-        return output
-    
-    def _get_error(self, **kargs):
-        #TODO: make this more of a use callable function
-        # and  make _scipy_error work by itself
-        doy_estimates = self._get_doy_fitting_estimates(**kargs)
-        error = self.loss_function(self.obs_fitting, doy_estimates)
-        return error
-    
     def _translate_scipy_parameters(self, parameters_array):
         """Map parameters from a 1D array to a dictionary for
         use in phenology model functions. Ordering matters
@@ -287,18 +268,74 @@ class _base_model():
         return labeled_parameters
     
     def _scipy_error(self,x):
-        """Error function for use within scipy.optimize functions.        
+        """Error function for use within scipy.optimize functions.
+        
+        All scipy.optimize functions take require a function with a single
+        parameter, x, which is the set of parameters to test. This takes
+        thats, labels is approriately to be based as **parameters to the
+        internal phenology model, and adds any fixed parameters.
         """
         parameters = self._translate_scipy_parameters(x)
 
         # add any fixed parameters
         parameters.update(self._fixed_parameters)
         
-        return self._get_error(**parameters)
+        if self.debug:
+            start = time.time()
+    
+        doy_estimates =self._apply_model(temperature = self.temperature_fitting.copy(), 
+                                       doy_series = self.doy_series.copy(),
+                                       **parameters)
+        if self.debug:
+            self.model_timings.append(time.time() - start)
+        
+        return self.loss_function(self.obs_fitting, doy_estimates)
     
     def _scipy_bounds(self):
         """Bounds structured for scipy.optimize input"""
         return [bounds for param, bounds  in list(self._parameters_to_estimate.items())]
     
-    def _score(self, metric='rmse'):
-        raise NotImplementedError()
+    def _check_parameter_completeness(self):
+        """Don't proceed unless all parameters are set"""
+        if len(self._fitted_params) != len(self.all_required_parameters):
+            raise RuntimeError('Not all parameters set')
+    
+    def score(self, metric='rmse', doy_observed=None, 
+              to_predict=None, temperature=None, doy_series=None):
+        """Get the scoring metric for fitted data
+        
+        Get the score on the dataset used for fitting (if fitting was done),
+        otherwsie set ``to_predict``, ``temperature``, and ``doy_series`` as used in
+        ``model.predict()``. In the latter case score is calculated using
+        observed values ``doy_observed``.
+        
+        Metrics available are root mean square error (``rmse``) and AIC (``aic``).
+        For AIC the number of parameters in the model is set to the number of
+        parameters actually estimated in ``fit()``, not the total number of
+        model parameters. 
+        
+        Parameters:
+            metric : str
+                Either 'rmse' or 'aic'
+        """
+        self._check_parameter_completeness()
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     temperature=temperature,
+                                     doy_series=doy_series)
+        
+        if doy_observed is None:
+            doy_observed = self.obs_fitting
+        elif isinstance(doy_observed, np.ndarray):
+            pass
+        else:
+            raise TypeError('Unknown doy_observed parameter type. expected str or ndarray, got '+str(type(doy_observed)))
+        
+        error_function = utils.get_loss_function(method=metric)
+        
+        if metric=='aic':
+            error = error_function(doy_observed, doy_estimated,
+                                   n_param = len(self._parameters_to_estimate))
+        else:
+            error = error_function(doy_observed, doy_estimated)
+            
+        return error

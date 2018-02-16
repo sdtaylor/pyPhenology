@@ -15,6 +15,7 @@ All models use the same methods for fitting, prediction, and saving.
     
     Model.fit
     Model.predict
+    Model.score
     Model.save_params
     Model.get_params
 
