@@ -217,6 +217,8 @@ def format_data(observations, temp_data, for_prediction=False, verbose=True):
 def get_loss_function(method):
     if method == 'rmse':
         return lambda obs, pred: np.sqrt(np.mean((obs - pred)**2))
+    elif method == 'aic':
+        return lambda obs, pred, n_param: len(obs) * np.log(np.mean((obs - pred)**2)) + 2*(n_param + 1)
     else:
         raise ValueError('Unknown loss method: ' + method)
 
