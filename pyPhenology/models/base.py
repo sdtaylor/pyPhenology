@@ -227,7 +227,7 @@ class _base_model():
         Returns:
             Dictionary of parameters.
         """
-        #TODO: Put a check here to make sure params are fitted
+        self._check_parameter_completeness()
         return self._fitted_params
 
     def save_params(self, filename):
@@ -240,8 +240,7 @@ class _base_model():
             filename : str
                 Filename to save parameter file
         """
-        if len(self._fitted_params)==0:
-            raise RuntimeError('Parameters not fit, nothing to save')
+        self._check_parameter_completeness()
         pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
     
     def _get_initial_bounds(self):
