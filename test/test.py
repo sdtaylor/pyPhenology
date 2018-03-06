@@ -15,7 +15,7 @@ model_test_cases.append({'model_name':'BootstrapModel',
 
 # The rest can all be tested the same way
 model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB',
-               'Linear','Sequential','M1']
+               'Linear','Sequential','M1','Naive']
 
 for name in model_names:
     model_test_cases.append({'model_name':name,
