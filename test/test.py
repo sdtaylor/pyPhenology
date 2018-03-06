@@ -15,7 +15,7 @@ model_test_cases.append({'model_name':'BootstrapModel',
 
 # The rest can all be tested the same way
 model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB',
-               'Linear','Sequential']
+               'Linear','Sequential','M1']
 
 for name in model_names:
     model_test_cases.append({'model_name':name,
@@ -45,19 +45,19 @@ for test_case in model_test_cases:
     #Test with no fixed parameters
     print(model_name + ' - Estimate all parameters')
     model=Model(**initial_params)
-    model.fit(observations=obs, temperature=temp, verbose=True, **fit_params)
+    model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
     model.predict(obs, temp)
 
     #Testing with alternate optimization method
     print(model_name + '- estimate using brute force')
-    model.fit(observations=obs, temperature=temp, verbose=True,
+    model.fit(observations=obs, predictors=temp, verbose=True,
               method='BF', optimizer_params='testing')
 
     print(model_name + ' - do not predict without both obs and temp')
     with pytest.raises(TypeError) as a:
         model.predict(to_predict = obs)
     with pytest.raises(TypeError) as a:
-        model.predict(temperature = temp)
+        model.predict(predictors = temp)
     print(model_name + ' - make prediction with values from fitting')
     predicted = model.predict()
 
@@ -65,7 +65,7 @@ for test_case in model_test_cases:
     assert len(predicted.shape) == 1, 'predicted array not 1D'
     assert len(predicted) == len(obs), 'predicted sample size not matching input from fit'
 
-    predicted = model.predict(to_predict=obs[1:10], temperature=temp)
+    predicted = model.predict(to_predict=obs[1:10], predictors=temp)
     assert len(predicted.shape) == 1, 'predicted array not 1D'
     assert len(predicted) == len(obs[1:10]), 'predicted sample size not matching input from predict'
     
@@ -78,7 +78,7 @@ for test_case in model_test_cases:
     model = Model(parameters=all_parameters, **initial_params)
     model.predict(obs, temp)
     
-    print(model_name + ' - Do not predict without to_predict and temperature \
+    print(model_name + ' - Do not predict without to_predict and predictors \
                         when all parameters are fixed a initialization')
     with pytest.raises(TypeError) as a:
         model.predict()
@@ -101,7 +101,7 @@ for test_case in model_test_cases:
     print(model_name + ' - Fix a single parameter')
     single_param = {param:value}
     model = Model(parameters=single_param, **initial_params)
-    model.fit(observations=obs, temperature=temp, verbose=True, **fit_params)
+    model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
     model.predict(obs, temp)
     
     fitted_params_with_one_fixed = model.get_params()
@@ -113,7 +113,7 @@ for test_case in model_test_cases:
     print(model_name + ' - Estimate a single parameter')
     # all_parameters is now minus one due to popitem()
     model = Model(parameters=all_parameters, **initial_params)
-    model.fit(observations=obs, temperature=temp, verbose=True, **fit_params)
+    model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
     model.predict(obs, temp)
     
     fitted_params_with_most_fixed = model.get_params()
@@ -137,7 +137,7 @@ for test_case in model_test_cases:
     #Save and load a parameter file
     print(model_name + ' - Save and load parameter file')
     model=Model(**initial_params)
-    model.fit(observations=obs, temperature=temp, verbose=True, **fit_params)
+    model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
     model.save_params(model_name+'_params.csv')
     model=Model(parameters=model_name+'_params.csv', **initial_params)
     model.predict(obs, temp)
@@ -259,7 +259,7 @@ print(divider)
 for case in test_cases:
     print('Testing known values: '+case['test_name'])
     model = case['model'](parameters = case['fitting_ranges'])
-    model.fit(observations = case['fitting_obs'], temperature=case['fitting_temp'], 
+    model.fit(observations = case['fitting_obs'], predictors=case['fitting_temp'], 
               **case['fitting_params'])
     check_known_values(estimated_params = model.get_params(), 
                        known_params = case['known_model_params'],

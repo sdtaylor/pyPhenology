@@ -1,24 +1,23 @@
 import pandas as pd
 
-def validate_temperature(temperature):
-    """ Validate a temperature dataframe to the format used in this package.
+def validate_predictors(predictor_df, valid_columns):
+    """ Validate the required columns in a predictor dataframe
     
     Parameters
     ----------
-    temperature : Pandas Dataframe
+    predictor_df : Pandas Dataframe
     
     Returns
     -------
-    temperature : The same dataframe but with only the valid columns
+    predictor_df : The same dataframe but with only the valid columns
     """
-    if not isinstance(temperature, pd.DataFrame):
-        raise TypeError('temperature should be a pandas dataframe')
-    valid_columns = ['temperature','year','site_id','doy']
+    if not isinstance(predictor_df, pd.DataFrame):
+        raise TypeError('predictors should be a pandas dataframe')
     for column in valid_columns:
-        if column not in temperature.columns:
-            raise ValueError('missing required temperature column: '+column)
+        if column not in predictor_df.columns:
+            raise ValueError('missing required predictor columns: '+column)
     
-    return temperature[valid_columns]
+    return predictor_df[valid_columns]
 
 def validate_observations(observations, for_prediction=False):
     """ Validate an observations dataframe to the format used in this package.
@@ -47,7 +46,8 @@ def validate_observations(observations, for_prediction=False):
 
 
 def validate_model(model_class):
-    required_attributes = ['_apply_model','all_required_parameters']
+    required_attributes = ['_apply_model','all_required_parameters','_required_data',
+                           '_organize_predictors','_validate_formatted_predictors']
     for attribute in required_attributes:
         if not hasattr(model_class, attribute):
             raise RuntimeError('Missing model attribute: ' + str(attribute))

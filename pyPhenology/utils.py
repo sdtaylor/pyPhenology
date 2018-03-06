@@ -92,6 +92,8 @@ def load_model(name):
         return models.Sequential
     elif name=='Linear':
         return models.Linear
+    elif name=='M1':
+        return models.M1
     else:
         raise ValueError('Unknown model name: '+name)
     
