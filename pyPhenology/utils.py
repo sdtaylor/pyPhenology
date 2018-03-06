@@ -94,6 +94,8 @@ def load_model(name):
         return models.Linear
     elif name=='M1':
         return models.M1
+    elif name=='Naive':
+        return models.Naive
     else:
         raise ValueError('Unknown model name: '+name)
     
