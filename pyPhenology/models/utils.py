@@ -92,6 +92,46 @@ def sigmoid3(temperature, a, b, c):
     """
     return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
 
+def daylength(doy, latitude):
+    """Calculates daylength in hours
+    
+    From https://github.com/khufkens/phenor
+    """
+    assert isinstance(doy, np.ndarray), 'doy should be np array'
+    assert isinstance(latitude, np.ndarray) , 'latitude should be np array'
+    assert doy.shape == latitude.shape, 'latitude and doy should be equal lengths'
+    assert len(doy.shape)==1, 'doy should be 1 dimensional'
+    doy = doy.copy()
+    latitude = latitude.copy()
+    
+    # negative doy values used in pyPhenology should be converted back to
+    # positive for daylength calculation
+    doy[doy<1] += 365
+    
+    # set constants
+    latitude = (np.pi / 180) * latitude
+    
+    # Correct for winter solistice
+    doy += 11
+    
+    # earths ecliptic
+    j = np.pi / 182.625
+    axis = (np.pi / 180) * 23.439
+    
+    m = 1 - np.tan(latitude) * np.tan(axis * np.cos(j * doy))
+    
+    # sun never appears or disappears
+    m = np.maximum(m, 0)
+    m = np.minimum(m, 2)
+    
+    # Exposed fraction of the sun's circle
+    b = np.arccos(1 - m) / np.pi
+    
+    # Daylength (lat,day)
+    b *= 24
+    
+    return b
+
 def forcing_accumulator(temperature):
     """ The accumulated forcing for each observation
     and doy in the (obs, doy) array.
@@ -145,7 +185,8 @@ def doy_estimator(forcing, doy_series, threshold, non_prediction=999):
     
     return doy_final
 
-def format_data(observations, temp_data, for_prediction=False, verbose=True):
+def temperature_only_data_prep(observations, predictors, for_prediction=False,
+                               verbose=True):
     """Create a numpy array of shape (a,b), where b
     is equal to the sample size in observations, and a is
     equal to the number of days in the yearly time
@@ -160,7 +201,7 @@ def format_data(observations, temp_data, for_prediction=False, verbose=True):
         where every row is an observation for an observed
         phenological event.
     
-    temp_data : Pandas Dataframe
+    predictors : Pandas Dataframe
         A Dataframe with columns['temperature','year','site_id']
         which matches to the sites and years in observations.
     
@@ -184,17 +225,18 @@ def format_data(observations, temp_data, for_prediction=False, verbose=True):
         (ie. doy 0 = Jan 1)
     
     """
-    doy_series = temp_data.doy.dropna().unique()
+    predictors = predictors[['doy','site_id','year','temperature']].copy()
+    doy_series = predictors.doy.dropna().unique()
     doy_series.sort()
-    temp_data = temp_data.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
+    predictors = predictors.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
     
     # This first day of temperature data causes NA issues because of leap years
     # TODO: generalize this a bit more
-    temp_data.drop(-67, axis=1, inplace=True)
+    predictors.drop(-67, axis=1, inplace=True)
     doy_series = doy_series[1:]
     
     # Give each observation a temperature time series
-    obs_with_temp = observations.merge(temp_data, on=['site_id','year'], how='left')
+    obs_with_temp = observations.merge(predictors, on=['site_id','year'], how='left')
     
     # Deal with any site/years that don't have tempterature data
     original_sample_size = len(obs_with_temp)

@@ -4,6 +4,7 @@ from . import utils, validation
 import time
 from collections import OrderedDict
 from warnings import warn
+from copy import deepcopy
 
 class _base_model():
     def __init__(self, loss_function='rmse'):
@@ -21,7 +22,7 @@ class _base_model():
         else:
             raise TypeError('Unknown loss_function. Must be string or custom function')
         
-    def fit(self, observations, temperature, method='DE', optimizer_params='practical', 
+    def fit(self, observations, predictors, method='DE', optimizer_params='practical', 
             verbose=False, debug=False):
         """Estimate the parameters of a model
         
@@ -29,8 +30,9 @@ class _base_model():
             observations : dataframe
                 pandas dataframe of phenology observations
             
-            temperature : dataframe
-                pandas dataframe of associated temperatures
+            predictors : dataframe
+                pandas dataframe of associated predictor variables such as
+                temperature, precipitation, and day length
             
             method : str
                 Optimization method to use. Either 'DE' or 'BF' for differential
@@ -48,12 +50,14 @@ class _base_model():
         
         """
         
-        validation.validate_temperature(temperature)
+        validation.validate_predictors(predictors, self._required_data['predictor_columns'])
         validation.validate_observations(observations)
         if len(self._parameters_to_estimate)==0:
             raise RuntimeError('No parameters to estimate')
     
-        self.obs_fitting, self.temperature_fitting, self.doy_series = utils.format_data(observations, temperature, verbose=verbose)
+        self._organize_predictors(predictors = predictors,
+                                  observations = observations,
+                                  for_prediction=False)
         
         if debug:
             verbose=True
@@ -83,21 +87,21 @@ class _base_model():
             self.debug=False
         self._fitted_params.update(self._fixed_parameters)
         
-    def predict(self, to_predict=None, temperature=None, doy_series=None):
+    def predict(self, to_predict=None, predictors=None):
         """Make predictions
         
-        Predict the DOY given temperature data and associated site/year info.
+        Predict the DOY given predictor data and associated site/year info.
         All model parameters must be set either in the initial model call
-        or by running fit(). If to_predict and temperature are not set, then
+        or by running fit(). If to_predict and predictors are not set, then
         this will return predictions for the data used in fitting (if available)
         
         Parameters:
             to_predict : dataframe, optional
                 pandas dataframe of site/year combinations to predicte from
-                the given temperature data. just like the observations 
+                the given predictor data. just like the observations 
                 dataframe used in fit() but (optionally) without the doy column
             
-            temperature : dataframe, optional
+            predictors : dataframe, optional
                 pandas dataframe in the format specific to this package
             
         Returns:
@@ -110,59 +114,95 @@ class _base_model():
             
         """
         valid arg combinations
-        {'to_predict':np.ndarray,'temperature':None,'doy_series':np.ndarray}
-        {'to_predict':pd.DataFrame,'temperature':pd.DataFrame,doy_series':None}
-        {'to_predict':None,'temperature':None,'doy_series':None}
+        {'to_predict':None,'predictors':dict}
+        {'to_predict':pd.DataFrame,'predictors':pd.DataFrame}
+        {'to_predict':None,'predictors':None}
         """
         
-        if isinstance(to_predict, np.ndarray) and temperature is None and isinstance(doy_series, np.ndarray):
-            # to_predict is a pre-formatted temperature array
-            if len(doy_series) != to_predict.shape[0]:
-                raise ValueError('to_predict axis 0 does not match doy_series')
+        if to_predict is None and isinstance(predictors,dict):
+            # predictors is a dict containing data that can be
+            # used directly in _apply_mode()
+            self._validate_formatted_predictors(predictors)
             
-            # Don't allow any nan values in 2d array
-            if len(to_predict.shape)==2:
-                if np.any(np.isnan(to_predict)):
-                    raise ValueError('Nan values in to_predict array')
-                    
-            # A 3d array implies spatial data, where nan values are allowed if
-            # that location is *only* nan. (ie, somewhere over water)
-            elif len(to_predict.shape)==3:
-                invalid_entries = np.logical_and(np.isnan(to_predict).any(0),
-                                                 ~np.isnan(to_predict).all(0))
-                if np.any(invalid_entries):
-                    raise ValueError('Nan values in some timeseries of 3d to_predict array')
-                
-            else:
-                raise ValueError('to_predict array is unknown shape')
-                
-            temp_array = to_predict
-            
-        elif isinstance(to_predict, pd.DataFrame) and isinstance(temperature, pd.DataFrame) and doy_series is None:
+        elif isinstance(to_predict, pd.DataFrame) and isinstance(predictors, pd.DataFrame):
             # New data to predict
-            validation.validate_temperature(temperature)
+            validation.validate_predictors(predictors, self._required_data['predictor_columns'])
             validation.validate_observations(to_predict, for_prediction=True)
-            temp_array, doy_series = utils.format_data(to_predict, temperature, for_prediction=True)
+
+            predictors = self._organize_predictors(observations=to_predict,
+                                                   predictors=predictors,
+                                                   for_prediction=True)
             
-        elif to_predict is None and  temperature is None and doy_series is None:
+        elif to_predict is None and  predictors is None:
             # Making predictions on data used for fitting
-            if self.obs_fitting is not None and self.temperature_fitting is not None:
-                temp_array = self.temperature_fitting.copy()
-                to_predict = self.obs_fitting.copy()
-                doy_series = self.doy_series
+            if self.obs_fitting is not None and self.fitting_predictors is not None:
+                predictors = self.fitting_predictors
             else:
                 raise TypeError('No to_predict + temperature passed, and'+ \
                                 'no fitting done. Nothing to predict')
         else:
-            raise TypeError('Invalid arguments. to_predict and temperature' + \
+            raise TypeError('Invalid arguments. to_predict and predictors ' + \
                             'must both be pandas dataframes of new data to predict,'+\
                             'or set to None to predict the data used for fitting')
         
-        predictions = self._apply_model(temp_array.copy(),
-                                        doy_series.copy(),
+        predictions = self._apply_model(**deepcopy(predictors),
                                         **self._fitted_params)
         
         return predictions
+    
+    def _organize_predictors(self, observations, predictors, for_prediction):
+        """Convert data to internal structure used by models
+        
+        This function inside _base() is used for all the modes which
+        have temperature as the only predictor variables (which is most of them). 
+        Models which have other predictors have their own _organize_predictors() method.
+        """
+        if for_prediction:
+            temperature_fitting, doy_series = utils.temperature_only_data_prep(observations, 
+                                                                               predictors,
+                                                                               for_prediction=for_prediction)
+            return {'temperature':temperature_fitting,
+                    'doy_series':doy_series}
+        else:
+            cleaned_observations, temperature_fitting, doy_series = utils.temperature_only_data_prep(observations, 
+                                                                                                     predictors,
+                                                                                                     for_prediction=for_prediction)
+            self.fitting_predictors = {'temperature':temperature_fitting,
+                                       'doy_series':doy_series}
+            self.obs_fitting = cleaned_observations
+    
+    def _validate_formatted_predictors(self, predictors):
+        """Make sure everything is valid.
+        
+        This is used when pre-formatted data (as opposed to dataframes)
+        is passed to predict() or fit().
+        
+        This function inside _base() is used for all the modes which
+        have temperature as the only predictor variables (which is most of them). 
+        Models which have other predictors have their own 
+        _validate_formatted_predictors() method.
+        """
+        # Don't allow any nan values in 2d temperature array
+        temp = predictors['temperature']
+        doy_series = predictors['doy_series']
+        
+        if len(doy_series) != temp.shape[0]:
+                raise ValueError('temp axis 0 does not match doy_series')
+        
+        if len(temp.shape)==2:
+            if np.any(np.isnan(temp)):
+                raise ValueError('Nan values in temp array')
+                
+        # A 3d array implies spatial data, where nan values are allowed if
+        # that location is *only* nan. (ie, somewhere over water)
+        elif len(temp.shape)==3:
+            invalid_entries = np.logical_and(np.isnan(temp).any(0),
+                                             ~np.isnan(temp).all(0))
+            if np.any(invalid_entries):
+                raise ValueError('Nan values in some timeseries of 3d temp array')
+            
+        else:
+            raise ValueError('temp array is unknown shape')
         
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
@@ -282,9 +322,8 @@ class _base_model():
         if self.debug:
             start = time.time()
     
-        doy_estimates =self._apply_model(temperature = self.temperature_fitting.copy(), 
-                                       doy_series = self.doy_series.copy(),
-                                       **parameters)
+        doy_estimates =self._apply_model(**deepcopy(self.fitting_predictors), 
+                                         **parameters)
         if self.debug:
             self.model_timings.append(time.time() - start)
         
@@ -300,11 +339,11 @@ class _base_model():
             raise RuntimeError('Not all parameters set')
     
     def score(self, metric='rmse', doy_observed=None, 
-              to_predict=None, temperature=None, doy_series=None):
+              to_predict=None, predictors=None):
         """Get the scoring metric for fitted data
         
         Get the score on the dataset used for fitting (if fitting was done),
-        otherwsie set ``to_predict``, ``temperature``, and ``doy_series`` as used in
+        otherwise set ``to_predict``, and ``predictors`` as used in
         ``model.predict()``. In the latter case score is calculated using
         observed values ``doy_observed``.
         
@@ -319,15 +358,14 @@ class _base_model():
         """
         self._check_parameter_completeness()
         doy_estimated = self.predict(to_predict=to_predict,
-                                     temperature=temperature,
-                                     doy_series=doy_series)
+                                     predictors=predictors)
         
         if doy_observed is None:
             doy_observed = self.obs_fitting
         elif isinstance(doy_observed, np.ndarray):
             pass
         else:
-            raise TypeError('Unknown doy_observed parameter type. expected str or ndarray, got '+str(type(doy_observed)))
+            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got '+str(type(doy_observed)))
         
         error_function = utils.get_loss_function(method=metric)
         

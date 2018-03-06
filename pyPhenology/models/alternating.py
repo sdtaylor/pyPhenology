@@ -51,6 +51,8 @@ class Alternating(_base_model):
         self.all_required_parameters = {'threshold':5, 't1':1,
                                         'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0)}
         self._organize_parameters(parameters)
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
     
     def _apply_model(self, temperature, doy_series, a, b, c, threshold, t1):
         chill_days = ((temperature < threshold)*1).copy()
@@ -124,6 +126,8 @@ class MSB(_base_model):
         self.all_required_parameters = {'threshold':5, 't1':1, 'd':(-100,100),
                                         'a':(-1000,1000), 'b':(0,5000), 'c':(-5,0)}
         self._organize_parameters(parameters)
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
     
     def _apply_model(self, temperature, doy_series, a, b, c, d, threshold, t1):
         chill_days = ((temperature < threshold)*1).copy()

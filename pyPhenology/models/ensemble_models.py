@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from . import utils, validation
 from copy import deepcopy
-
+import warnings
 
 class BootstrapModel():
     """Fit a model using bootstrapping of the data.
@@ -63,28 +63,26 @@ class BootstrapModel():
         else:
             raise TypeError('parameters must be str or dict, got: ' + str(type(parameters)))
     
-    def fit(self,observations, temperature, **kwargs):
+    def fit(self,observations, predictors, **kwargs):
         """Fit the underlying core models
         
         Parameters:
             observations : dataframe
                 pandas dataframe of phenology observations
             
-            temperature : dataframe
-                pandas dataframe of associated temperatures
+            predictors : dataframe
+                pandas dataframe of associated predictorss
                 
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
-        #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
+        #TODO: do the predictors transform here cause so it doesn't get reapated a bunch
         # need to wait till fit takes arrays directly
-        validation.validate_observations(observations)
-        validation.validate_temperature(temperature)
         for model in self.model_list:
             obs_shuffled = observations.sample(frac=1, replace=True).copy()
-            model.fit(obs_shuffled, temperature, **kwargs)
+            model.fit(obs_shuffled, predictors, **kwargs)
 
-    def predict(self,to_predict=None, temperature=None, aggregation='mean', **kwargs):
+    def predict(self,to_predict=None, predictors=None, aggregation='mean', **kwargs):
         """Make predictions from the bootstrapped models.
         
         Predictions will be made using each of the bootstrapped models.
@@ -97,12 +95,22 @@ class BootstrapModel():
                 in an array of size (num_bootstraps, num_samples)
         
         """
-        #TODO: do the temperature transform here cause so it doesn't get reapated a bunch
-        # need to wait till predict takes arrays directly
+        # Get the organized predictors. This is done from the 1st model in the
+        # list, but since they're all the same model it should be valid for all.
+        # Only works if there are new predictors. Otherwise the data used for
+        # fitting will be  used. 
+        # TODO: impliment this
+        # if predictors is not None:
+        #   predictors = self.model_list[0]._organize_predictors(observations=to_predict,
+        #                                                         predictors=predictors,
+        #                                                         for_prediction=True)
+        if predictors is None:
+                warnings.warn('bootstrap prediction needs to be fixed for making predictions on fit data')
+                
         predictions=[]
         for model in self.model_list:
             predictions.append(model.predict(to_predict=to_predict, 
-                                             temperature=temperature,
+                                             predictors=predictors,
                                              **kwargs))
         
         predictions = np.array(predictions)

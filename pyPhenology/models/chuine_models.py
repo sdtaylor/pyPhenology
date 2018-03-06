@@ -44,7 +44,9 @@ class Uniforc(_base_model):
         _base_model.__init__(self)
         self.all_required_parameters = {'t1':(-67,298),'F':(0,200),'b':(-20,0),'c':(-50,50)}
         self._organize_parameters(parameters)
-    
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
+        
     def _apply_model(self, temperature, doy_series, t1, F, b, c):
         temperature = utils.sigmoid2(temperature, b=b, c=c)
     
@@ -110,7 +112,9 @@ class Unichill(_base_model):
                                         'b_f':(-20,0),'c_f':(-50,50),
                                         'a_c':(0,20),'b_c':(-20,20),'c_c':(-50,50)}
         self._organize_parameters(parameters)
-    
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
+        
     def _apply_model(self, temperature, doy_series, t0, C, F, b_f, c_f, a_c, b_c, c_c):
         if len(temperature.shape)>2:
             raise NotImplementedError('Unichill model currently only supports 2d temperature arrays')

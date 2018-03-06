@@ -36,7 +36,9 @@ class Linear(_base_model):
         self.all_required_parameters = {'intercept':(-67,298),'slope':(-25,25),
                                         'spring_start':0, 'spring_end':90}
         self._organize_parameters(parameters)
-    
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
+        
     def _apply_model(self, temperature, doy_series, intercept, slope, 
                      spring_start, spring_end):
         mean_spring_temp = utils.mean_temperature(temperature, doy_series,

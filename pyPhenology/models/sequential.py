@@ -37,7 +37,9 @@ class Sequential(_base_model):
         self.all_required_parameters = {'t0':(-67,298),'c_t_min':(-25,10),'c_t_opt':(-10,10),
                                         'c_t_max':(0,10), 'C':(0,100), 'f_t':(0,20), 'F':(0,1000)}
         self._organize_parameters(parameters)
-    
+        self._required_data={'predictor_columns':['site_id','year','doy','temperature'],
+                             'predictors':['temperature','doy_series']}
+        
     def _apply_model(self, temperature, doy_series, t0, c_t_min, c_t_opt, c_t_max,
                                                      C, f_t, F):
         
