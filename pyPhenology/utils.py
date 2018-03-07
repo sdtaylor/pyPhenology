@@ -100,23 +100,21 @@ def load_model(name):
         raise ValueError('Unknown model name: '+name)
     
 
-def check_data(observations, temperature, drop_missing=True, for_prediction=False):
-    """Make sure observation and temperature data.frames are
+def check_data(observations, predictors, drop_missing=True, for_prediction=False):
+    """Make sure observation and predictors data.frames are
     valid before submitting them to models.
-    If observations are missing temperature data, optionally return
+    If observations are missing predictors data, optionally return
     a dataframe with those observations dropped.
     """
-    models.validation.validate_observations(observations, for_prediction=for_prediction)
-    models.validation.validate_temperature(temperature)
     original_obs_columns = observations.columns.values
     
-    temperature_pivoted = temperature.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
+    predictors_pivoted = predictors.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
     
-    # This first day of temperature data causes NA issues because of leap years
+    # This first day of predictors data causes NA issues because of leap years
     # TODO: generalize this a bit more
-    temperature_pivoted.drop(-67, axis=1, inplace=True)
+    predictors_pivoted.drop(-67, axis=1, inplace=True)
     
-    observations_with_temp = observations.merge(temperature_pivoted, on=['site_id','year'], how='left')
+    observations_with_temp = observations.merge(predictors_pivoted, on=['site_id','year'], how='left')
     
     original_sample_size = len(observations_with_temp)
     rows_with_missing_data = observations_with_temp.isnull().any(axis=1)
@@ -127,10 +125,10 @@ def check_data(observations, temperature, drop_missing=True, for_prediction=Fals
         n_dropped = original_sample_size - len(observations_with_temp)
         print('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size))
         print('\n Missing data from: \n' + str(missing_info))
-        return observations_with_temp[original_obs_columns], temperature
+        return observations_with_temp[original_obs_columns], predictors
     elif len(missing_info)>0:
-        print('Missing temperature values detected')
+        print('Missing predictors values detected')
         print('\n Missing data from: \n' + str(missing_info))
-        return observations, temperature
+        return observations, predictors
     else:
-        return observations, temperature
+        return observations, predictors
