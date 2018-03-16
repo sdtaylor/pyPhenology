@@ -72,7 +72,7 @@ def load_test_data(name='vaccinium', phenophase='both'):
     return obs, temp
 
 def load_model(name):
-    """Load a model via a string string
+    """Load a model via a string
     
     Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB','Sequential','Linear']``
     """
@@ -98,7 +98,26 @@ def load_model(name):
         return models.Naive
     else:
         raise ValueError('Unknown model name: '+name)
+
+def load_saved_model(filename):
+    """Load a previously saved model file
     
+    Returns the model object with parameters preloaded.
+    """
+    if not isinstance(filename, str):
+        raise TypeError('filename must be string, got' + type(filename))
+    
+    model_info = models.utils.read_saved_model(filename)
+        
+    if model_info['model_name']=='BootstrapModel':
+        # The bootstrap model has it's own code for loading saved files
+        model = models.BootstrapModel(parameters = filename)
+    else:
+        # For all other ones just need to pass the parameters
+        Model = load_model(model_info['model_name'])
+        model = Model(parameters = model_info['parameters'])
+    
+    return model
 
 def check_data(observations, predictors, drop_missing=True, for_prediction=False):
     """Make sure observation and predictors data.frames are

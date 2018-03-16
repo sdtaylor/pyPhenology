@@ -139,7 +139,13 @@ for test_case in model_test_cases:
     model=Model(**initial_params)
     model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
     model.save_params(model_name+'_params.json')
+    
+    # Load via passing saved file to model directly
     model=Model(parameters=model_name+'_params.json', **initial_params)
+    model.predict(obs, temp)
+
+    # Load via passing the saved file to universal loader
+    model=utils.load_saved_model(model_name+'_params.json')
     model.predict(obs, temp)
     print(divider)
 
