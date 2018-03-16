@@ -215,12 +215,14 @@ class _base_model():
 
         # Parameter can also be a file to load
         if isinstance(passed_parameters, str):
-            passed_parameters = pd.read_csv(passed_parameters).to_dict('records')
-            if len(passed_parameters)>1:
-                warn('Greater than 1 entry in parameter file. Using the first')
-            passed_parameters = passed_parameters[0]
+            model_info = utils.read_saved_model(model_file = passed_parameters)
+            passed_parameters = model_info['parameters']
 
-            # all parameters that were saved should be fixed values
+            if type(self).__name__ != model_info['model_name']:
+                raise RuntimeWarning('Saved model file does not match model class. ' + \
+                                     'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                                   b=type(self).__name__))
+            # all parameters that were saved should be fixed numeric values
             for parameter, value in passed_parameters.items():
                 if not isinstance(value*1.0, float):
                     raise TypeError('Expected a set value for parameter {p} in saved file, got {v}'.format(p=parameter, v=value))
@@ -270,7 +272,11 @@ class _base_model():
         self._check_parameter_completeness()
         return self._fitted_params
 
-    def save_params(self, filename):
+    def _get_model_info(self):
+        return {'model_name':type(self).__name__,
+                'parameters':self._fitted_params}
+
+    def save_params(self, filename, overwrite=False):
         """Save the parameters for a model
         
         A model can be loaded again by passing the filename to the ``parameters``
@@ -279,9 +285,14 @@ class _base_model():
         Parameters:
             filename : str
                 Filename to save parameter file
+            
+            overwrite : bool
+                Overwrite the file if it exists
         """
         self._check_parameter_completeness()
-        pd.DataFrame([self._fitted_params]).to_csv(filename, index=False)
+        utils.write_saved_model(model_info = self._get_model_info(), 
+                                model_file = filename,
+                                overwrite = overwrite)
     
     def _get_initial_bounds(self):
         #TODO: Probably just return params to estimate + fixed ones
@@ -333,9 +344,13 @@ class _base_model():
         """Bounds structured for scipy.optimize input"""
         return [bounds for param, bounds  in list(self._parameters_to_estimate.items())]
     
+    def _parameters_are_set(self):
+        """True if all parameters have been set from fitting or loading at initialization"""
+        return len(self._fitted_params) == len(self.all_required_parameters)
+    
     def _check_parameter_completeness(self):
         """Don't proceed unless all parameters are set"""
-        if len(self._fitted_params) != len(self.all_required_parameters):
+        if not self._parameters_are_set():
             raise RuntimeError('Not all parameters set')
     
     def score(self, metric='rmse', doy_observed=None, 
