@@ -138,8 +138,8 @@ for test_case in model_test_cases:
     print(model_name + ' - Save and load parameter file')
     model=Model(**initial_params)
     model.fit(observations=obs, predictors=temp, verbose=True, **fit_params)
-    model.save_params(model_name+'_params.csv')
-    model=Model(parameters=model_name+'_params.csv', **initial_params)
+    model.save_params(model_name+'_params.json')
+    model=Model(parameters=model_name+'_params.json', **initial_params)
     model.predict(obs, temp)
     print(divider)
 

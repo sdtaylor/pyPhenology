@@ -1,6 +1,7 @@
 import numpy as np
-import pandas as pd
-from . import utils, validation
+from . import utils
+from ..utils import load_model
+from . import validation
 from copy import deepcopy
 import warnings
 
@@ -25,7 +26,7 @@ class BootstrapModel():
     
 
     """
-    def __init__(self, core_model, num_bootstraps, parameters={}):
+    def __init__(self, core_model=None, num_bootstraps=None, parameters={}):
         """Bootstrap Model
         
         Parameters:
@@ -38,23 +39,32 @@ class BootstrapModel():
             parameters : dictionary | filename, optional
                 Parameter search ranges or fixed values for the core model.
                 If a filename, then it must be a bootstrap model saved via
-                ``save_params()``
-        
+                ``save_params()``. 
+                Also if it is a saved model file then core_model and 
+                num_bootstrap are ignored and inferred from the file.        
         """
-        
-        
-        validation.validate_model(core_model())
         
         self.model_list=[]
         if isinstance(parameters, str):
             # A filename pointing toward a file from save_params()
-            params = pd.read_csv(parameters).to_dict('records')
-            for bootstrap_iteration in params:
-                bootstrap_iteration.pop('bootstrap_num')
-                self.model_list.append(core_model(parameters=bootstrap_iteration))
+            # core_model and num_bootstraps is ignored
+            model_info = utils.read_saved_model(model_file = parameters)
+            
+            if type(self).__name__ != model_info['model_name']:
+                raise RuntimeError('Saved model file does not match model class. ' + \
+                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                                   b=type(self).__name__))
+            
+            for bootstrap_iteration in model_info['parameters']:
+                Model = load_model(bootstrap_iteration['model_name'])
+                self.model_list.append(Model(parameters=bootstrap_iteration['parameters']))
+            
         elif isinstance(parameters, dict):
+            # Custom parameter values to pass to each bootstrap model
+            validation.validate_model(core_model())
             for i in range(num_bootstraps):            
                 self.model_list.append(core_model(parameters=parameters))
+                
         elif isinstance(parameters, list):
             # If its the output of BootstrapModel.get_params()
             for bootstrap_iteration in parameters:
@@ -134,7 +144,7 @@ class BootstrapModel():
 
         return all_params
 
-    def save_params(self, filename):
+    def save_params(self, filename, overwrite=False):
         """Save model parameters
         
         Note this will save details on all bootstrapped models, and 
@@ -143,12 +153,25 @@ class BootstrapModel():
         Parameters:
             filename : str
                 Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``paramters`` argument, but only
+                passing the filename in the ``parameters`` argument, but only
                 with the BootstrapModel.
+            
+            overwrite : bool
+                Overwrite the file if it exists
         
         """
+        model_parameter_status = [m._parameters_are_set() for m in self.model_list]
+        if not np.all(model_parameter_status):
+            raise RuntimeError('Cannot save bootstrap model, not all parameters set')
         
-        if len(self.model_list[0]._fitted_params)==0:
-            raise RuntimeError('Parameters not fit, nothing to save')
-        params = self.get_params()
-        pd.DataFrame(params).to_csv(filename, index=False)
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+            core_model_info[-1].update({'bootstrap_num':i})
+        
+        model_info = {'model_name' : type(self).__name__,
+                      'parameters' : core_model_info}
+        
+        utils.write_saved_model(model_info=model_info,
+                                model_file=filename,
+                                overwrite=overwrite)
