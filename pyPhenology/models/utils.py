@@ -290,6 +290,18 @@ def validate_optimizer_parameters(optimizer_method, optimizer_params):
                                             'disp':False},
                                'intensive': {'Ns':40,
                                             'finish':optimize.fmin_bfgs,
+                                            'disp':False}},
+                        'BH': {'testing':  {'niter':100,
+                                            'T':0.5,
+                                            'stepsize':0.5,
+                                            'disp':False},
+                               'practical': {'niter':50000,
+                                            'T':0.5,
+                                            'stepsize':0.5,
+                                            'disp':False},
+                               'intensive': {'niter':500000,
+                                            'T':0.5,
+                                            'stepsize':0.5,
                                             'disp':False}}
                         }
                         
@@ -374,7 +386,20 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         fitted_parameters = results_translator(optimize_output['x'])
 
     elif method == 'BH':
-        raise NotImplementedError('Basin Hopping not working yet')
+        optimizer_params = validate_optimizer_parameters(optimizer_method=method,
+                                                         optimizer_params=optimizer_params)
+        # optimize.bashinhopping takes an initial guess value, so here
+        # choose one randomly from the (low,high) search ranges given
+        initial_guess = [float(np.random.randint(l, h)) for l,h in bounds]
+
+        optimize_output = optimize.basinhopping(function_to_minimize,
+                                                x0 = initial_guess,
+                                                **optimizer_params,
+                                                minimizer_kwargs={'method':'L-BFGS-B',
+                                                                  'bounds':bounds})
+
+        fitted_parameters = results_translator(optimize_output['x'])
+        
     elif method == 'SE':
         raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
