@@ -14,3 +14,4 @@ Utilities
     
     utils.load_model
     utils.load_test_data
+    utils.load_saved_model
