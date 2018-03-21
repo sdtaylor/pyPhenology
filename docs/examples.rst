@@ -7,46 +7,33 @@ Examples
 Model selection via AIC
 =======================
 
+This will fit the vaccinium budburst data to 3 different models,
+and choose the best performing one via AIC
+
+.. literalinclude:: ../examples/model_selection_aic.py
+
+Output:
 ::
 
-    from pyPhenology import utils
-    import numpy as np
+    model ThermalTime got an aic of 55.51000634199631
+    model Alternating got an aic of 60.45760650906022
+    model Linear got an aic of 64.01178179718035
+    Best model: ThermalTime
+    Best model paramters:
+    {'t1': 90.018369435585129, 'T': 2.7067432485899765, 'F': 181.66471096956883}
 
-    models_to_test = ['ThermalTime','Alternating','Linear']
+.. _example_model_rmse:
 
-    observations, temp = utils.load_test_data(name='vaccinium')
 
-    # Only keep the leaf phenophase
-    observations = observations[observations.phenophase==371]
 
-    observations_test = observations[0:10]
-    observations_train = observations[10:]
+Model RMSE
+==========
 
-    # AIC based off mean sum of squares
-    def aic(obs, pred, n_param):
-        return len(obs) * np.log(np.mean((obs - pred)**2)) + 2*(n_param + 1)
+This will calculate the RMSE on 2 species, each with a budburst and flower
+phenophase, using 2 models. Both are Thermal Time models with a start 
+date of 1 (Jan. 1), and the temperature threshold is 0 for one and 5
+for the other.
 
-    best_aic=np.inf
-    best_base_model = None
-    best_base_model_name = None
+.. literalinclude:: ../examples/model_rmse.py
 
-    for model_name in models_to_test:
-        Model = utils.load_model(model_name)
-        model = Model()
-        model.fit(observations_train, temp, optimizer_params='practical')
-        
-        model_aic = aic(obs = observations_test.doy.values,
-                        pred = model.predict(observations_test,
-                                             temp),
-                        n_param = len(model.get_params()))
-        
-        if model_aic < best_aic:
-            best_model = model
-            best_model_name = model_name
-            best_aic = model_aic
-            
-        print('model {m} got an aic of {a}'.format(m=model_name,a=model_aic))
-        
-    print('Best model: {m}'.format(m=best_model_name))
-    print('Best model paramters:')
-    print(best_model.get_params())
+.. image:: https://i.imgur.com/vTdKOdO.png

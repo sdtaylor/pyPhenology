@@ -3,10 +3,8 @@ import numpy as np
 
 models_to_test = ['ThermalTime','Alternating','Linear']
 
-observations, temp = utils.load_test_data(name='vaccinium')
-
-# Only keep the leaf phenophase
-observations = observations[observations.phenophase==371]
+observations, predictors = utils.load_test_data(name='vaccinium',
+                                                phenophase='budburst')
 
 observations_test = observations[0:10]
 observations_train = observations[10:]
@@ -22,11 +20,11 @@ best_base_model_name = None
 for model_name in models_to_test:
     Model = utils.load_model(model_name)
     model = Model()
-    model.fit(observations_train, temp, optimizer_params='practical')
+    model.fit(observations_train, predictors, optimizer_params='practical')
     
     model_aic = aic(obs = observations_test.doy.values,
                     pred = model.predict(observations_test,
-                                         temp),
+                                         predictors),
                     n_param = len(model.get_params()))
     
     if model_aic < best_aic:
