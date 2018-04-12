@@ -9,7 +9,11 @@ bootstrap_model = models.BootstrapModel(core_model=models.ThermalTime,
                                         num_bootstraps=n_bootstraps)
 bootstrap_model.fit(obs, predictors, optimizer_params='testing')
 
-
+def test_bootstrap_initialize():
+    """Bootstrap model requires core_model and num_bootstraps set"""
+    with pytest.raises(TypeError):
+        models.BootstrapModel()
+        
 def test_bootstrap_model_predict_default():
     """Predict with no new data should return 1D array"""
     assert len(bootstrap_model.predict().shape) == 1

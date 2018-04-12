@@ -61,6 +61,9 @@ class BootstrapModel():
             
         elif isinstance(parameters, dict):
             # Custom parameter values to pass to each bootstrap model
+            if core_model is None or num_bootstraps is None:
+                raise TypeError('core_model and num_bootstraps must be set')
+            
             validation.validate_model(core_model())
             for i in range(num_bootstraps):            
                 self.model_list.append(core_model(parameters=parameters))
