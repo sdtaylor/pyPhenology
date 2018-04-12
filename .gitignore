@@ -100,4 +100,6 @@ ENV/
 # mypy
 .mypy_cache/
 
-*_params.csv
+*_params.json
+docs/_static/
+docs/generated/
