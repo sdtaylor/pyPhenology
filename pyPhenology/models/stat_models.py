@@ -57,6 +57,9 @@ class Naive(_base_model):
     .. math::
         DOY = \\beta_{1} + \\beta_{2}Latitude
     
+    This model requires only a latitude column in the predictors
+    for each unique site_id
+    
     Parameters:
         intercept : int | float
             | :math:`\\beta_{1}`, intercept of the model

@@ -48,14 +48,16 @@ class ThermalTime(_base_model):
                                    threshold = F)
 
 class M1(_base_model):
-    """The Thermal Time Model with a daylenght correction.
-    
-    Blümel & Chmielewski 2012
+    """The Thermal Time Model with a daylength correction.
     
     Event happens on :math:`DOY` when the following is met:
     
     .. math::
-        \sum_{t=t_{1}}^{DOY}R_{f}(T_{i})\geq (\frac{L_{i}}{24})^{k} F^{*}
+        
+        \sum_{t=t_{1}}^{DOY}R_{f}(T_{i}) \geq (L_{i}/24)^kF^*
+        
+    This model requires a daylenght column in the predictors in 
+    addition to daily mean temperature.
     
     Parameters:
         t1 : int
@@ -69,6 +71,17 @@ class M1(_base_model):
         F : int, > 0
             | :math:`F^{*}` - The total forcing units required
             | default : (0,1000)
+            
+        k : int, > 0
+            | :math:`k^{*}` - Daylength coefficient
+            | default : (0,50)
+            
+    Notes:
+        Blümel, K., & Chmielewski, F. M. (2012). Shortcomings of classical phenological
+        forcing models and a way to overcome them. 
+        Agricultural and Forest Meteorology, 164, 10–19. 
+        http://doi.org/10.1016/j.agrformet.2012.05.001
+            
     """
     def __init__(self, parameters={}):
         _base_model.__init__(self)
