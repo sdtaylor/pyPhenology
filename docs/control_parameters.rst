@@ -72,26 +72,3 @@ For example the Thermal Time model with narrow search range for ``t1`` and ``F``
     
 The above works well for the optimization method :ref:`optimizer_de` (the default).
 For the brute force method you can also specify a slice in the form (low, high, step), see :ref:`optimizer_bf`
-
-.. _parameter_saving_loading:
-
-Saving and loading models 
--------------------------
-
-Parameters from a model can be obtained in a dictionary via the :any:`Model.get_params` method as shown above.
-Fitted models can also be saved to a file::
-
-    model.save_params(filename='model_1_parameters.json')
-    
-Paremeters are saved to a json file, though the json extension isn't required.   
-
-Saved model files can be loaded again by passing the saved filename as the ``parameters`` argument 
-in the model initialization::
-
-    model = models.ThermalTime(parameters = 'model_1_parameters.json')
-    
-or by using the more generic saved model loader::
-
-    model = utils.load_saved_model('model_1_parameters.json')
-    model.get_params()
-    {'t1': 4.9538373877994291, 'F': 270.006971948699, 'T': 5}

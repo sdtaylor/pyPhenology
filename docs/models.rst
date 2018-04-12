@@ -31,6 +31,8 @@ Primary Models
     Linear
     MSB
     Sequential
+    M1
+    Naive
 
 
 
