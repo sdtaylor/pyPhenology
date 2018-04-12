@@ -25,9 +25,9 @@ A Thermal Time growing degree day model:
 
 ```
 from pyPhenology import models, utils
-observations, temp = utils.load_test_data(name='vaccinium')
+observations, predictors = utils.load_test_data(name='vaccinium')
 model = models.Thermal_Time()
-model.fit(observations, temp)
+model.fit(observations, predictors)
 model.get_params()
 {'t1': 85.704951490688927, 'T': 7.0814430573372666, 'F': 185.36866570243012}
 ```
@@ -36,7 +36,7 @@ Any of the parameters in a model can be set to a fixed value. For example the th
 
 ```
 model = models.Thermal_Time(parameters={'T':0})
-model.fit(observations, temp)
+model.fit(observations, predictors)
 model.get_params()
 {'t1': 26.369813953905265, 'F': 333.76534368004388, 'T': 0}
 ```
