@@ -7,4 +7,5 @@ setup(name='pyPhenology',
       author='Shawn Taylor',
       license='MIT',
       packages=find_packages(),
+      include_package_data=True,
       zip_safe=False)
