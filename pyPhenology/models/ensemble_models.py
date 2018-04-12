@@ -88,6 +88,9 @@ class BootstrapModel():
         """
         #TODO: do the predictors transform here cause so it doesn't get reapated a bunch
         # need to wait till fit takes arrays directly
+        self.observations = observations
+        self.predictors = predictors
+        
         for model in self.model_list:
             obs_shuffled = observations.sample(frac=1, replace=True).copy()
             model.fit(obs_shuffled, predictors, **kwargs)
@@ -115,7 +118,9 @@ class BootstrapModel():
         #                                                         predictors=predictors,
         #                                                         for_prediction=True)
         if predictors is None:
-                warnings.warn('bootstrap prediction needs to be fixed for making predictions on fit data')
+            predictors = self.predictors
+        if to_predict is None:
+            to_predict = self.observations
                 
         predictions=[]
         for model in self.model_list:
