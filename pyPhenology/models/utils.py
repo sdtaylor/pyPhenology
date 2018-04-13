@@ -231,10 +231,14 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
     doy_series.sort()
     predictors = predictors.pivot_table(index=['site_id','year'], columns='doy', values='temperature').reset_index()
     
-    # This first day of temperature data causes NA issues because of leap years
-    # TODO: generalize this a bit more
-    predictors.drop(-67, axis=1, inplace=True)
-    doy_series = doy_series[1:]
+    # This first day of temperature data can causes NA issues because of leap years.
+    # If thats the case try dropping it. 
+    first_doy_has_na = predictors.iloc[:,2].isna().any() # first day will always be col 2
+    if first_doy_has_na:
+        first_doy_column = predictors.columns[2]
+        predictors.drop(first_doy_column, axis=1, inplace=True)
+        doy_series = doy_series[1:]
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=first_doy_column))
     
     # Give each observation a temperature time series
     obs_with_temp = observations.merge(predictors, on=['site_id','year'], how='left')
