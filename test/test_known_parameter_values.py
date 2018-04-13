@@ -14,6 +14,8 @@ import pytest
 leaves_obs, vaccinium_temp = utils.load_test_data(name='vaccinium', phenophase=371)
 flowers_obs, vaccinium_temp = utils.load_test_data(name='vaccinium', phenophase=501)
 
+aspen_leaves, aspen_temp = utils.load_test_data(name='aspen', phenophase=371)
+
 # thorough but still relatively quick
 thorough_DE_optimization = {'method':'DE', 'debug':True,
                             'optimizer_params':{'seed':1,
@@ -85,6 +87,22 @@ test_cases.append({'test_name' : 'Unichill Vaccinium Flowers',
                    'fitting_ranges':{'t0':(-40,-10),'C':(50,100),'F':(5,30),
                                      'b_f':(-10,10),'c_f':(0,20),
                                      'a_c':(-10,10),'b_c':(-20,0),'c_c':(-25,-5)},
+                   'fitting_params':thorough_DE_optimization})
+
+test_cases.append({'test_name' : 'Linear Model Aspen leaves',
+                   'model' : models.Linear,
+                   'fitting_obs':aspen_leaves,
+                   'fitting_temp':aspen_temp,
+                   'expected_params':{'intercept': 113, 'slope': -1, 'spring_start': 0, 'spring_end': 90},
+                   'fitting_ranges':{},
+                   'fitting_params':thorough_DE_optimization})
+
+test_cases.append({'test_name' : 'Naive Model Aspen leaves',
+                   'model' : models.Naive,
+                   'fitting_obs':aspen_leaves,
+                   'fitting_temp':aspen_temp,
+                   'expected_params':{'intercept': 109, 'slope': 0},
+                   'fitting_ranges':{},
                    'fitting_params':thorough_DE_optimization})
 
 #######################################
