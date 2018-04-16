@@ -43,7 +43,8 @@ class BootstrapModel():
                 Also if it is a saved model file then core_model and 
                 num_bootstrap are ignored and inferred from the file.        
         """
-        
+        self.observations = None
+        self.predictors = None
         self.model_list=[]
         if isinstance(parameters, str):
             # A filename pointing toward a file from save_params()

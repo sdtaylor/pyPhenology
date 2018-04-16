@@ -39,3 +39,10 @@ def test_bootstrap_save_load():
     bootstrap_model.save_params('model_params.json', overwrite=True)
     loaded_model = utils.load_saved_model('model_params.json')
     assert len(loaded_model.predict(obs, predictors)) == len(obs)
+
+def test_do_not_predict_without_data():
+    """Should not predict when no fitting was done and no new data passed """
+    bootstrap_model.save_params('model_params.json', overwrite=True)
+    loaded_model = utils.load_saved_model('model_params.json')
+    with pytest.raises(TypeError):
+        loaded_model.predict()
