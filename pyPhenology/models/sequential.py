@@ -54,18 +54,18 @@ class Sequential(_base_model):
             return to_return
         
         
-        chill_days = utils.triangle_response(temperature.copy(), t_min=c_t_min,
-                                             t_opt = c_t_opt, t_max=c_t_max)
+        chill_days = utils.transforms.triangle_response(temperature.copy(), t_min=c_t_min,
+                                                        t_opt = c_t_opt, t_max=c_t_max)
         chill_days[doy_series<t0]=0
-        chill_days = utils.forcing_accumulator(chill_days)
+        chill_days = utils.transforms.forcing_accumulator(chill_days)
         
         # Where adequate chill has not yet accumulated
         temperature[chill_days < C]=0
         # Warming threshold temperature
         temperature[temperature<f_t]=0
                 
-        accumulated_gdd=utils.forcing_accumulator(temperature)
+        accumulated_gdd=utils.transforms.forcing_accumulator(temperature)
     
-        return utils.doy_estimator(forcing = accumulated_gdd, 
-                                   doy_series = doy_series, 
-                                   threshold = F)
+        return utils.transforms.doy_estimator(forcing = accumulated_gdd, 
+                                              doy_series = doy_series, 
+                                              threshold = F)

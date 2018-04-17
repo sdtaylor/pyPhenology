@@ -42,9 +42,9 @@ class Linear(_base_model):
         
     def _apply_model(self, temperature, doy_series, intercept, slope, 
                      spring_start, spring_end):
-        mean_spring_temp = utils.mean_temperature(temperature, doy_series,
-                                                  start_doy = spring_start,
-                                                  end_doy = spring_end)
+        mean_spring_temp = utils.transforms.mean_temperature(temperature, doy_series,
+                                                             start_doy = spring_start,
+                                                             end_doy = spring_end)
         return mean_spring_temp * slope + intercept
 
 class Naive(_base_model):

@@ -41,11 +41,11 @@ class ThermalTime(_base_model):
         #Only accumulate forcing after t1
         temperature[doy_series<t1]=0
     
-        accumulated_gdd=utils.forcing_accumulator(temperature)
+        accumulated_gdd=utils.transforms.forcing_accumulator(temperature)
     
-        return utils.doy_estimator(forcing = accumulated_gdd, 
-                                   doy_series = doy_series, 
-                                   threshold = F)
+        return utils.transforms.doy_estimator(forcing = accumulated_gdd, 
+                                              doy_series = doy_series, 
+                                              threshold = F)
 
 class M1(_base_model):
     """The Thermal Time Model with a daylength correction.
@@ -100,16 +100,16 @@ class M1(_base_model):
         daylength_array = obs_with_daylength.daylength.values
         
         if for_prediction:
-            temperature_array, doy_series = utils.temperature_only_data_prep(observations=observations, 
-                                                                             predictors=predictors,
-                                                                             for_prediction=for_prediction)
+            temperature_array, doy_series = utils.misc.temperature_only_data_prep(observations=observations, 
+                                                                                  predictors=predictors,
+                                                                                  for_prediction=for_prediction)
             return {'temperature': temperature_array,
                     'daylength' :  daylength_array,
                     'doy_series':  doy_series}
         else:
-            cleaned_observations, temperature_array, doy_series = utils.temperature_only_data_prep(observations, 
-                                                                                                   predictors,
-                                                                                                   for_prediction=for_prediction)
+            cleaned_observations, temperature_array, doy_series = utils.misc.temperature_only_data_prep(observations, 
+                                                                                                        predictors,
+                                                                                                        for_prediction=for_prediction)
             self.fitting_predictors = {'temperature' : temperature_array,
                                        'daylength' :   daylength_array,
                                        'doy_series' :  doy_series}
@@ -126,13 +126,13 @@ class M1(_base_model):
         #Only accumulate forcing after t1
         temperature[doy_series<t1]=0
     
-        accumulated_gdd=utils.forcing_accumulator(temperature)
+        accumulated_gdd=utils.transforms.forcing_accumulator(temperature)
     
         daylength_adjustment = (daylength / 24) ** k
         # Make it the same shape as gdd for easy adjustment
         num_days = len(doy_series)
         daylength_adjustment = np.tile(np.expand_dims(daylength_adjustment, 1), num_days)
     
-        return utils.doy_estimator(forcing = accumulated_gdd, 
-                                   doy_series = doy_series, 
-                                   threshold = F)
+        return utils.transforms.doy_estimator(forcing = accumulated_gdd, 
+                                              doy_series = doy_series, 
+                                              threshold = F)

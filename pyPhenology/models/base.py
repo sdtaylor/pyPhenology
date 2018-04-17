@@ -15,7 +15,7 @@ class _base_model():
         self.debug=False
         
         if isinstance(loss_function, str):
-            self.loss_function = utils.get_loss_function(method=loss_function)
+            self.loss_function = utils.optimize.get_loss_function(method=loss_function)
         elif callable(loss_function):
             #validation.validate_loss_function(loss_function)
             self.loss_function = loss_function
@@ -69,12 +69,12 @@ class _base_model():
         if verbose:
             fitting_start = time.time()
 
-        self._fitted_params = utils.fit_parameters(function_to_minimize = self._scipy_error,
-                                                   bounds = self._scipy_bounds(),
-                                                   method=method,
-                                                   results_translator=self._translate_scipy_parameters,
-                                                   optimizer_params = optimizer_params,
-                                                   verbose=verbose)
+        self._fitted_params = utils.optimize.fit_parameters(function_to_minimize = self._scipy_error,
+                                                           bounds = self._scipy_bounds(),
+                                                           method=method,
+                                                           results_translator=self._translate_scipy_parameters,
+                                                           optimizer_params = optimizer_params,
+                                                           verbose=verbose)
         if verbose:
             total_fit_time = round(time.time() - fitting_start,5)
             print('Total model fitting time: {s} sec.\n'.format(s=total_fit_time))
@@ -158,15 +158,15 @@ class _base_model():
         Models which have other predictors have their own _organize_predictors() method.
         """
         if for_prediction:
-            temperature_fitting, doy_series = utils.temperature_only_data_prep(observations, 
-                                                                               predictors,
-                                                                               for_prediction=for_prediction)
+            temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations, 
+                                                                                    predictors,
+                                                                                    for_prediction=for_prediction)
             return {'temperature':temperature_fitting,
                     'doy_series':doy_series}
         else:
-            cleaned_observations, temperature_fitting, doy_series = utils.temperature_only_data_prep(observations, 
-                                                                                                     predictors,
-                                                                                                     for_prediction=for_prediction)
+            cleaned_observations, temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations, 
+                                                                                                          predictors,
+                                                                                                          for_prediction=for_prediction)
             self.fitting_predictors = {'temperature':temperature_fitting,
                                        'doy_series':doy_series}
             self.obs_fitting = cleaned_observations
@@ -215,7 +215,7 @@ class _base_model():
 
         # Parameter can also be a file to load
         if isinstance(passed_parameters, str):
-            model_info = utils.read_saved_model(model_file = passed_parameters)
+            model_info = utils.misc.read_saved_model(model_file = passed_parameters)
             passed_parameters = model_info['parameters']
 
             if type(self).__name__ != model_info['model_name']:
@@ -290,9 +290,9 @@ class _base_model():
                 Overwrite the file if it exists
         """
         self._check_parameter_completeness()
-        utils.write_saved_model(model_info = self._get_model_info(), 
-                                model_file = filename,
-                                overwrite = overwrite)
+        utils.misc.write_saved_model(model_info = self._get_model_info(), 
+                                     model_file = filename,
+                                     overwrite = overwrite)
     
     def _get_initial_bounds(self):
         #TODO: Probably just return params to estimate + fixed ones
@@ -382,7 +382,7 @@ class _base_model():
         else:
             raise TypeError('Unknown doy_observed parameter type. expected ndarray, got '+str(type(doy_observed)))
         
-        error_function = utils.get_loss_function(method=metric)
+        error_function = utils.optimize.get_loss_function(method=metric)
         
         if metric=='aic':
             error = error_function(doy_observed, doy_estimated,
