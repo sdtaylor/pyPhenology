@@ -48,16 +48,16 @@ class Uniforc(_base_model):
                              'predictors':['temperature','doy_series']}
         
     def _apply_model(self, temperature, doy_series, t1, F, b, c):
-        temperature = utils.sigmoid2(temperature, b=b, c=c)
+        temperature = utils.transforms.sigmoid2(temperature, b=b, c=c)
     
         #Only accumulate forcing after t1
         temperature[doy_series<t1]=0
     
-        accumulateed_forcing=utils.forcing_accumulator(temperature)
+        accumulateed_forcing=utils.transforms.forcing_accumulator(temperature)
     
-        return utils.doy_estimator(forcing = accumulateed_forcing,
-                                   doy_series=doy_series,
-                                   threshold=F)
+        return utils.transforms.doy_estimator(forcing = accumulateed_forcing,
+                                              doy_series=doy_series,
+                                              threshold=F)
 
 class Unichill(_base_model):
     """Unichill two-hase model.
@@ -122,19 +122,19 @@ class Unichill(_base_model):
         temp_chilling = temperature.copy()
         temp_forcing  = temperature.copy()
         
-        temp_forcing = utils.sigmoid2(temp_forcing, b=b_f, c=c_f)
-        temp_chilling =utils.sigmoid3(temp_chilling, a=a_c, b=b_c, c=c_c) 
+        temp_forcing = utils.transforms.sigmoid2(temp_forcing, b=b_f, c=c_f)
+        temp_chilling =utils.transforms.sigmoid3(temp_chilling, a=a_c, b=b_c, c=c_c) 
     
         #Only accumulate chilling after t0
         temp_chilling[doy_series<t0]=0
 
         # forcing (heat) accumulation starts once chilling requirement (C)
         # has been met
-        chill_requirement_not_met = utils.forcing_accumulator(temp_chilling) < C
+        chill_requirement_not_met = utils.transforms.forcing_accumulator(temp_chilling) < C
         temp_forcing[chill_requirement_not_met] =0
         
-        accumulated_forcing = utils.forcing_accumulator(temp_forcing)
+        accumulated_forcing = utils.transforms.forcing_accumulator(temp_forcing)
         
-        return utils.doy_estimator(forcing = accumulated_forcing,
-                                   doy_series=doy_series,
-                                   threshold=F)
+        return utils.transforms.doy_estimator(forcing = accumulated_forcing,
+                                              doy_series=doy_series,
+                                              threshold=F)

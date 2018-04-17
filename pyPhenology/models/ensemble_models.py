@@ -49,7 +49,7 @@ class BootstrapModel():
         if isinstance(parameters, str):
             # A filename pointing toward a file from save_params()
             # core_model and num_bootstraps is ignored
-            model_info = utils.read_saved_model(model_file = parameters)
+            model_info = utils.misc.read_saved_model(model_file = parameters)
             
             if type(self).__name__ != model_info['model_name']:
                 raise RuntimeError('Saved model file does not match model class. ' + \
@@ -181,6 +181,6 @@ class BootstrapModel():
         model_info = {'model_name' : type(self).__name__,
                       'parameters' : core_model_info}
         
-        utils.write_saved_model(model_info=model_info,
+        utils.misc.write_saved_model(model_info=model_info,
                                 model_file=filename,
                                 overwrite=overwrite)

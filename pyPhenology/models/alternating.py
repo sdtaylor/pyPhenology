@@ -57,13 +57,13 @@ class Alternating(_base_model):
     def _apply_model(self, temperature, doy_series, a, b, c, threshold, t1):
         chill_days = ((temperature < threshold)*1).copy()
         chill_days[doy_series < t1]=0
-        chill_days = utils.forcing_accumulator(chill_days)
+        chill_days = utils.transforms.forcing_accumulator(chill_days)
 
         # Accumulated growing degree days from Jan 1
         gdd = temperature.copy()
         gdd[gdd < threshold]=0
         gdd[doy_series < t1]=0
-        gdd = utils.forcing_accumulator(gdd)
+        gdd = utils.transforms.forcing_accumulator(gdd)
 
         # Phenological event happens the first day gdd is > chill_day curve
         chill_day_curve = a + b * np.exp( c * chill_days)
@@ -71,7 +71,7 @@ class Alternating(_base_model):
 
         # The estimate is equal to the first day that
         # gdd - chill_day_curve > 0
-        return utils.doy_estimator(difference, doy_series, threshold=0)
+        return utils.transforms.doy_estimator(difference, doy_series, threshold=0)
     
 class MSB(_base_model):
     """Macroscale Species-specific Budburst model.
@@ -132,20 +132,20 @@ class MSB(_base_model):
     def _apply_model(self, temperature, doy_series, a, b, c, d, threshold, t1):
         chill_days = ((temperature < threshold)*1).copy()
         chill_days[doy_series < t1]=0
-        chill_days = utils.forcing_accumulator(chill_days)
+        chill_days = utils.transforms.forcing_accumulator(chill_days)
 
         # Accumulated growing degree days from Jan 1
         gdd = temperature.copy()
         gdd[gdd < threshold]=0
         gdd[doy_series < t1]=0
-        gdd = utils.forcing_accumulator(gdd)
+        gdd = utils.transforms.forcing_accumulator(gdd)
 
         chill_day_curve = a + b * np.exp( c * chill_days)
         
         # Make the spring temps the same shape as chill_day_curve
         # for easy addition.
-        mean_spring_temp = utils.mean_temperature(temperature, doy_series,
-                                                  start_doy=1, end_doy=60)
+        mean_spring_temp = utils.transforms.mean_temperature(temperature, doy_series,
+                                                             start_doy=1, end_doy=60)
         mean_spring_temp *= d
         # Add in correction based on per site spring temperature
         chill_day_curve += mean_spring_temp
@@ -155,4 +155,4 @@ class MSB(_base_model):
 
         # The estimate is equal to the first day that
         # gdd - chill_day_curve > 0
-        return utils.doy_estimator(difference, doy_series, threshold=0)
+        return utils.transforms.doy_estimator(difference, doy_series, threshold=0)

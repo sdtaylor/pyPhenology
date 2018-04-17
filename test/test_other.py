@@ -22,6 +22,6 @@ def test_daylength_util():
     
     Numbers confirmed via http://www.solartopo.com/daylength.htm
     """
-    d = models.utils.daylength(np.array([30,90,180]), np.array([20,30,40]))
+    d = models.utils.transforms.daylength(np.array([30,90,180]), np.array([20,30,40]))
     np
     assert np.all(np.round(d,1) == np.array([ 11.1 ,  12.3 ,  14.8]))
