@@ -2,6 +2,7 @@ import numpy as np
 import json
 import os
 from scipy import optimize
+import numexpr as ne
 from warnings import warn
 
 def mean_temperature(temperature, doy_series, start_doy, end_doy):
@@ -67,7 +68,7 @@ def sigmoid2(temperature, b, c):
     temperature : Numpy array
         array of daily forcings derived from function
     """
-    return 1 / (1 + np.exp(b*(temperature-c)))
+    return ne.evaluate('1 / (1 + exp(b*(temperature-c)))')
 
 def sigmoid3(temperature, a, b, c):
     """The three parameter sigmoid function from Chuine 2000
@@ -91,7 +92,7 @@ def sigmoid3(temperature, a, b, c):
     temperature : Numpy array
         array of daily forcings derived from function
     """
-    return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
+    return ne.evaluate('1 / (1 + exp(a*((temperature - c)**2) + b*(temperature-c)))')
 
 def daylength(doy, latitude):
     """Calculates daylength in hours

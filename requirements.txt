@@ -1,3 +1,4 @@
 scipy>=1.0 --only-binary :all:
 numpy>=1.8 --only-binary :all:
 pandas>=0.18 --only-binary :all:
+numexpr>=2.0 --only-binary :all:
