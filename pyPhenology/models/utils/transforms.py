@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.special import expit
 
 def mean_temperature(temperature, doy_series, start_doy, end_doy):
     """Mean temperature of a single time period.
@@ -47,6 +48,13 @@ def triangle_response(temperature, t_min, t_opt, t_max):
 def sigmoid2(temperature, b, c):
     """The two parameter sigmoid function from Chuine 2000
     
+    The full equation is f(x) = 1 / (1 + exp(b*(temp -c)))
+    
+    The scipy.special.expit function = 1/(1+(-x))
+
+    Using float32 increases speed significantly over 
+    the default float64
+
     Parameters
     ----------
     temperature : Numpy array
@@ -63,11 +71,18 @@ def sigmoid2(temperature, b, c):
     temperature : Numpy array
         array of daily forcings derived from function
     """
-    return 1 / (1 + np.exp(b*(temperature-c)))
+    return expit(-(b*(temperature.astype(np.float32)-c)))
 
 def sigmoid3(temperature, a, b, c):
     """The three parameter sigmoid function from Chuine 2000
     
+    The full equation is f(x) = 1 / (1 + exp(a*(temp-c)**2 +  b*(temp -c)))
+
+    The scipy.special.expit function = 1/(1+(-x))
+
+    Using float32 increases speed significantly over 
+    the default float64
+
     Parameters
     ----------
     temperature : Numpy array
@@ -87,7 +102,7 @@ def sigmoid3(temperature, a, b, c):
     temperature : Numpy array
         array of daily forcings derived from function
     """
-    return 1 / (1 + np.exp(a*((temperature - c)**2) + b*(temperature-c)))
+    return expit(-(a*((temperature.astype(float32) - c)**2) + b*(temperature.astype(float32)-c)))
 
 def daylength(doy, latitude):
     """Calculates daylength in hours
