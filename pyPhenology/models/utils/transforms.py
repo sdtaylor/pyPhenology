@@ -102,7 +102,7 @@ def sigmoid3(temperature, a, b, c):
     temperature : Numpy array
         array of daily forcings derived from function
     """
-    return expit(-(a*((temperature.astype(float32) - c)**2) + b*(temperature.astype(float32)-c)))
+    return expit(-(a*((temperature.astype(np.float32) - c)**2) + b*(temperature.astype(np.float32)-c)))
 
 def daylength(doy, latitude):
     """Calculates daylength in hours
