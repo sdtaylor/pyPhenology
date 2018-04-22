@@ -59,7 +59,7 @@ class M1(_base_model):
 
         \sum_{t=t_{1}}^{DOY}R_{f}(T_{i}) \geq (L_{i}/24)^kF^*
 
-    This model requires a daylenght column in the predictors in 
+    This model requires a daylength column in the predictors in
     addition to daily mean temperature.
 
     Parameters:
@@ -81,8 +81,8 @@ class M1(_base_model):
 
     Notes:
         Blümel, K., & Chmielewski, F. M. (2012). Shortcomings of classical phenological
-        forcing models and a way to overcome them. 
-        Agricultural and Forest Meteorology, 164, 10–19. 
+        forcing models and a way to overcome them.
+        Agricultural and Forest Meteorology, 164, 10–19.
         http://doi.org/10.1016/j.agrformet.2012.05.001
 
     """
