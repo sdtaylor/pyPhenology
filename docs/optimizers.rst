@@ -13,7 +13,7 @@ Optimizers available are:
 Changing the optimizer
 ======================
 
-The optimize can specified be in the ``fit`` method by using the codes ``DE``, 'BH', or ``BF`` for differential evolution, bashin hopping or brute force, respectively::
+The optimizer can be specified in the ``fit`` method by using the codes ``DE``, ``BH``, or ``BF`` for differential evolution, basin hopping, or brute force, respectively::
 
     from pyPhenology import models, utils
     observations, temp = utils.load_test_data(name='vaccinium')

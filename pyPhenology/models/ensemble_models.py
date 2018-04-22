@@ -41,9 +41,9 @@ class BootstrapModel():
             parameters : dictionary | filename, optional
                 Parameter search ranges or fixed values for the core model.
                 If a filename, then it must be a bootstrap model saved via
-                ``save_params()``. 
-                Also if it is a saved model file then core_model and 
-                num_bootstrap are ignored and inferred from the file.        
+                ``save_params()``.
+                Also if it is a saved model file then the core_model and
+                num_bootstrap parameters are ignored.
         """
         self.observations = None
         self.predictors = None
