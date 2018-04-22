@@ -7,12 +7,13 @@ To estimate parameters pyPhenology uses optimizers built-in to `scipy <https://d
 Optimizers available are:
 
 * Differential evolution (the default)
+* Basin hopping
 * Brute force
 
 Changing the optimizer
 ======================
 
-The optimize can specified be in the ``fit`` method by using the codes ``DE``, or ``BF`` for differential evolution or brute force, respectively::
+The optimize can specified be in the ``fit`` method by using the codes ``DE``, 'BH', or ``BF`` for differential evolution, bashin hopping or brute force, respectively::
 
     from pyPhenology import models, utils
     observations, temp = utils.load_test_data(name='vaccinium')
@@ -34,7 +35,7 @@ Optimizer arguments can be set two ways. The first is using some preset defaults
 
 * ``testing``  Designed to be quick for testing code. Results from this should not be used for analysis. 
 * ``practical`` Default. Should produce realistic results on desktop systems in a relatively short period.
-* ``intensive`` Designed to find the absolute optimal solution. Can potentially take hours to days.
+* ``intensive`` Designed to find the absolute optimal solution. Can potentially take hours to days on large datasets.
 
 
 The 2nd is using a dictionary for customized optimizer arguments::
@@ -102,6 +103,54 @@ Presets
      'mutation':(0.1,1),
      'recombination':0.25,
      'disp':False}
+
+.. _optimizer_bh:
+
+Basin Hopping
+-------------
+Basin hopping first makes a random guess at the parameters, then finds the local minima using `L-BFGS-B <https://docs.scipy.org/doc/scipy-1.0.0/reference/optimize.minimize-lbfgsb.html>`__.
+From the local minima the parameters are then randomly perturbed and minimized again, with this new estimate accepted using a Metropolis criterion. This is repeated
+until ``niter`` is reached. The parameters with the best score are selected.
+Basin hopping is essentially the same as simulated annealing, but with the added step of finding the local minima between random perturbations. 
+Simulated annealing was retired from the Scipy packge in favor of basin hopping, see the note `here <https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.optimize.anneal.html>`__.
+
+`Basin Hopping Scipy documentation <https://docs.scipy.org/doc/scipy-1.0.0/reference/generated/scipy.optimize.basinhopping.html>`__
+
+Key arguments
+^^^^^^^^^^^^^
+See the official documentation for more in depth details.  
+
+* ``niter`` : int
+    the number of itations. higher means potentially longer fitting times. 
+* ``T`` : float
+    The “temperature” parameter for the accept or reject criterion.
+* ``stepsize`` : float
+    The size of the random perturbations
+* ``disp`` : boolean
+    Display output as the model is fit. 
+
+Presets
+^^^^^^^
+* ``testing``::
+    
+    {'niter': 100,
+     'T': 0.5,
+     'stepsize': 0.5,
+     'disp': False}
+
+* ``practical``::
+    
+    {'niter': 50000,
+     'T': 0.5,
+     'stepsize': 0.5,
+     'disp': False}
+
+* ``intensive``::
+    
+    {'niter': 500000,
+     'T': 0.5,
+     'stepsize': 0.5,
+     'disp': False}
 
 .. _optimizer_bf:
 

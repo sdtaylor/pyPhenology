@@ -3,7 +3,7 @@ from .base import _base_model
 
 
 class Sequential(_base_model):
-    """The sequentail model
+    """The sequential model
 
     This uses a triangular response for chilling, and growing degree days for forcing.
 
