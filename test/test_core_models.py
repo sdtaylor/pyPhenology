@@ -114,7 +114,7 @@ def test_estimate_all_but_one_parameter(model_name, fitted_model):
 
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_error_on_bad_parameter_names(model_name, fitted_model):
-    """Expect error when uknown parameter name is used"""
+    """Expect error when unknown parameter name is used"""
     with pytest.raises(RuntimeError):
         utils.load_model(model_name)(parameters={'not_a_parameter':0})
         

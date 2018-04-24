@@ -12,15 +12,15 @@ class Sequential(_base_model):
             The doy which chilling accumulation beings
 
         c_t_min: int | float
-            Triangular response paramter. The minimum temperature where
+            Triangular response parameter. The minimum temperature where
             chilling accumulates.
 
         c_t_opt: int | float
-            Triangular response paramter. The optimum temperature where
+            Triangular response parameter. The optimum temperature where
             chilling accumulates.
 
         c_t_max: int | float
-            Triangular response paramter. The maximum temperature where
+            Triangular response parameter. The maximum temperature where
             chilling accumulates.
 
         C : int | float

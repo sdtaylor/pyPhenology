@@ -37,7 +37,7 @@ class _base_model():
 
             method : str
                 Optimization method to use. Either 'DE' or 'BF' for differential
-                eovlution or brute force methods.
+                evolution or brute force methods.
 
             optimizer_params : dict | str
                 Arguments for the scipy optimizer, or one of 3 presets 'testing',
@@ -98,7 +98,7 @@ class _base_model():
 
         Parameters:
             to_predict : dataframe, optional
-                pandas dataframe of site/year combinations to predicte from
+                pandas dataframe of site/year combinations to predict from
                 the given predictor data. just like the observations 
                 dataframe used in fit() but (optionally) without the doy column
 
@@ -108,7 +108,7 @@ class _base_model():
         Returns:
             predictions : array
                 1D array the same length of to_predict. Or if to_predict
-                is not used, the same lengh as observations used in fitting.
+                is not used, the same length as observations used in fitting.
 
         """
         self._check_parameter_completeness()
@@ -302,7 +302,7 @@ class _base_model():
     def _translate_scipy_parameters(self, parameters_array):
         """Map parameters from a 1D array to a dictionary for
         use in phenology model functions. Ordering matters
-        in unpacking the scipy_array since it isn't labelled. Thus
+        in unpacking the scipy_array since it isn't labeled. Thus
         it relies on self._parameters_to_estimate being an 
         OrdereddDict
         """
@@ -323,7 +323,7 @@ class _base_model():
 
         All scipy.optimize functions take require a function with a single
         parameter, x, which is the set of parameters to test. This takes
-        thats, labels is approriately to be based as **parameters to the
+        x, labels it appropriately to be used as **parameters to the
         internal phenology model, and adds any fixed parameters.
         """
         parameters = self._translate_scipy_parameters(x)

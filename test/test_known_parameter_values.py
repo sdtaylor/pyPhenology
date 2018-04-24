@@ -6,7 +6,7 @@ import pytest
 # Make sure some known parameters are estimated correctly
 # The number roughly match the estimates from the original model
 # codebase in github.com/sdtaylor/phenology_dataset_study.
-# They don't match exactly becuse that original stuff uses DE
+# They don't match exactly because that original stuff uses DE
 # while I'm using BF here for testing sake.
 
 ##############################

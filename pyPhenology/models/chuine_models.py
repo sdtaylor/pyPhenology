@@ -63,7 +63,7 @@ class Uniforc(_base_model):
 
 
 class Unichill(_base_model):
-    """Unichill two-hase model.
+    """Unichill two-phase model.
 
     Two phase forcing model using a sigmoid function for forcing and
     chilling units. 
@@ -92,15 +92,15 @@ class Unichill(_base_model):
             | default : (-50,50)
 
         a_c : int, > 0
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (0,20)
 
         b_c : int
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (-20,20)
 
         c_c : int
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (-50,50)
 
     Notes:

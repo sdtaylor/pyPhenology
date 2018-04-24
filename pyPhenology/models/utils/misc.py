@@ -10,7 +10,7 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
     equal to the number of days in the yearly time
     series of temperature (ie. Jan 1 - July 30).
     Using a numpy array in this way allows for very 
-    efficient processing of phenology mdoels.
+    efficient processing of phenology models.
 
     Parameters
     ----------
@@ -60,7 +60,7 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
     # Give each observation a temperature time series
     obs_with_temp = observations.merge(predictors, on=['site_id', 'year'], how='left')
 
-    # Deal with any site/years that don't have tempterature data
+    # Deal with any site/years that don't have temperature data
     original_sample_size = len(obs_with_temp)
     rows_with_missing_data = obs_with_temp.isnull().any(axis=1)
     missing_info = obs_with_temp[['site_id', 'year']][rows_with_missing_data].drop_duplicates()

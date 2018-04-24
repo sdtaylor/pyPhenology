@@ -13,7 +13,7 @@ class BootstrapModel():
     models of the same form are fit, but each use a random selection,
     with replacement, of the data.
 
-    Note that the core model must be passed uninitialzed::
+    Note that the core model must be passed uninitialized::
 
         from pyPhenology import models
 
@@ -87,12 +87,12 @@ class BootstrapModel():
                 pandas dataframe of phenology observations
 
             predictors : dataframe
-                pandas dataframe of associated predictorss
+                pandas dataframe of associated predictors
 
             kwargs :
-                Other arguments passed to core model fitting (eg. optimzer methods)
+                Other arguments passed to core model fitting (eg. optimizer methods)
         """
-        # TODO: do the predictors transform here cause so it doesn't get reapated a bunch
+        # TODO: do the predictors transform here cause so it doesn't get repeated a bunch
         # need to wait till fit takes arrays directly
         self.observations = observations
         self.predictors = predictors
@@ -118,7 +118,7 @@ class BootstrapModel():
         # list, but since they're all the same model it should be valid for all.
         # Only works if there are new predictors. Otherwise the data used for
         # fitting will be  used.
-        # TODO: impliment this
+        # TODO: implement this
         # if predictors is not None:
         #   predictors = self.model_list[0]._organize_predictors(observations=to_predict,
         #                                                         predictors=predictors,

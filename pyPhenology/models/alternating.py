@@ -32,12 +32,12 @@ class Alternating(_base_model):
             | :math:`c` - scale parameter of chill day curve
             | default : (-5,0)
 
-        threshold : int | flaot
+        threshold : int | float
             | :math:`threshold` - Degree threshold above which forcing accumulates, and below which chilling accumulates.
             | default : 5
 
         t1 : int
-            | :math:`` - DOY which forcing and chilling accumulationg starts.
+            | :math:`` - DOY which forcing and chilling accumulation starts.
             | default : 1 (Jan 1)
 
     Notes:
@@ -108,7 +108,7 @@ class MSB(_base_model):
         d : int | float
             | :math:`d` - Correction factor using spring temperature
 
-        threshold : int | flaot
+        threshold : int | float
             | :math:`threshold` - Degree threshold above which forcing 
               accumulates, and below which chilling accumulates.
             | default : 5

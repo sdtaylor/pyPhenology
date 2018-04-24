@@ -128,7 +128,7 @@ def daylength(doy, latitude):
     # set constants
     latitude = (np.pi / 180) * latitude
 
-    # Correct for winter solistice
+    # Correct for winter solstice
     doy += 11
 
     # earths ecliptic
