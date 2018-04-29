@@ -8,22 +8,15 @@ from copy import deepcopy
 
 
 class _base_model():
-    def __init__(self, loss_function='rmse'):
+    def __init__(self):
         self._fitted_params = {}
         self.obs_fitting = None
         self.temperature_fitting = None
         self.doy_series = None
         self.debug = False
 
-        if isinstance(loss_function, str):
-            self.loss_function = utils.optimize.get_loss_function(method=loss_function)
-        elif callable(loss_function):
-            # validation.validate_loss_function(loss_function)
-            self.loss_function = loss_function
-        else:
-            raise TypeError('Unknown loss_function. Must be string or custom function')
-
-    def fit(self, observations, predictors, method='DE', optimizer_params='practical',
+    def fit(self, observations, predictors, loss_function='rmse',
+            method='DE', optimizer_params='practical',
             verbose=False, debug=False):
         """Estimate the parameters of a model
 
@@ -35,6 +28,12 @@ class _base_model():
                 pandas dataframe of associated predictor variables such as
                 temperature, precipitation, and day length
 
+            loss_function : str, or function
+            
+            A string for built in loss functions (currently only 'rmse'), 
+            or a customized function which accpepts 2 arguments. obs and pred,
+            both numpy arrays of the same shape
+            
             method : str
                 Optimization method to use. Either 'DE' or 'BF' for differential
                 evolution or brute force methods.
@@ -53,6 +52,7 @@ class _base_model():
 
         validation.validate_predictors(predictors, self._required_data['predictor_columns'])
         validation.validate_observations(observations)
+        self._set_loss_function(loss_function)
         if len(self._parameters_to_estimate) == 0:
             raise RuntimeError('No parameters to estimate')
 
@@ -150,6 +150,21 @@ class _base_model():
                                         **self._fitted_params)
 
         return predictions
+
+    def _set_loss_function(self, loss_function):
+        """The loss function (ie. RMSE)
+
+        Either a sting for a built in function, or a customized
+        function which accpepts 2 arguments. obs, pred, both 
+        numpy arrays of the same shape
+        """
+        if isinstance(loss_function, str):
+            self.loss_function = utils.optimize.get_loss_function(method=loss_function)
+        elif callable(loss_function):
+            # validation.validate_loss_function(loss_function)
+            self.loss_function = loss_function
+        else:
+            raise TypeError('Unknown loss_function. Must be string or custom function')
 
     def _organize_predictors(self, observations, predictors, for_prediction):
         """Convert data to internal structure used by models
