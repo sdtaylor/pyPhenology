@@ -1,9 +1,9 @@
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 import warnings
 
 
-class Linear(_base_model):
+class Linear(BaseModel):
     """Linear Regression Model
 
     A 2 parameter regression model with :math:`DOY` as
@@ -35,7 +35,7 @@ class Linear(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'intercept': (-67, 298), 'slope': (-25, 25),
                                         'spring_start': 0, 'spring_end': 90}
         self._organize_parameters(parameters)
@@ -50,7 +50,7 @@ class Linear(_base_model):
         return mean_spring_temp * slope + intercept
 
 
-class Naive(_base_model):
+class Naive(BaseModel):
     """A naive model of the spatially interpolated mean
 
     This is the mean doy for an event adjusted for latitude, essentially    
@@ -75,7 +75,7 @@ class Naive(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'intercept': (-67, 298), 'slope': (-25, 25)}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy'],

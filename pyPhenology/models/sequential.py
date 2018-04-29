@@ -1,8 +1,8 @@
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 
 
-class Sequential(_base_model):
+class Sequential(BaseModel):
     """The sequential model
 
     This uses a triangular response for chilling, and growing degree days for forcing.
@@ -34,7 +34,7 @@ class Sequential(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'t0': (-67, 298), 'c_t_min': (-25, 10), 'c_t_opt': (-10, 10),
                                         'c_t_max': (0, 10), 'C': (0, 100), 'f_t': (0, 20), 'F': (0, 1000)}
         self._organize_parameters(parameters)

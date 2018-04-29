@@ -1,9 +1,9 @@
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 import numpy as np
 
 
-class ThermalTime(_base_model):
+class ThermalTime(BaseModel):
     """Thermal Time Model
 
     The classic growing degree day model using a fixed temperature
@@ -30,7 +30,7 @@ class ThermalTime(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'t1': (-67, 298), 'T': (-25, 25), 'F': (0, 1000)}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
@@ -50,7 +50,7 @@ class ThermalTime(_base_model):
                                               threshold=F)
 
 
-class M1(_base_model):
+class M1(BaseModel):
     """The Thermal Time Model with a daylength correction.
 
     Event happens on :math:`DOY` when the following is met:
@@ -88,7 +88,7 @@ class M1(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'t1': (-67, 298), 'T': (-25, 25),
                                         'F': (0, 1000), 'k': (0, 50)}
         self._organize_parameters(parameters)

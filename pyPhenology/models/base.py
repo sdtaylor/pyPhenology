@@ -7,7 +7,7 @@ from warnings import warn
 from copy import deepcopy
 
 
-class _base_model():
+class BaseModel():
     def __init__(self):
         self._fitted_params = {}
         self.obs_fitting = None
