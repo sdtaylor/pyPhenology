@@ -186,3 +186,236 @@ class BootstrapModel():
         utils.misc.write_saved_model(model_info=model_info,
                                      model_file=filename,
                                      overwrite=overwrite)
+
+class WeightedEnsemble():
+    """Fit an ensemble of many models with associated weights
+
+    """
+    def __init__(self, core_models, method='stacking'):
+        """Weighted Ensemble model
+        
+        core_models : list of type str, pyPhenology model, or a saved model file
+            list of strings:
+                Names of models to include in the ensemble. These will be fit
+                with their respective default parameter setttings.
+                Example:
+                
+                ensemble = WeightedEnsemble(core_models=['ThermalTime','Unichill','Alternating'])
+            
+            list of pyPhenology.models
+                Initialized models to be fit within the ensemble.
+                Example:
+                m1 = Thermaltime(parameters={'T':0})
+                m2 = Thermaltime(parameters={'T':5})
+                m3 = Thermaltime(parameters={'T':-5})
+                m4 = Thermaltime(parameters={'T':10})
+                m5 = Uniforc(parameters={'t1':1})
+                m6 = Uniforc(parameters={'t1':30})
+                m7 = Uniforc(parameters={'t1':60})
+                
+                ensemble = WeightedEnsemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
+        """
+        self.observations = None
+        self.predictors = None
+        self.model_list = core_models
+        self.method = method
+        self.weights = np.array([None] * len(core_models))
+    
+        if isinstance(core_models, list):
+            pass
+            # list of unintialized models
+        elif isinstance(core_models, str):
+            pass
+            # filename to load model
+        else:
+            raise TypeError()
+    
+    def fit(self, observations, predictors, iterations=10, held_out_percent=0.2,
+            loss_function='rmse', method='DE', optimizer_params='practical',
+            verbose=False, debug=False):
+        """Fit the underlying core models
+        
+        Parameters:
+            observations : dataframe
+                pandas dataframe of phenology observations
+            
+            predictors : dataframe
+                pandas dataframe of associated predictorss
+                
+            kwargs :
+                Other arguments passed to core model fitting (eg. optimzer methods)
+        """
+        #TODO: do the predictors transform here cause so it doesn't get reapated a bunch
+        # need to wait till fit takes arrays directly
+        self.observations = observations
+        self.predictors = predictors
+        
+        self.fitted_weights = np.empty((iterations, len(self.model_list)))
+        
+        loss = utils.optimize.get_loss_function('rmse')
+        weight_bounds = [(1,10)] * len(self.model_list)
+        translate_scipy_weights = lambda w: np.array(w)
+        for i in range(iterations):
+            held_out_observations = self.observations.sample(frac=held_out_percent,
+                                                             replace=False)
+            training_observations = self.observations[~self.observations.isin(held_out_observations.index)]
+            
+            held_out_predictions = []
+
+            for model in self.model_list:
+                model.fit(training_observations, predictors,
+                          loss_function=loss_function, method=method, 
+                          optimizer_params=optimizer_params,
+                          verbose=verbose, debug=debug)
+                
+                held_out_predictions.append(model.predict(held_out_observations, predictors=predictors))
+            
+            held_out_predictions = np.array(held_out_predictions).T
+    
+            def weighted_loss(w):
+                w = np.array([w])
+                w = w/w.sum()
+                pred = (held_out_predictions * w).sum(1)
+                return loss(held_out_observations.doy.values, pred)
+            
+            iteration_weights = utils.optimize.fit_parameters(function_to_minimize = weighted_loss,
+                                                  bounds = weight_bounds,
+                                                  method='DE',
+                                                  optimizer_params=optimizer_params,
+                                                  results_translator=translate_scipy_weights)
+            iteration_weights = iteration_weights / iteration_weights.sum()
+            self.fitted_weights[i] = iteration_weights
+        
+        self.weights = self.fitted_weights.mean(0)
+        
+        # Refit the core models one last time to the full dataset. These 
+        # fitted models will be compbined with the weights for predictions
+        for model in self.model_list:
+                model.fit(observations, predictors,
+                          loss_function=loss_function, method=method, 
+                          optimizer_params=optimizer_params,
+                          verbose=verbose, debug=debug)
+
+    def predict(self, to_predict=None, predictors=None, **kwargs):
+        """Make predictions from the bootstrapped models.
+
+        Predictions will be made using each of the bootstrapped models.
+        The final results will be the mean or median of all bootstraps, or all bootstrapped
+        model results in 2d array.
+
+        Parameters:
+            aggregation : str
+                Either 'mean','median', or 'none'. 'none' return *all* predictions
+                in an array of size (num_bootstraps, num_samples)
+
+        """
+        # Get the organized predictors. This is done from the 1st model in the
+        # list, but since they're all the same model it should be valid for all.
+        # Only works if there are new predictors. Otherwise the data used for
+        # fitting will be  used.
+        # TODO: implement this
+        # if predictors is not None:
+        #   predictors = self.model_list[0]._organize_predictors(observations=to_predict,
+        #                                                         predictors=predictors,
+        #                                                         for_prediction=True)
+        self._check_parameter_completeness()
+        
+        if predictors is None:
+            predictors = self.predictors
+        if to_predict is None:
+            to_predict = self.observations
+
+        predictions = []
+        for model in self.model_list:
+            predictions.append(model.predict(to_predict=to_predict,
+                                             predictors=predictors,
+                                             **kwargs))
+
+        predictions = np.array(predictions)
+        return (predictions.T * self.weights).sum(1)
+    
+    def score(self, metric='rmse', doy_observed=None,
+              to_predict=None, predictors=None):
+        """Get the scoring metric for fitted data
+
+        Get the score on the dataset used for fitting (if fitting was done),
+        otherwise set ``to_predict``, and ``predictors`` as used in
+        ``model.predict()``. In the latter case score is calculated using
+        observed values ``doy_observed``.
+
+        Metrics available are root mean square error (``rmse``) and AIC (``aic``).
+        For AIC the number of parameters in the model is set to the number of
+        parameters actually estimated in ``fit()``, not the total number of
+        model parameters. 
+
+        Parameters:
+            metric : str
+                Either 'rmse' or 'aic'
+        """
+        self._check_parameter_completeness()
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
+
+        if doy_observed is None:
+            doy_observed = self.observations.doy.values
+        elif isinstance(doy_observed, np.ndarray):
+            pass
+        else:
+            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        error_function = utils.optimize.get_loss_function(method=metric)
+
+        if metric == 'aic':
+            error = error_function(doy_observed, doy_estimated,
+                                   n_param=len(self._parameters_to_estimate))
+        else:
+            error = error_function(doy_observed, doy_estimated)
+
+        return error
+
+    def _check_parameter_completeness(self):
+        """True if all parameters have been set from fitting or loading at initialization"""
+        if not len(self.weights) == len(self.model_list):
+            raise RuntimeError('Model not fit')
+        
+        [m._check_parameter_completeness() for m in self.model_list]
+    
+    def save_params(self, filename, overwrite=False):
+        """Save model parameters
+
+        Note this will save details on all bootstrapped models, and 
+        can only be loaded again as a bootstrap model.
+
+        Parameters:
+            filename : str
+                Filename to save model to. Note this can be loaded again by
+                passing the filename in the ``parameters`` argument, but only
+                with the BootstrapModel.
+
+            overwrite : bool
+                Overwrite the file if it exists
+
+        """
+        model_parameter_status = [m._parameters_are_set() for m in self.model_list]
+        if not np.all(model_parameter_status):
+            raise RuntimeError('Cannot save weighted ensemble model, not all parameters set')
+
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+            core_model_info[-1].update({'weight': self.weights[i]})
+
+        model_info = {'model_name': type(self).__name__,
+                      'parameters': core_model_info}
+
+        utils.misc.write_saved_model(model_info=model_info,
+                                     model_file=filename,
+                                     overwrite=overwrite)
+    
+    def get_params(self):
+        raise NotImplementedError()
+    
+    def get_weights(self):
+        self._check_parameter_completeness()
+        return self.weights
+    
