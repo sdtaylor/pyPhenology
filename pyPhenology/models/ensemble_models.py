@@ -217,16 +217,31 @@ class WeightedEnsemble():
         """
         self.observations = None
         self.predictors = None
-        self.model_list = core_models
         self.method = method
-        self.weights = np.array([None] * len(core_models))
-    
+
         if isinstance(core_models, list):
-            pass
-            # list of unintialized models
+            # List of models to fit
+            self.model_list = core_models
+            self.weights = np.array([None] * len(core_models))
+            
         elif isinstance(core_models, str):
-            pass
-            # filename to load model
+            # A filename pointing toward a file from save_params()
+            model_info = utils.misc.read_saved_model(model_file=core_models)
+
+            if type(self).__name__ != model_info['model_name']:
+                raise RuntimeError('Saved model file does not match model class. ' +
+                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                                 b=type(self).__name__))
+
+            self.model_list = []
+            self.weights = []
+            for model in model_info['core_models']:
+                Model = load_model(model['model_name'])
+                self.model_list.append(Model(parameters=model['parameters']))
+                self.weights.append(model['weight'])
+
+            self.weights = np.array(self.weights)
+            
         else:
             raise TypeError()
     
@@ -304,9 +319,7 @@ class WeightedEnsemble():
         model results in 2d array.
 
         Parameters:
-            aggregation : str
-                Either 'mean','median', or 'none'. 'none' return *all* predictions
-                in an array of size (num_bootstraps, num_samples)
+            see core model description
 
         """
         # Get the organized predictors. This is done from the 1st model in the
@@ -396,24 +409,23 @@ class WeightedEnsemble():
                 Overwrite the file if it exists
 
         """
-        model_parameter_status = [m._parameters_are_set() for m in self.model_list]
-        if not np.all(model_parameter_status):
-            raise RuntimeError('Cannot save weighted ensemble model, not all parameters set')
-
-        core_model_info = []
-        for i, model in enumerate(self.model_list):
-            core_model_info.append(deepcopy(model._get_model_info()))
-            core_model_info[-1].update({'weight': self.weights[i]})
+        self._check_parameter_completeness()
 
         model_info = {'model_name': type(self).__name__,
-                      'parameters': core_model_info}
+                      'core_models': self.get_params()}
 
         utils.misc.write_saved_model(model_info=model_info,
                                      model_file=filename,
                                      overwrite=overwrite)
     
     def get_params(self):
-        raise NotImplementedError()
+        self._check_parameter_completeness()
+        
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+            core_model_info[-1].update({'weight': self.weights[i]})
+        return core_model_info
     
     def get_weights(self):
         self._check_parameter_completeness()
