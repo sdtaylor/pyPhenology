@@ -352,9 +352,8 @@ class WeightedEnsemble():
         if not isinstance(aggregation, str):
             raise TypeError('aggregation should be a string. got: ' + str(type(aggregation)))
             
-        if predictors is None:
+        if predictors is None and to_predict is None:
             predictors = self.predictors
-        if to_predict is None:
             to_predict = self.observations
 
         predictions = []
@@ -366,7 +365,9 @@ class WeightedEnsemble():
         predictions = np.array(predictions)
 
         if aggregation=='weighted_mean':
-            return (predictions.T * self.weights).sum(1)
+            # Transpose to align the model axis with the 1D weight array
+            # then transpose back to sum the weigted predictions.
+            return (predictions.T * self.weights).T.sum(0)
         elif aggregation=='none':
             return self.weights, predictions
         else:
