@@ -198,13 +198,30 @@ class WeightedEnsemble():
         2. Fit each core model on the training set.
         3. Make predictions on the testing set.
         4. Find the weights which minimize RMSE of the testing set. 
-        5. Repeat 1-4 for M iterations.
+        5. Repeat 1-4 for H iterations.
         6. Take the average weight for each model from all iterations as
            final weight used in the ensemble. These will sum to 1. 
         7. Fit the core models a final time on the full dataset given
            to the fit() method. Parameters derived from this final
            iterations will be used to make predictions. 
-           
+
+    Note that the core models must be passed initialized. They will be
+    fit within the Weighted Ensemble model::
+
+                from pyPhenology import models, utils
+                observations, predictors = utils.load_test_data(name='vaccinium')
+                
+                m1 = models.Thermaltime(parameters={'T':0})
+                m2 = models.Thermaltime(parameters={'T':5})
+                m3 = models.Thermaltime(parameters={'T':-5})
+                m4 = models.Thermaltime(parameters={'T':10})
+                m5 = models.Uniforc(parameters={'t1':1})
+                m6 = models.Uniforc(parameters={'t1':30})
+                m7 = models.Uniforc(parameters={'t1':60})
+                
+                ensemble = models.WeightedEnsemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
+                ensemble.fit(observations, predictors)
+
     Notes:
         Dormann, Carsten F., et al. Model averaging in ecology: a review of
         Bayesian, information‐theoretic and tactical approaches for predictive
@@ -215,18 +232,6 @@ class WeightedEnsemble():
         """Weighted Ensemble model
         
         core_models : list of pyPhenology models, or a saved model file
-            list of pyPhenology.models
-                Initialized models to be fit within the ensemble.
-                Example:
-                m1 = Thermaltime(parameters={'T':0})
-                m2 = Thermaltime(parameters={'T':5})
-                m3 = Thermaltime(parameters={'T':-5})
-                m4 = Thermaltime(parameters={'T':10})
-                m5 = Uniforc(parameters={'t1':1})
-                m6 = Uniforc(parameters={'t1':30})
-                m7 = Uniforc(parameters={'t1':60})
-                
-                ensemble = WeightedEnsemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
 
         """
         self.observations = None
@@ -242,7 +247,7 @@ class WeightedEnsemble():
             model_info = utils.misc.read_saved_model(model_file=core_models)
 
             if type(self).__name__ != model_info['model_name']:
-                raise RuntimeError('Saved model file does not match model class. ' +
+                raise RuntimeError('Saved model file does not match model class. ',
                                    'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
                                                                                  b=type(self).__name__))
 
@@ -269,7 +274,14 @@ class WeightedEnsemble():
                 pandas dataframe of phenology observations
             
             predictors : dataframe
-                pandas dataframe of associated predictorss
+                pandas dataframe of associated predictors
+            
+            iterations : int
+                Number of stacking iterations to use.
+            
+            held_out_percent : float
+                Percent of randomly held out data to use in each stacking
+                iteration. Must be between 0 and 1. 
                 
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
@@ -331,11 +343,10 @@ class WeightedEnsemble():
 
     def predict(self, to_predict=None, predictors=None,
                 aggregation = 'weighted_mean', **kwargs):
-        """Make predictions from the bootstrapped models.
+        """Make predictions..
 
-        Predictions will be made using each of the bootstrapped models.
-        The final results will be the mean or median of all bootstraps, or all bootstrapped
-        model results in 2d array.
+        Predictions will be made using each core models, then a final average
+        model derrived using the fitted weights.
 
         Parameters:
             see core model description
@@ -366,7 +377,7 @@ class WeightedEnsemble():
 
         if aggregation=='weighted_mean':
             # Transpose to align the model axis with the 1D weight array
-            # then transpose back to sum the weigted predictions.
+            # then transpose back to sum the weighted predictions.
             return (predictions.T * self.weights).T.sum(0)
         elif aggregation=='none':
             return self.weights, predictions
@@ -384,14 +395,11 @@ class WeightedEnsemble():
         ``model.predict()``. In the latter case score is calculated using
         observed values ``doy_observed``.
 
-        Metrics available are root mean square error (``rmse``) and AIC (``aic``).
-        For AIC the number of parameters in the model is set to the number of
-        parameters actually estimated in ``fit()``, not the total number of
-        model parameters. 
+        Metrics available are root mean square error (``rmse``).
 
         Parameters:
             metric : str
-                Either 'rmse' or 'aic'
+                Currently only rmse is available for WeightedEnsemble
         """
         self._check_parameter_completeness()
         doy_estimated = self.predict(to_predict=to_predict,
@@ -406,13 +414,7 @@ class WeightedEnsemble():
 
         error_function = utils.optimize.get_loss_function(method=metric)
 
-        if metric == 'aic':
-            error = error_function(doy_observed, doy_estimated,
-                                   n_param=len(self._parameters_to_estimate))
-        else:
-            error = error_function(doy_observed, doy_estimated)
-
-        return error
+        return error_function(doy_observed, doy_estimated)
 
     def _check_parameter_completeness(self):
         """Make sure all parameters have been set from fitting or loading at initialization"""
@@ -424,14 +426,13 @@ class WeightedEnsemble():
     def save_params(self, filename, overwrite=False):
         """Save model parameters
 
-        Note this will save details on all bootstrapped models, and 
-        can only be loaded again as a bootstrap model.
+        Note this can only be loaded again as a WeightedEnsemble model. 
 
         Parameters:
             filename : str
                 Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``parameters`` argument, but only
-                with the BootstrapModel.
+                passing the filename in the ``core_models`` argument, or by
+                using ``utils.load_saved_model``.
 
             overwrite : bool
                 Overwrite the file if it exists
