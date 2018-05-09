@@ -28,9 +28,9 @@ class Linear(BaseModel):
             | The start day of spring
             | default : 1 (Jan 1)
 
-        spring_end : int
-            | The last day of spring
-            | default : 90 \(March 30\)
+        spring_length : int
+            | The length of spring in days
+            | default : 90
 
     """
 
