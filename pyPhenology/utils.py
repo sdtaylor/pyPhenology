@@ -113,9 +113,11 @@ def load_saved_model(filename):
 
     model_info = models.utils.misc.read_saved_model(filename)
 
+    # These ensemble methods have their own code for loading saved files
     if model_info['model_name'] == 'BootstrapModel':
-        # The bootstrap model has it's own code for loading saved files
         model = models.BootstrapModel(parameters=filename)
+    elif model_info['model_name'] == 'WeightedEnsemble':
+        model = models.WeightedEnsemble(core_models=filename)
     else:
         # For all other ones just need to pass the parameters
         Model = load_model(model_info['model_name'])
