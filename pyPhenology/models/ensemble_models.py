@@ -190,18 +190,31 @@ class BootstrapModel():
 class WeightedEnsemble():
     """Fit an ensemble of many models with associated weights
 
+    This model can combine multiple models into an ensemble where predictions
+    are the weighted average of the predictions from each model. The weights
+    are derived via "stacking" as described in Dormann et al. 2018. The 
+    steps are as followed:
+        1. Subset the data into random training/testing sets.
+        2. Fit each core model on the training set.
+        3. Make predictions on the testing set.
+        4. Find the weights which minimize RMSE of the testing set. 
+        5. Repeat 1-4 for M iterations.
+        6. Take the average weight for each model from all iterations as
+           final weight used in the ensemble. These will sum to 1. 
+        7. Fit the core models a final time on the full dataset given
+           to the fit() method. Parameters derived from this final
+           iterations will be used to make predictions. 
+           
+    Notes:
+        Dormann, Carsten F., et al. Model averaging in ecology: a review of
+        Bayesian, information‐theoretic and tactical approaches for predictive
+        inference. Ecological Monographs. https://doi.org/10.1002/ecm.1309
+
     """
-    def __init__(self, core_models, method='stacking'):
+    def __init__(self, core_models):
         """Weighted Ensemble model
         
-        core_models : list of type str, pyPhenology model, or a saved model file
-            list of strings:
-                Names of models to include in the ensemble. These will be fit
-                with their respective default parameter setttings.
-                Example:
-                
-                ensemble = WeightedEnsemble(core_models=['ThermalTime','Unichill','Alternating'])
-            
+        core_models : list of pyPhenology models, or a saved model file
             list of pyPhenology.models
                 Initialized models to be fit within the ensemble.
                 Example:
@@ -214,10 +227,10 @@ class WeightedEnsemble():
                 m7 = Uniforc(parameters={'t1':60})
                 
                 ensemble = WeightedEnsemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
+
         """
         self.observations = None
         self.predictors = None
-        self.method = method
 
         if isinstance(core_models, list):
             # List of models to fit
@@ -243,7 +256,8 @@ class WeightedEnsemble():
             self.weights = np.array(self.weights)
             
         else:
-            raise TypeError()
+            raise TypeError('core_models must be list of pyPhenology models',
+                            'or a filename for a saved model')
     
     def fit(self, observations, predictors, iterations=10, held_out_percent=0.2,
             loss_function='rmse', method='DE', optimizer_params='practical',
@@ -260,14 +274,12 @@ class WeightedEnsemble():
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
-        #TODO: do the predictors transform here cause so it doesn't get reapated a bunch
-        # need to wait till fit takes arrays directly
         self.observations = observations
         self.predictors = predictors
         
         self.fitted_weights = np.empty((iterations, len(self.model_list)))
         
-        loss = utils.optimize.get_loss_function('rmse')
+        loss = utils.optimize.get_loss_function(loss_function)
         weight_bounds = [(1,10)] * len(self.model_list)
         translate_scipy_weights = lambda w: np.array(w)
         for i in range(iterations):
@@ -287,6 +299,7 @@ class WeightedEnsemble():
             
             held_out_predictions = np.array(held_out_predictions).T
     
+            # Special funtion for use inside scipy.optimize routines
             def weighted_loss(w):
                 w = np.array([w])
                 w = w/w.sum()
@@ -294,14 +307,19 @@ class WeightedEnsemble():
                 return loss(held_out_observations.doy.values, pred)
             
             iteration_weights = utils.optimize.fit_parameters(function_to_minimize = weighted_loss,
-                                                  bounds = weight_bounds,
-                                                  method='DE',
-                                                  optimizer_params=optimizer_params,
-                                                  results_translator=translate_scipy_weights)
+                                                              bounds = weight_bounds,
+                                                              method='DE',
+                                                              optimizer_params=optimizer_params,
+                                                              results_translator=translate_scipy_weights)
             iteration_weights = iteration_weights / iteration_weights.sum()
             self.fitted_weights[i] = iteration_weights
         
         self.weights = self.fitted_weights.mean(0)
+        
+        # Sum of weights should equal or be extremely close to 1
+        summed_weights = self.weights.sum().round(5)
+        if summed_weights != 1.0:
+            raise RuntimeError('Weights do not sum to 1, got '+str(summed_weights))
         
         # Refit the core models one last time to the full dataset. These 
         # fitted models will be compbined with the weights for predictions
@@ -311,7 +329,8 @@ class WeightedEnsemble():
                           optimizer_params=optimizer_params,
                           verbose=verbose, debug=debug)
 
-    def predict(self, to_predict=None, predictors=None, **kwargs):
+    def predict(self, to_predict=None, predictors=None,
+                aggregation = 'weighted_mean', **kwargs):
         """Make predictions from the bootstrapped models.
 
         Predictions will be made using each of the bootstrapped models.
@@ -320,19 +339,19 @@ class WeightedEnsemble():
 
         Parameters:
             see core model description
+            
+            aggregation : str
+                Either 'weighted_mean' to get a normal prediciton, or 'none'
+                to get predictions for all models. If using 'none' this returns
+                a tuple of (weights, predictions). 
 
         """
-        # Get the organized predictors. This is done from the 1st model in the
-        # list, but since they're all the same model it should be valid for all.
-        # Only works if there are new predictors. Otherwise the data used for
-        # fitting will be  used.
-        # TODO: implement this
-        # if predictors is not None:
-        #   predictors = self.model_list[0]._organize_predictors(observations=to_predict,
-        #                                                         predictors=predictors,
-        #                                                         for_prediction=True)
+
         self._check_parameter_completeness()
         
+        if not isinstance(aggregation, str):
+            raise TypeError('aggregation should be a string. got: ' + str(type(aggregation)))
+            
         if predictors is None:
             predictors = self.predictors
         if to_predict is None:
@@ -345,8 +364,16 @@ class WeightedEnsemble():
                                              **kwargs))
 
         predictions = np.array(predictions)
-        return (predictions.T * self.weights).sum(1)
-    
+
+        if aggregation=='weighted_mean':
+            return (predictions.T * self.weights).sum(1)
+        elif aggregation=='none':
+            return self.weights, predictions
+        else:
+            raise ValueError('Unknown aggregation: ' + str(aggregation))
+        
+        
+
     def score(self, metric='rmse', doy_observed=None,
               to_predict=None, predictors=None):
         """Get the scoring metric for fitted data
@@ -387,7 +414,7 @@ class WeightedEnsemble():
         return error
 
     def _check_parameter_completeness(self):
-        """True if all parameters have been set from fitting or loading at initialization"""
+        """Make sure all parameters have been set from fitting or loading at initialization"""
         if not len(self.weights) == len(self.model_list):
             raise RuntimeError('Model not fit')
         
@@ -420,13 +447,13 @@ class WeightedEnsemble():
     
     def get_params(self):
         self._check_parameter_completeness()
-        
+
         core_model_info = []
         for i, model in enumerate(self.model_list):
             core_model_info.append(deepcopy(model._get_model_info()))
             core_model_info[-1].update({'weight': self.weights[i]})
         return core_model_info
-    
+
     def get_weights(self):
         self._check_parameter_completeness()
         return self.weights
