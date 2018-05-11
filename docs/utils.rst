@@ -30,9 +30,7 @@ mean daily temperature derived from the PRISM dataset. The data
 is in pandas ``data.frames`` as outlined in :ref:`data structures <data_structure>`.
 
 The first is observations of `Vaccinium corymbosum` from Harvard Forest, with both
-flower and budburst phenophases.
-is observations of `Populus tremuloides` (Aspen) from the National Phenology Network.
-Both have flower and budburst phenophases available. 
+flower and budburst phenophases. 
 
 ::
 
