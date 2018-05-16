@@ -12,8 +12,10 @@ class Linear(BaseModel):
     .. math::
         DOY = \\beta_{1} + \\beta_{2}T_{mean}
 
-    where :math:`T_{mean}` is the mean spring temperature.
-    The start and end of spring is configurable.
+    where :math:`T_{mean}` is the mean temperature of the time period specified.
+    By default it is set to model spring phenology (with mean temperature of
+    Jan. 1 - March 31). This can also be used for fall phenology by setting the
+    time parameters to the late summer/fall season.
 
     Parameters:
         intercept : int | float
@@ -24,12 +26,12 @@ class Linear(BaseModel):
             | :math:`\\beta_{1}`, Slope of the model
             | default : (-25,25)
 
-        spring_start : int
-            | The start day of spring
+        time_start : int
+            | Start doy for the season of interest
             | default : 1 (Jan 1)
 
-        spring_length : int
-            | The length of spring in days
+        time_length : int
+            | The length of the season in days
             | default : 90
 
     """
@@ -37,16 +39,16 @@ class Linear(BaseModel):
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
         self.all_required_parameters = {'intercept': (-67, 298), 'slope': (-25, 25),
-                                        'spring_start': 0, 'spring_length': 90}
+                                        'time_start': 0, 'time_length': 90}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
                                'predictors': ['temperature', 'doy_series']}
 
     def _apply_model(self, temperature, doy_series, intercept, slope,
-                     spring_start, spring_length):
+                     time_start, time_length):
         mean_spring_temp = utils.transforms.mean_temperature(temperature, doy_series,
-                                                             start_doy=spring_start,
-                                                             end_doy=spring_start + spring_length)
+                                                             start_doy=time_start,
+                                                             end_doy=time_start + time_length)
         return mean_spring_temp * slope + intercept
 
 
