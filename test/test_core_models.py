@@ -4,7 +4,7 @@ import pytest
 obs, predictors = utils.load_test_data()
 
 core_model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB',
-                    'Linear','Sequential','M1','Naive']
+                    'Linear','Sequential','M1','Naive','FallCooling']
 
 # Setup a list of (model_name, fitted_model object)
 fitted_models = [utils.load_model(model_name)() for model_name in core_model_names]

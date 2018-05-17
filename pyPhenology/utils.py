@@ -83,7 +83,7 @@ def load_model(name):
     """Load a model via a string
 
     Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB',
-                   'Sequential','Linear','M1','Naive']``
+                   'Sequential','Linear','M1','FallCooling','Naive']``
     """
     if not isinstance(name, str):
         raise TypeError('name must be string, got' + type(name))
@@ -103,6 +103,8 @@ def load_model(name):
         return models.Linear
     elif name == 'M1':
         return models.M1
+    elif name == 'FallCooling':
+        return models.FallCooling
     elif name == 'Naive':
         return models.Naive
     else:
