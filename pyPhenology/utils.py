@@ -3,7 +3,7 @@ import pkg_resources
 from . import models
 
 
-def load_test_data(name='vaccinium', phenophase='both'):
+def load_test_data(name='vaccinium', phenophase='all'):
     """Pre-loaded phenology data
 
     Datasets are available with the package. They include multiple phenophases
@@ -28,7 +28,7 @@ def load_test_data(name='vaccinium', phenophase='both'):
 
         phenophase : str | int, optional
             Name of the phenophase. Either 'budburst','flowers', 'colored_leaves',
-            or 'all'. Or the phenophase id (498, 371 or 501)
+            or 'all'. Or the phenophase id (371 or 501, or 498)
 
     Returns:
         obs, temp : tuple
