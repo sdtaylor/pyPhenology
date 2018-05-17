@@ -93,7 +93,7 @@ test_cases.append({'test_name' : 'Linear Model Aspen leaves',
                    'model' : models.Linear,
                    'fitting_obs':aspen_leaves,
                    'fitting_temp':aspen_temp,
-                   'expected_params':{'intercept': 113, 'slope': -1, 'time_start': 0, 'time_length': 90},
+                   'expected_params':{'intercept': 118, 'slope': 0, 'time_start': 0, 'time_length': 90},
                    'fitting_ranges':{},
                    'fitting_params':thorough_DE_optimization})
 
@@ -101,7 +101,7 @@ test_cases.append({'test_name' : 'Naive Model Aspen leaves',
                    'model' : models.Naive,
                    'fitting_obs':aspen_leaves,
                    'fitting_temp':aspen_temp,
-                   'expected_params':{'intercept': 109, 'slope': 0},
+                   'expected_params':{'intercept': 156, 'slope': 0},
                    'fitting_ranges':{},
                    'fitting_params':thorough_DE_optimization})
 
