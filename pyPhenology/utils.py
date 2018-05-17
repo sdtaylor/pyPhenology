@@ -3,7 +3,7 @@ import pkg_resources
 from . import models
 
 
-def load_test_data(name='vaccinium', phenophase='both'):
+def load_test_data(name='vaccinium', phenophase='all'):
     """Pre-loaded phenology data
 
     Datasets are available with the package. They include multiple phenophases
@@ -16,18 +16,19 @@ def load_test_data(name='vaccinium', phenophase='both'):
     Available datasets:
         'vaccinium'
             Vaccinium corymbosum phenology from Harvard Forest
-            Both flowers (phenophase 501) and leaves (phenophase 371)
+            Both flowers (phenophase 501) and budburst (phenophase 371)
         'aspen'
             Populus tremuloides (aspen) phenology from the National Phenology
-            Dataset. Both flowers  (phenophase 501) and leaves (phenophase 371)
+            Dataset. Has flowers  (phenophase 501), budburst (phenophase 371),
+            and colored leaves for fall senesence (phenophase 498)
 
     Parameters:
         name : str, optional
             Name of the test dataset
 
         phenophase : str | int, optional
-            Name of the phenophase. Either 'budburst','flowers', or 'both'.
-            Or the phenophase id (371 or 501)
+            Name of the phenophase. Either 'budburst','flowers', 'colored_leaves',
+            or 'all'. Or the phenophase id (371 or 501, or 498)
 
     Returns:
         obs, temp : tuple
@@ -48,7 +49,7 @@ def load_test_data(name='vaccinium', phenophase='both'):
         raise ValueError('Uknown dataset name: ' + str(name))
 
     if isinstance(phenophase, int):
-        if phenophase not in [371, 501]:
+        if phenophase not in [371, 501, 498]:
             raise ValueError('uknown phenophase: ' + str(phenophase))
         phenophase_ids = [phenophase]
     elif isinstance(phenophase, str):
@@ -56,8 +57,10 @@ def load_test_data(name='vaccinium', phenophase='both'):
             phenophase_ids = [371]
         elif phenophase == 'flowers':
             phenophase_ids = [501]
-        elif phenophase == 'both':
-            phenophase_ids = [371, 501]
+        elif phenophase == 'colored_leaves':
+            phenophase_ids = [498]
+        elif phenophase == 'all':
+            phenophase_ids = [371, 501, 498]
         else:
             raise ValueError('unknown phenophase: ' + phenophase)
     else:
@@ -69,6 +72,9 @@ def load_test_data(name='vaccinium', phenophase='both'):
     temp = pd.read_csv(temp_file)
 
     obs = obs[obs.phenophase.isin(phenophase_ids)]
+    
+    if len(obs) == 0:
+        raise RuntimeError('Phenophase {p} not available for dataset {d}'.format(p=phenophase,d=name))
 
     return obs, temp
 
