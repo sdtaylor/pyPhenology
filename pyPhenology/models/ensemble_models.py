@@ -297,7 +297,7 @@ class WeightedEnsemble():
         for i in range(iterations):
             held_out_observations = self.observations.sample(frac=held_out_percent,
                                                              replace=False)
-            training_observations = self.observations[~self.observations.isin(held_out_observations.index)]
+            training_observations = self.observations[~self.observations.index.isin(held_out_observations.index)]
             
             held_out_predictions = []
 
