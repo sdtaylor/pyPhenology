@@ -1,6 +1,7 @@
 import pandas as pd
 import pkg_resources
 from . import models
+from warnings import warn
 
 
 def load_test_data(name='vaccinium', phenophase='all'):
@@ -144,9 +145,21 @@ def check_data(observations, predictors, drop_missing=True, for_prediction=False
 
     predictors_pivoted = predictors.pivot_table(index=['site_id', 'year'], columns='doy', values='temperature').reset_index()
 
-    # This first day of predictors data causes NA issues because of leap years
-    # TODO: generalize this a bit more
-    predictors_pivoted.drop(-67, axis=1, inplace=True)
+    # This first and last day of temperature data can causes NA issues because
+    # of leap years.If thats the case try dropping them
+    first_doy_has_na = predictors_pivoted.iloc[:, 2].isna().any()  # first day will always be col 2
+    if first_doy_has_na:
+        first_doy_column = predictors_pivoted.columns[2]
+        predictors_pivoted.drop(first_doy_column, axis=1, inplace=True)
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=first_doy_column))
+
+    last_doy_index = predictors_pivoted.shape[1] - 1
+    last_doy_has_na = predictors_pivoted.iloc[:, last_doy_index].isna().any()
+    if last_doy_has_na:
+        last_doy_column = predictors_pivoted.columns[-1]
+        predictors_pivoted.drop(last_doy_column, axis=1, inplace=True)
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=last_doy_column))
+
 
     observations_with_temp = observations.merge(predictors_pivoted, on=['site_id', 'year'], how='left')
 
