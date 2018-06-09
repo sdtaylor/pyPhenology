@@ -88,6 +88,12 @@ class BaseModel():
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
 
+        # Check predictions for 999, indicating a bad fit.
+        if np.any(self.predict() == 999):
+            warn('999 values in predictions, indicating lack of convergence '\
+                 'in model fitting. Perhaps try with different optimizer '\
+                 'values.')
+
     def predict(self, to_predict=None, predictors=None):
         """Make predictions
 
