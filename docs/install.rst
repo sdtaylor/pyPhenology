@@ -15,6 +15,10 @@ Required dependencies
 Instructions
 ------------
 
-pyPhenology is currently available only via directly installing from github using pip.::
+Install the current release via pip::
+
+    pip install pyPhenology
+
+or install the latest version via Github using pip + git::
 
     pip install git+git://github.com/sdtaylor/pyPhenology

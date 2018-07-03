@@ -13,7 +13,13 @@ Plant phenology models in python with a scikit-learn inspired API
 ## Installation
 Requires: scipy, pandas, and numpy
 
-Install from Github  
+Install via pip
+
+```
+pip install pyPhenology
+```
+
+Or install the latest version from Github  
 
 ```
 pip install git+git://github.com/sdtaylor/pyPhenology
