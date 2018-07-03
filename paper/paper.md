@@ -23,4 +23,8 @@ pyPhenology has an object oriented API where the same analysis code can be used 
 
 pyPhenology was built with large scale analysis in mind and currently drives the continental scale phenology models on http://phenology.naturecast.org. A similar phenology modeling framework, phenor, is currently available for the R language [@hufkens2018]. 
 
+# Acknowledgements
+
+Development of this software was funded by the Gordon and Betty Moore Foundation’s Data-Driven Discovery Initiative through Grant GBMF4563 to Ethan P. White.
+
 # References
