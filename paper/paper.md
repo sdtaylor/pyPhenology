@@ -1,5 +1,5 @@
 ---
-title: pyPhenology: A python framework for plant phenology modelling
+title: 'pyPhenology: A python framework for plant phenology modelling'
 tags:
     - plants, ecology, modeling, phenology
 authors:
