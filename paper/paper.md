@@ -1,16 +1,17 @@
 ---
 title: 'pyPhenology: A python framework for plant phenology modelling'
 tags:
-    - plants, ecology, modeling, phenology
+    - plants
+    - ecology
+    - modeling
+    - phenology
 authors:
  - name: Shawn David Taylor
-   Orcid: 0000-0002-6178-6903
+   orcid: 0000-0002-6178-6903
    affiliation: 1
 affiliations:
  - name: School of Natural Resources and Environment, University of Florida
    index: 1
-
-
 date: 4 July 2018
 bibliography: paper.bib
 ---
