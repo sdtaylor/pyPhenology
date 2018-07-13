@@ -32,6 +32,10 @@ def test_WeightedEnsemble_predict_default():
     """Predict with no new data should return 1D array"""
     assert weighted_model.predict().shape == obs.doy.values.shape
 
+def test_WeightedEnsemble_score():
+    """The score method should return a number"""
+    assert isinstance(weighted_model.score(), float)
+
 def test_WeightedEnsemble_parameters():
     """Parameters should be the same when loaded again"""
     weighted_model.save_params('model_params.json', overwrite=True)

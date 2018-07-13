@@ -26,6 +26,10 @@ def test_bootstrap_model_predict_none_length():
     """Predict with aggregation='none' returns a 2d array"""
     assert bootstrap_model.predict(aggregation='none').shape[0] == n_bootstraps
 
+def test_bootsrap_model_score():
+    """The score method should return a number"""
+    assert isinstance(bootstrap_model.score(), float)
+
 def test_bootstrap_model_parameters():
     """Parameters should be the same when loaded again"""
     parameters = bootstrap_model.get_params()

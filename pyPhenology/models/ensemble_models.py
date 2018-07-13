@@ -146,6 +146,41 @@ class BootstrapModel():
 
         return predictions
 
+    def score(self, metric='rmse', doy_observed=None,
+              to_predict=None, predictors=None):
+        """Get the scoring metric for fitted data
+
+        Get the score on the dataset used for fitting (if fitting was done),
+        otherwise set ``to_predict``, and ``predictors`` as used in
+        ``model.predict()``. In the latter case score is calculated using
+        observed values ``doy_observed``.
+
+        Metrics available are root mean square error (``rmse``).
+
+        Parameters:
+            metric : str
+                Currently only rmse is available for BootstrapModel
+        """
+        self._check_parameter_completeness()
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
+
+        if doy_observed is None:
+            doy_observed = self.observations.doy.values
+        elif isinstance(doy_observed, np.ndarray):
+            pass
+        else:
+            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        error_function = utils.optimize.get_loss_function(method=metric)
+
+        return error_function(doy_observed, doy_estimated)
+
+    def _check_parameter_completeness(self):
+        """Make sure all parameters have been set from fitting or loading at initialization"""
+        
+        [m._check_parameter_completeness() for m in self.model_list]
+
     def get_params(self):
 
         all_params = []
