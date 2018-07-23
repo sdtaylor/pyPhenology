@@ -1,6 +1,6 @@
 import numpy as np
 from . import utils
-from ..utils import load_model
+from ..utils import load_model, load_model_parameters
 from . import validation
 from copy import deepcopy
 import warnings
@@ -74,7 +74,7 @@ class BootstrapModel():
                     self.model_list.append(core_model(parameters=parameters))
 
         elif isinstance(parameters, list):
-            # If its the output of BootstrapModel.get_params()
+            # If its the output of BootstrapModel._get_model_info()
             for bootstrap_iteration in parameters:
                 bootstrap_iteration.pop('bootstrap_num')
                 self.model_list.append(core_model(parameters=bootstrap_iteration))
@@ -89,8 +89,8 @@ class BootstrapModel():
                                                                              b=type(self).__name__))
 
         for bootstrap_iteration in model_info['parameters']:
-            Model = load_model(bootstrap_iteration['model_name'])
-            self.model_list.append(Model(parameters=bootstrap_iteration['parameters']))
+            fitted_bootstrap_iteration = load_model_parameters(bootstrap_iteration)
+            self.model_list.append(fitted_bootstrap_iteration)
 
     def fit(self, observations, predictors, **kwargs):
         """Fit the underlying core models
@@ -195,13 +195,27 @@ class BootstrapModel():
         [m._check_parameter_completeness() for m in self.model_list]
 
     def get_params(self):
-
+        """This returns list of dictionaries with parameters of each bootstrap model
+        """
+        self._check_parameter_completeness()
+        
         all_params = []
         for i, model in enumerate(self.model_list):
             all_params.append(deepcopy(model.get_params()))
             all_params[-1].update({'bootstrap_num': i})
 
         return all_params
+
+    def _get_model_info(self):
+        # essentially the same as get_params() but is in a formate capable of
+        # being loaded again later by _parse_fully_fitted_model()
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+            core_model_info[-1].update({'bootstrap_num': i})
+            
+        return {'model_name': type(self).__name__,
+                'parameters': core_model_info}
 
     def save_params(self, filename, overwrite=False):
         """Save model parameters
@@ -219,19 +233,9 @@ class BootstrapModel():
                 Overwrite the file if it exists
 
         """
-        model_parameter_status = [m._parameters_are_set() for m in self.model_list]
-        if not np.all(model_parameter_status):
-            raise RuntimeError('Cannot save bootstrap model, not all parameters set')
+        self._check_parameter_completeness()
 
-        core_model_info = []
-        for i, model in enumerate(self.model_list):
-            core_model_info.append(deepcopy(model._get_model_info()))
-            core_model_info[-1].update({'bootstrap_num': i})
-
-        model_info = {'model_name': type(self).__name__,
-                      'parameters': core_model_info}
-
-        utils.misc.write_saved_model(model_info=model_info,
+        utils.misc.write_saved_model(model_info=self._get_model_info(),
                                      model_file=filename,
                                      overwrite=overwrite)
 
@@ -291,8 +295,8 @@ class Ensemble():
 
         self.model_list = []
         for model in model_info['core_models']:
-            Model = load_model(model['model_name'])
-            self.model_list.append(Model(parameters=model['parameters']))
+            fitted_ensemble_member = load_model_parameters(model)
+            self.model_list.append(fitted_ensemble_member)
             
     def fit(self, observations, predictors, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
@@ -382,17 +386,39 @@ class Ensemble():
     def _check_parameter_completeness(self):
         """Make sure all parameters have been set from fitting or loading at initialization"""
         [m._check_parameter_completeness() for m in self.model_list]
-    
+
+    def get_params(self):
+        """This returns list of dictionaries with parameters of each model in the ensemble
+        """
+        self._check_parameter_completeness()
+        
+        all_params = []
+        for i, model in enumerate(self.model_list):
+            all_params.append(deepcopy(model.get_params()))
+
+        return all_params
+
+    def _get_model_info(self):
+        # essentially the same as get_params() but is in a formate capable of
+        # being loaded again later by _parse_fully_fitted_model()
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+
+        return {'model_name': type(self).__name__,
+                'core_models': core_model_info}
+
     def save_params(self, filename, overwrite=False):
         """Save model parameters
 
-        Note this can only be loaded again as a WeightedEnsemble model. 
+        Note this will save details on all ensemble models, and 
+        can only be loaded again as an ensemble model.
 
         Parameters:
             filename : str
                 Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``core_models`` argument, or by
-                using ``utils.load_saved_model``.
+                passing the filename in the ``parameters`` argument, but only
+                with the BootstrapModel.
 
             overwrite : bool
                 Overwrite the file if it exists
@@ -400,20 +426,9 @@ class Ensemble():
         """
         self._check_parameter_completeness()
 
-        model_info = {'model_name': type(self).__name__,
-                      'core_models': self.get_params()}
-
-        utils.misc.write_saved_model(model_info=model_info,
+        utils.misc.write_saved_model(model_info=self._get_model_info(),
                                      model_file=filename,
                                      overwrite=overwrite)
-    
-    def get_params(self):
-        self._check_parameter_completeness()
-
-        core_model_info = []
-        for i, model in enumerate(self.model_list):
-            core_model_info.append(deepcopy(model._get_model_info()))
-        return core_model_info
 
 class WeightedEnsemble():
     """Fit an ensemble of many models with associated weights

@@ -112,15 +112,8 @@ def load_model(name):
         raise ValueError('Unknown model name: ' + name)
 
 
-def load_saved_model(filename):
-    """Load a previously saved model file
-
-    Returns the model object with parameters preloaded.
-    """
-    if not isinstance(filename, str):
-        raise TypeError('filename must be string, got' + type(filename))
-
-    model_info = models.utils.misc.read_saved_model(filename)
+def load_model_parameters(model_info):
+    # Load a model from a model_info dictionary
 
     # These ensemble methods have their own code for loading saved files
     if model_info['model_name'] == 'BootstrapModel':
@@ -136,6 +129,16 @@ def load_saved_model(filename):
 
     return model
 
+def load_saved_model(filename):
+    """Load a previously saved model file
+
+    Returns the model object with parameters preloaded.
+    """
+    if not isinstance(filename, str):
+        raise TypeError('filename must be string, got' + type(filename))
+
+    model_info = models.utils.misc.read_saved_model(filename)
+    return(load_model_parameters(model_info))
 
 def check_data(observations, predictors, drop_missing=True, for_prediction=False):
     """Make sure observation and predictors data.frames are
