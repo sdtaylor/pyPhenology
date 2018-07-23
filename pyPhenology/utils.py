@@ -112,6 +112,23 @@ def load_model(name):
         raise ValueError('Unknown model name: ' + name)
 
 
+def load_model_parameters(model_info):
+    # Load a model from a model_info dictionary
+
+    # These ensemble methods have their own code for loading saved files
+    if model_info['model_name'] == 'BootstrapModel':
+        model = models.BootstrapModel(parameters=model_info)
+    elif model_info['model_name'] == 'WeightedEnsemble':
+        model = models.WeightedEnsemble(core_models=model_info)
+    elif model_info['model_name'] == 'Ensemble':
+        model = models.Ensemble(core_models=model_info)
+    else:
+        # For all other ones just need to pass the parameters
+        Model = load_model(model_info['model_name'])
+        model = Model(parameters=model_info['parameters'])
+
+    return model
+
 def load_saved_model(filename):
     """Load a previously saved model file
 
@@ -121,19 +138,7 @@ def load_saved_model(filename):
         raise TypeError('filename must be string, got' + type(filename))
 
     model_info = models.utils.misc.read_saved_model(filename)
-
-    # These ensemble methods have their own code for loading saved files
-    if model_info['model_name'] == 'BootstrapModel':
-        model = models.BootstrapModel(parameters=filename)
-    elif model_info['model_name'] == 'WeightedEnsemble':
-        model = models.WeightedEnsemble(core_models=filename)
-    else:
-        # For all other ones just need to pass the parameters
-        Model = load_model(model_info['model_name'])
-        model = Model(parameters=model_info['parameters'])
-
-    return model
-
+    return(load_model_parameters(model_info))
 
 def check_data(observations, predictors, drop_missing=True, for_prediction=False):
     """Make sure observation and predictors data.frames are
