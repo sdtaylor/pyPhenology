@@ -52,24 +52,26 @@ class BootstrapModel():
             # A filename pointing toward a file from save_params()
             # core_model and num_bootstraps is ignored
             model_info = utils.misc.read_saved_model(model_file=parameters)
-
-            if type(self).__name__ != model_info['model_name']:
-                raise RuntimeError('Saved model file does not match model class. ' +
-                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
-                                                                                 b=type(self).__name__))
-
-            for bootstrap_iteration in model_info['parameters']:
-                Model = load_model(bootstrap_iteration['model_name'])
-                self.model_list.append(Model(parameters=bootstrap_iteration['parameters']))
-
+            self._parse_fully_fitted_model(model_info)
+ 
         elif isinstance(parameters, dict):
-            # Custom parameter values to pass to each bootstrap model
-            if core_model is None or num_bootstraps is None:
-                raise TypeError('core_model and num_bootstraps must be set')
-
-            validation.validate_model(core_model())
-            for i in range(num_bootstraps):
-                self.model_list.append(core_model(parameters=parameters))
+            # A dictionary passed in the parameters argument can either be
+            # a list of parameters to pass to the core model (such as in the 
+            # example above), OR a full fitted model specification (essentially
+            # the read json from a saved model file). The latter is only used 
+            # if this is from another ensemble method
+            
+            if 'model_name' in parameters:
+                # A saved model
+                self._parse_fully_fitted_model(parameters)
+            else:
+                # Custom parameter values to pass to each bootstrap model
+                if core_model is None or num_bootstraps is None:
+                    raise TypeError('core_model and num_bootstraps must be set')
+    
+                validation.validate_model(core_model())
+                for i in range(num_bootstraps):
+                    self.model_list.append(core_model(parameters=parameters))
 
         elif isinstance(parameters, list):
             # If its the output of BootstrapModel.get_params()
@@ -78,6 +80,17 @@ class BootstrapModel():
                 self.model_list.append(core_model(parameters=bootstrap_iteration))
         else:
             raise TypeError('parameters must be str or dict, got: ' + str(type(parameters)))
+
+    def _parse_fully_fitted_model(self, model_info):
+        # This loads a model from a saved json file
+        if type(self).__name__ != model_info['model_name']:
+            raise RuntimeError('Saved model file does not match model class. ' +
+                               'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                             b=type(self).__name__))
+
+        for bootstrap_iteration in model_info['parameters']:
+            Model = load_model(bootstrap_iteration['model_name'])
+            self.model_list.append(Model(parameters=bootstrap_iteration['parameters']))
 
     def fit(self, observations, predictors, **kwargs):
         """Fit the underlying core models
@@ -236,13 +249,10 @@ class Ensemble():
                 
                 m1 = models.Thermaltime(parameters={'T':0})
                 m2 = models.Thermaltime(parameters={'T':5})
-                m3 = models.Thermaltime(parameters={'T':-5})
-                m4 = models.Thermaltime(parameters={'T':10})
-                m5 = models.Uniforc(parameters={'t1':1})
-                m6 = models.Uniforc(parameters={'t1':30})
-                m7 = models.Uniforc(parameters={'t1':60})
-                
-                ensemble = models.Ensemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
+                m3 = models.Uniforc(parameters={'t1':1})
+                m4 = models.Uniforc(parameters={'t1':30})
+
+                ensemble = models.Ensemble(core_models=[m1,m2,m3,m4])
                 ensemble.fit(observations, predictors)
     
     """
@@ -258,26 +268,32 @@ class Ensemble():
         if isinstance(core_models, list):
             # List of models to fit
             self.model_list = core_models
-            self.weights = np.array([None] * len(core_models))
             
         elif isinstance(core_models, str):
             # A filename pointing toward a file from save_params()
             model_info = utils.misc.read_saved_model(model_file=core_models)
+            self._parse_fully_fitted_model(model_info)
 
-            if type(self).__name__ != model_info['model_name']:
-                raise RuntimeError('Saved model file does not match model class. ',
-                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
-                                                                                 b=type(self).__name__))
-
-            self.model_list = []
-            for model in model_info['core_models']:
-                Model = load_model(model['model_name'])
-                self.model_list.append(Model(parameters=model['parameters']))
+        elif isinstance(core_models, dict):
+            # A saved model file read by another model or utility
+            self._parse_fully_fitted_model(core_models)
 
         else:
             raise TypeError('core_models must be list of pyPhenology models',
                             'or a filename for a saved model')
-    
+
+    def _parse_fully_fitted_model(self, model_info):
+        # This loads a model from a saved json file
+        if type(self).__name__ != model_info['model_name']:
+            raise RuntimeError('Saved model file does not match model class. ',
+                               'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                             b=type(self).__name__))
+
+        self.model_list = []
+        for model in model_info['core_models']:
+            Model = load_model(model['model_name'])
+            self.model_list.append(Model(parameters=model['parameters']))
+            
     def fit(self, observations, predictors, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
 
@@ -457,25 +473,31 @@ class WeightedEnsemble():
         elif isinstance(core_models, str):
             # A filename pointing toward a file from save_params()
             model_info = utils.misc.read_saved_model(model_file=core_models)
+            self._parse_fully_fitted_model(model_info)
 
-            if type(self).__name__ != model_info['model_name']:
-                raise RuntimeError('Saved model file does not match model class. ',
-                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
-                                                                                 b=type(self).__name__))
-
-            self.model_list = []
-            self.weights = []
-            for model in model_info['core_models']:
-                Model = load_model(model['model_name'])
-                self.model_list.append(Model(parameters=model['parameters']))
-                self.weights.append(model['weight'])
-
-            self.weights = np.array(self.weights)
-            
+        elif isinstance(core_models, dict):
+            # A saved model file read by another model or utility
+            self._parse_fully_fitted_model(core_models)
         else:
             raise TypeError('core_models must be list of pyPhenology models',
                             'or a filename for a saved model')
-    
+
+    def _parse_fully_fitted_model(self, model_info):
+        # This loads a model from a saved json file
+        if type(self).__name__ != model_info['model_name']:
+            raise RuntimeError('Saved model file does not match model class. ',
+                               'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                             b=type(self).__name__))
+
+        self.model_list = []
+        self.weights = []
+        for model in model_info['core_models']:
+            Model = load_model(model['model_name'])
+            self.model_list.append(Model(parameters=model['parameters']))
+            self.weights.append(model['weight'])
+
+        self.weights = np.array(self.weights)
+
     def fit(self, observations, predictors, iterations=10, held_out_percent=0.2,
             loss_function='rmse', method='DE', optimizer_params='practical',
             verbose=False, debug=False):
