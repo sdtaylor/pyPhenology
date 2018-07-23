@@ -18,7 +18,7 @@ weighted_model.fit(obs, predictors, optimizer_params='testing',
 def test_WeightedEnsemble_initialize():
     """WeightedEnsemble model requires core_models set"""
     with pytest.raises(TypeError):
-        models.BootstrapModel()
+        models.WeightedEnsemble()
 
 def test_WeightedEnsemble_weight_shape():
     """Array of fitted weights should be this shape"""
@@ -43,7 +43,7 @@ def test_WeightedEnsemble_parameters():
     assert loaded_model.get_params() == weighted_model.get_params()
 
 def test_WeightedEnsemble_save_load():
-    """"Save and load a bootstrap model"""
+    """"Save and load a model"""
     weighted_model.save_params('model_params.json', overwrite=True)
     loaded_model = utils.load_saved_model('model_params.json')
     assert len(loaded_model.predict(obs, predictors)) == len(obs)
