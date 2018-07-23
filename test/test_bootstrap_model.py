@@ -1,4 +1,5 @@
 from pyPhenology import models, utils
+import numpy as np
 import pytest
 
 obs, predictors = utils.load_test_data()
@@ -50,3 +51,11 @@ def test_do_not_predict_without_data():
     loaded_model = utils.load_saved_model('model_params.json')
     with pytest.raises(TypeError):
         loaded_model.predict()
+
+def test_bootstrap_prediction_is_stable_after_saving():
+    """Predictions shouldn't change after the model is saved and re-loaded"""
+    predictions1 = bootstrap_model.predict()
+    bootstrap_model.save_params('model_params.json', overwrite=True)
+    loaded_model = utils.load_saved_model('model_params.json')
+    predictions2 = loaded_model.predict(to_predict = obs, predictors=predictors)
+    assert np.all(predictions1 == predictions2)
