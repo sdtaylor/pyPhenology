@@ -222,6 +222,183 @@ class BootstrapModel():
                                      model_file=filename,
                                      overwrite=overwrite)
 
+class Ensemble():
+    """Fit an ensemble of different models.
+    
+    This model can fit multiple models into an ensemble where the 
+    weights are equal among all ensemble members.
+    
+    Note that the core models must be passed initialized. They will be
+    fit within the Ensemble model::
+
+                from pyPhenology import models, utils
+                observations, predictors = utils.load_test_data(name='vaccinium')
+                
+                m1 = models.Thermaltime(parameters={'T':0})
+                m2 = models.Thermaltime(parameters={'T':5})
+                m3 = models.Thermaltime(parameters={'T':-5})
+                m4 = models.Thermaltime(parameters={'T':10})
+                m5 = models.Uniforc(parameters={'t1':1})
+                m6 = models.Uniforc(parameters={'t1':30})
+                m7 = models.Uniforc(parameters={'t1':60})
+                
+                ensemble = models.Ensemble(core_models=[m1,m2,m3,m4,m5,m6,m7])
+                ensemble.fit(observations, predictors)
+    
+    """
+    def __init__(self, core_models):
+        """Ensemble model
+        
+        core_models : list of pyPhenology models, or a saved model file
+
+        """
+        self.observations = None
+        self.predictors = None
+
+        if isinstance(core_models, list):
+            # List of models to fit
+            self.model_list = core_models
+            self.weights = np.array([None] * len(core_models))
+            
+        elif isinstance(core_models, str):
+            # A filename pointing toward a file from save_params()
+            model_info = utils.misc.read_saved_model(model_file=core_models)
+
+            if type(self).__name__ != model_info['model_name']:
+                raise RuntimeError('Saved model file does not match model class. ',
+                                   'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
+                                                                                 b=type(self).__name__))
+
+            self.model_list = []
+            for model in model_info['core_models']:
+                Model = load_model(model['model_name'])
+                self.model_list.append(Model(parameters=model['parameters']))
+
+        else:
+            raise TypeError('core_models must be list of pyPhenology models',
+                            'or a filename for a saved model')
+    
+    def fit(self, observations, predictors, verbose=False, debug=False, **kwargs):
+        """Fit the underlying core models
+
+        Parameters:
+            observations : dataframe
+                pandas dataframe of phenology observations
+
+            predictors : dataframe
+                pandas dataframe of associated predictors
+
+            kwargs :
+                Other arguments passed to core model fitting (eg. optimzer methods)
+        """
+        self.observations = observations
+        self.predictors = predictors
+
+        for model in self.model_list:
+            model.fit(observations, predictors, **kwargs)
+
+    def predict(self, to_predict=None, predictors=None, aggregation='mean', **kwargs):
+        """Make predictions..
+
+        Predictions will be made using each core models, then a final prediction
+        for each observation using the specified aggregation method.
+
+        Parameters:
+            see core model description
+            
+            aggregation : str
+                Either 'mean', 'median', or 'none'. If using 'none' this returns
+                an array of tuple of size (number of members, predictions). 
+        """
+        if predictors is None:
+            predictors = self.predictors
+        if to_predict is None:
+            to_predict = self.observations
+
+        predictions = []
+        for model in self.model_list:
+            predictions.append(model.predict(to_predict=to_predict,
+                                             predictors=predictors,
+                                             **kwargs))
+
+        predictions = np.array(predictions)
+        if aggregation == 'mean':
+            predictions = np.mean(predictions, 0)
+        elif aggregation == 'median':
+            predictions = np.median(predictions, 0)
+        elif aggregation == 'none':
+            pass
+        else:
+            raise ValueError('Unknown aggregation: ' + str(aggregation))
+
+        return predictions
+
+    def score(self, metric='rmse', doy_observed=None,
+              to_predict=None, predictors=None):
+        """Get the scoring metric for fitted data
+
+        Get the score on the dataset used for fitting (if fitting was done),
+        otherwise set ``to_predict``, and ``predictors`` as used in
+        ``model.predict()``. In the latter case score is calculated using
+        observed values ``doy_observed``.
+
+        Metrics available are root mean square error (``rmse``).
+
+        Parameters:
+            metric : str
+                Currently only rmse is available for WeightedEnsemble
+        """
+        self._check_parameter_completeness()
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
+
+        if doy_observed is None:
+            doy_observed = self.observations.doy.values
+        elif isinstance(doy_observed, np.ndarray):
+            pass
+        else:
+            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        error_function = utils.optimize.get_loss_function(method=metric)
+
+        return error_function(doy_observed, doy_estimated)
+
+    def _check_parameter_completeness(self):
+        """Make sure all parameters have been set from fitting or loading at initialization"""
+        [m._check_parameter_completeness() for m in self.model_list]
+    
+    def save_params(self, filename, overwrite=False):
+        """Save model parameters
+
+        Note this can only be loaded again as a WeightedEnsemble model. 
+
+        Parameters:
+            filename : str
+                Filename to save model to. Note this can be loaded again by
+                passing the filename in the ``core_models`` argument, or by
+                using ``utils.load_saved_model``.
+
+            overwrite : bool
+                Overwrite the file if it exists
+
+        """
+        self._check_parameter_completeness()
+
+        model_info = {'model_name': type(self).__name__,
+                      'core_models': self.get_params()}
+
+        utils.misc.write_saved_model(model_info=model_info,
+                                     model_file=filename,
+                                     overwrite=overwrite)
+    
+    def get_params(self):
+        self._check_parameter_completeness()
+
+        core_model_info = []
+        for i, model in enumerate(self.model_list):
+            core_model_info.append(deepcopy(model._get_model_info()))
+        return core_model_info
+
 class WeightedEnsemble():
     """Fit an ensemble of many models with associated weights
 

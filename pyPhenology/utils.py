@@ -127,6 +127,8 @@ def load_saved_model(filename):
         model = models.BootstrapModel(parameters=filename)
     elif model_info['model_name'] == 'WeightedEnsemble':
         model = models.WeightedEnsemble(core_models=filename)
+    elif model_info['model_name'] == 'Ensemble':
+        model = models.Ensemble(core_models=filename)
     else:
         # For all other ones just need to pass the parameters
         Model = load_model(model_info['model_name'])
