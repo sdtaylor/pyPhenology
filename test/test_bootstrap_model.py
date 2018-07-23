@@ -59,3 +59,11 @@ def test_bootstrap_prediction_is_stable_after_saving():
     loaded_model = utils.load_saved_model('model_params.json')
     predictions2 = loaded_model.predict(to_predict = obs, predictors=predictors)
     assert np.all(predictions1 == predictions2)
+
+def test_bootstrap_aggregation():
+    """It's theoretically possible for the median to equal the mean, but
+    chances are that something is off internally if that happens.
+    """
+    mean_prediction = bootstrap_model.predict(aggregation='mean')
+    median_prediction = bootstrap_model.predict(aggregation='median')
+    assert np.all(~(mean_prediction==median_prediction))
