@@ -437,6 +437,7 @@ class WeightedEnsemble():
     are the weighted average of the predictions from each model. The weights
     are derived via "stacking" as described in Dormann et al. 2018. The 
     steps are as followed:
+
         1. Subset the data into random training/testing sets.
         2. Fit each core model on the training set.
         3. Make predictions on the testing set.
