@@ -1,6 +1,6 @@
 # pyPhenology  
 [![Build Status](https://travis-ci.org/sdtaylor/pyPhenology.svg?branch=master)](https://travis-ci.org/sdtaylor/pyPhenology) 
-[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/sdtaylor/phPhenology/master/LICENSE)
+[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/sdtaylor/pyPhenology/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/pyphenology/badge/?version=master)](http://pyphenology.readthedocs.io/en/master/?badge=master)  
 
 Plant phenology models in python with a scikit-learn inspired API
