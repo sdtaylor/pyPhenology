@@ -32,9 +32,28 @@ def test_predict_output_length2(model_name, fitted_model):
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_predict_output_shape(model_name, fitted_model):
     """Predict output shape should be 1D"""
-    
     assert len(fitted_model.predict().shape) == 1
-    
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_score(model_name, fitted_model):
+    """Score should return a single number"""
+    assert isinstance(fitted_model.score(), float)
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_score_with_new_data(model_name, fitted_model):
+    """Score should return a single number using a new prediction set"""
+    assert isinstance(fitted_model.score(doy_observed = obs.doy.values[1:10],
+                                         to_predict = obs[1:10],
+                                         predictors = predictors), float)
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_do_not_score_with_non_numpy_observed_values(model_name, fitted_model):
+    """doy_observed argument should only be a numpy array"""
+    with pytest.raises(TypeError):
+        fitted_model.score(doy_observed = list(obs.doy.values[1:10]),
+                                         to_predict = obs[1:10],
+                                         predictors = predictors)
+
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_brute_force(model_name, fitted_model):
     """Test brute force optimization"""
