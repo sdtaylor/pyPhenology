@@ -377,12 +377,13 @@ class BaseModel():
 
     def score(self, metric='rmse', doy_observed=None,
               to_predict=None, predictors=None):
-        """Get the scoring metric for fitted data
+        """Evaluate a prediction given observed doy values
 
-        Get the score on the dataset used for fitting (if fitting was done),
-        otherwise set ``to_predict``, and ``predictors`` as used in
-        ``model.predict()``. In the latter case score is calculated using
-        observed values ``doy_observed``.
+        Given no arguments this will return the RMSE on the dataset used for
+        fitting (if fitting was done).
+        To evaluate a new set of data set ``to_predict``, and ``predictors``
+        as used in ``model.predict()``. The predictions from these will be
+        evluated against the true values in ``doy_observed``.
 
         Metrics available are root mean square error (``rmse``) and AIC (``aic``).
         For AIC the number of parameters in the model is set to the number of
@@ -390,19 +391,43 @@ class BaseModel():
         model parameters. 
 
         Parameters:
-            metric : str
-                Either 'rmse' or 'aic'
+            metric : str, optional
+                The metric used either 'rmse' for the root mean square error,
+                or 'aic' for akaike information criteria.
+                
+            doy_observed : numpy array, optional
+                The true doy values to evaluate with. This must be a numpy
+                array the same length as the number of rows in to_predict
+
+            to_predict : dataframe, optional
+                pandas dataframe of site/year combinations to predict from
+                the given predictor data. just like the observations 
+                dataframe used in fit() but (optionally) without the doy column
+
+            predictors : dataframe, optional
+                pandas dataframe in the format specific to this package
+        
+        Returns:
+            The score as a float
         """
         self._check_parameter_completeness()
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
 
         if doy_observed is None:
             doy_observed = self.obs_fitting
         elif isinstance(doy_observed, np.ndarray):
-            pass
+            if not isinstance(to_predict, pd.DataFrame) or not isinstance(predictors, pd.DataFrame):
+                raise TypeError('to_predict and predictors must be pandas dataframes if ',
+                                'evaluating new data')
+
+            if doy_observed.shape[0] != to_predict.shape[0]:
+                raise TypeError('The length of doy_observed must be equal to the',
+                                'length of to_predict.')
+
         else:
             raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
 
         error_function = utils.optimize.get_loss_function(method=metric)
 
