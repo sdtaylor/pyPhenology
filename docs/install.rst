@@ -11,11 +11,12 @@ Required dependencies
 - `numpy <http://www.numpy.org/>`__ (1.8 or later)
 - `pandas <http://pandas.pydata.org/>`__ (0.18.0 or later)
 
+all these requirements can be installed for Linux, Windows or MacOSX, e.g. by using the package manager `conda <https://conda.io/miniconda.html>`__.
+
 
 Instructions
 ------------
-
-Install the current release via pip::
+pyPhenology supports all operating systems that fullfil the above dependencies and can simply be installed using `pip <https://pip.pypa.io/en/stable/>`__::
 
     pip install pyPhenology
 
