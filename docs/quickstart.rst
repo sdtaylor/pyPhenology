@@ -66,14 +66,14 @@ model to January 1 (julian day 1). This is done in the model initialization. By 
 parameters in a model are estimated. Specifying one as fixed is done with the
 ``parameters`` argument::
 
-    model = models.ThermalTime(parameters={'t1':1})
+    model_fixed_t1 = models.ThermalTime(parameters={'t1':1})
 
-Note that the exact parameters are different for each model. See the details of
+Note that the exact parameters to specifcy are different for each model. See the details of
 them in the :ref:`Primary Models` section.
 
 The model can then be fit as before::
 
-    model_fixed_t1 = models.ThermalTime(parameters={'t1':1})
+    model_fixed_t1.fit(observations, predictors)
     model_fixed_t1.get_params()
     {'F': 293.4456066438384, 'T': 7.542323552813556, 't1': 1}
 
