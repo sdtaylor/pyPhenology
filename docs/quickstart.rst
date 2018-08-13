@@ -105,3 +105,6 @@ make predictions::
        132, 130, 130, 130, 129, 127, 126, 132, 130, 129, 132, 132, 133,
        133, 137, 137, 141, 141, 142, 132, 141, 141, 139, 139, 139, 139,
        137, 137, 141, 141, 141, 141, 142, 142, 142])
+
+For a more detailed analysis see the examples on :ref:`Model selection via AIC` or
+:ref:`RMSE Evaluation`

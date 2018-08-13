@@ -24,15 +24,13 @@ Output:
 
 .. _example_model_rmse:
 
+RMSE Evaluation
+===============
 
-
-Model RMSE
-==========
-
-This will calculate the RMSE on 2 species, each with a budburst and flower
-phenophase, using 2 models. Both are Thermal Time models with a start 
-date of 1 (Jan. 1), and the temperature threshold is 0 for one and 5
-for the other.
+This will calculate the root mean square error (RMSE) on 2 species,
+each with a budburst and flower phenophase, using 2 models. Both are
+Thermal Time models with a start date of 1 (Jan. 1), and the temperature
+threshold is 0 for one and 5 for the other.
 
 .. literalinclude:: ../examples/model_rmse.py
 
