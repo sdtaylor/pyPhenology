@@ -63,8 +63,8 @@ or a convergence threshold is met.
 
 `Differential evolution Scipy documentation <https://docs.scipy.org/doc/scipy-1.0.0/reference/generated/scipy.optimize.differential_evolution.html>`__
 
-Key arguments
-^^^^^^^^^^^^^
+Differential Evolution Key arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 See the official documentation for more in depth details.
 
 * ``maxiter`` : int
@@ -78,8 +78,8 @@ See the official documentation for more in depth details.
 * ``disp`` : boolean
     Display output as the model is fit.
 
-Presets
-^^^^^^^
+Differential Evolution Presets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * ``testing``::
 
     {'maxiter':5,
@@ -116,8 +116,8 @@ Simulated annealing was retired from the Scipy packge in favor of basin hopping,
 
 `Basin Hopping Scipy documentation <https://docs.scipy.org/doc/scipy-1.0.0/reference/generated/scipy.optimize.basinhopping.html>`__
 
-Key arguments
-^^^^^^^^^^^^^
+Basin Hopping Key arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 See the official documentation for more in depth details.
 
 * ``niter`` : int
@@ -129,8 +129,8 @@ See the official documentation for more in depth details.
 * ``disp`` : boolean
     Display output as the model is fit.
 
-Presets
-^^^^^^^
+Basin Hopping Presets
+^^^^^^^^^^^^^^^^^^^^^
 * ``testing``::
 
     {'niter': 100,
@@ -161,8 +161,8 @@ Brute force is a comprehensive search within predefined parameter ranges.
 
 `Brute force Scipy documentation <https://docs.scipy.org/doc/scipy-1.0.0/reference/generated/scipy.optimize.brute.html>`__
 
-Key Arguments
-^^^^^^^^^^^^^
+Brute Force Key Arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^
 See the official documentation for more details
 
 * ``Ns`` : int
@@ -174,8 +174,8 @@ See the official documentation for more details
 * ``disp`` : boolean
     Display output as the model is fit.
 
-Presets
-^^^^^^^^
+Brute Force Presets
+^^^^^^^^^^^^^^^^^^^
 * ``testing``::
 
     {'Ns':2,
