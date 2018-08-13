@@ -155,7 +155,7 @@ class FallCooling(BaseModel):
 
     A model for fall senesence. Essential a Thermal Time model,
     but instead of accumulating warming above a base temperature,
-    it accumulates cooling below a max temperature. 
+    it accumulates cooling below a max temperature.
 
     Event happens on :math:`DOY` when the following is met:
 
@@ -166,9 +166,9 @@ class FallCooling(BaseModel):
 
     .. math::
         R_{f}(T_{i}) = max(threshold-T_{i}, 0)
-    
+
     This is a simplified version of the model in Delpierre et al. 2009.
-    The full version also has a photoperiod compoenent. 
+    The full version also has a photoperiod compoenent.
 
     Parameters:
         t1 : int
