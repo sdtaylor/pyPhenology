@@ -4,8 +4,8 @@
 Quickstart
 ====================
 
-Comparison of Thermal Time Models
----------------------------------
+Fitting a Thermal Time Model
+----------------------------
 
 This short overview will fit a basic :any:`ThermalTime` model, which has 3 parameters.
 We will fit the model using data of flowering observations of blueberry (Vaccinium corymbosum)
