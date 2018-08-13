@@ -10,7 +10,7 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
     equal to the number of days in the yearly time
     series of temperature (ie. Jan 1 - July 30).
     Using a numpy array in this way allows for very 
-    efficient processing of phenology mdoels.
+    efficient processing of phenology models.
 
     Parameters
     ----------
@@ -48,8 +48,8 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
     doy_series.sort()
     predictors = predictors.pivot_table(index=['site_id', 'year'], columns='doy', values='temperature').reset_index()
 
-    # This first day of temperature data can causes NA issues because of leap years.
-    # If thats the case try dropping it.
+    # This first and last day of temperature data can causes NA issues because
+    # of leap years.If thats the case try dropping them
     first_doy_has_na = predictors.iloc[:, 2].isna().any()  # first day will always be col 2
     if first_doy_has_na:
         first_doy_column = predictors.columns[2]
@@ -57,10 +57,19 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
         doy_series = doy_series[1:]
         warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=first_doy_column))
 
+    last_doy_index = predictors.shape[1] - 1
+    last_doy_has_na = predictors.iloc[:, last_doy_index].isna().any()
+    if last_doy_has_na:
+        last_doy_column = predictors.columns[-1]
+        predictors.drop(last_doy_column, axis=1, inplace=True)
+        doy_series = doy_series[:-1]
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=last_doy_column))
+
+
     # Give each observation a temperature time series
     obs_with_temp = observations.merge(predictors, on=['site_id', 'year'], how='left')
 
-    # Deal with any site/years that don't have tempterature data
+    # Deal with any site/years that don't have temperature data
     original_sample_size = len(obs_with_temp)
     rows_with_missing_data = obs_with_temp.isnull().any(axis=1)
     missing_info = obs_with_temp[['site_id', 'year']][rows_with_missing_data].drop_duplicates()

@@ -29,7 +29,7 @@ def validate_observations(observations, for_prediction=False):
     observations : Pandas Dataframe
 
     for_prediction : bool
-        If being used to in model.predict(), then one less colum is required
+        If being used to in model.predict(), then one less column is required
 
     Returns
     -------

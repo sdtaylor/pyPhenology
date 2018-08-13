@@ -1,8 +1,8 @@
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 
 
-class Uniforc(_base_model):
+class Uniforc(BaseModel):
     """Uniforc model
 
     Single phase forcing model using a sigmoid function for forcing units.
@@ -43,7 +43,7 @@ class Uniforc(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'t1': (-67, 298), 'F': (0, 200), 'b': (-20, 0), 'c': (-50, 50)}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
@@ -62,8 +62,8 @@ class Uniforc(_base_model):
                                               threshold=F)
 
 
-class Unichill(_base_model):
-    """Unichill two-hase model.
+class Unichill(BaseModel):
+    """Unichill two-phase model.
 
     Two phase forcing model using a sigmoid function for forcing and
     chilling units. 
@@ -92,15 +92,15 @@ class Unichill(_base_model):
             | default : (-50,50)
 
         a_c : int, > 0
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (0,20)
 
         b_c : int
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (-20,20)
 
         c_c : int
-            | Sigmoid funcion parameter for chilling
+            | Sigmoid function parameter for chilling
             | default : (-50,50)
 
     Notes:
@@ -111,7 +111,7 @@ class Unichill(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'t0': (-67, 298), 'C': (0, 300), 'F': (0, 200),
                                         'b_f': (-20, 0), 'c_f': (-50, 50),
                                         'a_c': (0, 20), 'b_c': (-20, 20), 'c_c': (-50, 50)}

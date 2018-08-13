@@ -1,9 +1,10 @@
 import pandas as pd
 import pkg_resources
 from . import models
+from warnings import warn
 
 
-def load_test_data(name='vaccinium', phenophase='both'):
+def load_test_data(name='vaccinium', phenophase='all'):
     """Pre-loaded phenology data
 
     Datasets are available with the package. They include multiple phenophases
@@ -16,18 +17,19 @@ def load_test_data(name='vaccinium', phenophase='both'):
     Available datasets:
         'vaccinium'
             Vaccinium corymbosum phenology from Harvard Forest
-            Both flowers (phenophase 501) and leaves (phenophase 371)
+            Both flowers (phenophase 501) and budburst (phenophase 371)
         'aspen'
             Populus tremuloides (aspen) phenology from the National Phenology
-            Dataset. Both flowers  (phenophase 501) and leaves (phenophase 371)
+            Dataset. Has flowers  (phenophase 501), budburst (phenophase 371),
+            and colored leaves for fall senesence (phenophase 498)
 
     Parameters:
         name : str, optional
             Name of the test dataset
 
         phenophase : str | int, optional
-            Name of the phenophase. Either 'budburst','flowers', or 'both'.
-            Or the phenophase id (371 or 501)
+            Name of the phenophase. Either 'budburst','flowers', 'colored_leaves',
+            or 'all'. Or the phenophase id (371 or 501, or 498)
 
     Returns:
         obs, temp : tuple
@@ -48,7 +50,7 @@ def load_test_data(name='vaccinium', phenophase='both'):
         raise ValueError('Uknown dataset name: ' + str(name))
 
     if isinstance(phenophase, int):
-        if phenophase not in [371, 501]:
+        if phenophase not in [371, 501, 498]:
             raise ValueError('uknown phenophase: ' + str(phenophase))
         phenophase_ids = [phenophase]
     elif isinstance(phenophase, str):
@@ -56,8 +58,10 @@ def load_test_data(name='vaccinium', phenophase='both'):
             phenophase_ids = [371]
         elif phenophase == 'flowers':
             phenophase_ids = [501]
-        elif phenophase == 'both':
-            phenophase_ids = [371, 501]
+        elif phenophase == 'colored_leaves':
+            phenophase_ids = [498]
+        elif phenophase == 'all':
+            phenophase_ids = [371, 501, 498]
         else:
             raise ValueError('unknown phenophase: ' + phenophase)
     else:
@@ -69,6 +73,9 @@ def load_test_data(name='vaccinium', phenophase='both'):
     temp = pd.read_csv(temp_file)
 
     obs = obs[obs.phenophase.isin(phenophase_ids)]
+    
+    if len(obs) == 0:
+        raise RuntimeError('Phenophase {p} not available for dataset {d}'.format(p=phenophase,d=name))
 
     return obs, temp
 
@@ -77,7 +84,7 @@ def load_model(name):
     """Load a model via a string
 
     Options are ``['ThermalTime','Uniforc','Unichill','Alternating','MSB',
-                   'Sequential','Linear','M1','Naive']``
+                   'Sequential','Linear','M1','FallCooling','Naive']``
     """
     if not isinstance(name, str):
         raise TypeError('name must be string, got' + type(name))
@@ -97,11 +104,30 @@ def load_model(name):
         return models.Linear
     elif name == 'M1':
         return models.M1
+    elif name == 'FallCooling':
+        return models.FallCooling
     elif name == 'Naive':
         return models.Naive
     else:
         raise ValueError('Unknown model name: ' + name)
 
+
+def load_model_parameters(model_info):
+    # Load a model from a model_info dictionary
+
+    # These ensemble methods have their own code for loading saved files
+    if model_info['model_name'] == 'BootstrapModel':
+        model = models.BootstrapModel(parameters=model_info)
+    elif model_info['model_name'] == 'WeightedEnsemble':
+        model = models.WeightedEnsemble(core_models=model_info)
+    elif model_info['model_name'] == 'Ensemble':
+        model = models.Ensemble(core_models=model_info)
+    else:
+        # For all other ones just need to pass the parameters
+        Model = load_model(model_info['model_name'])
+        model = Model(parameters=model_info['parameters'])
+
+    return model
 
 def load_saved_model(filename):
     """Load a previously saved model file
@@ -112,17 +138,7 @@ def load_saved_model(filename):
         raise TypeError('filename must be string, got' + type(filename))
 
     model_info = models.utils.misc.read_saved_model(filename)
-
-    if model_info['model_name'] == 'BootstrapModel':
-        # The bootstrap model has it's own code for loading saved files
-        model = models.BootstrapModel(parameters=filename)
-    else:
-        # For all other ones just need to pass the parameters
-        Model = load_model(model_info['model_name'])
-        model = Model(parameters=model_info['parameters'])
-
-    return model
-
+    return(load_model_parameters(model_info))
 
 def check_data(observations, predictors, drop_missing=True, for_prediction=False):
     """Make sure observation and predictors data.frames are
@@ -134,9 +150,21 @@ def check_data(observations, predictors, drop_missing=True, for_prediction=False
 
     predictors_pivoted = predictors.pivot_table(index=['site_id', 'year'], columns='doy', values='temperature').reset_index()
 
-    # This first day of predictors data causes NA issues because of leap years
-    # TODO: generalize this a bit more
-    predictors_pivoted.drop(-67, axis=1, inplace=True)
+    # This first and last day of temperature data can causes NA issues because
+    # of leap years.If thats the case try dropping them
+    first_doy_has_na = predictors_pivoted.iloc[:, 2].isna().any()  # first day will always be col 2
+    if first_doy_has_na:
+        first_doy_column = predictors_pivoted.columns[2]
+        predictors_pivoted.drop(first_doy_column, axis=1, inplace=True)
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=first_doy_column))
+
+    last_doy_index = predictors_pivoted.shape[1] - 1
+    last_doy_has_na = predictors_pivoted.iloc[:, last_doy_index].isna().any()
+    if last_doy_has_na:
+        last_doy_column = predictors_pivoted.columns[-1]
+        predictors_pivoted.drop(last_doy_column, axis=1, inplace=True)
+        warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=last_doy_column))
+
 
     observations_with_temp = observations.merge(predictors_pivoted, on=['site_id', 'year'], how='left')
 

@@ -84,14 +84,14 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html
 
     'SA', Simulated annealing
-        The most commonly used method in phenology modelling. Not yet implemented
+        The most commonly used method in phenology modeling. Not yet implemented
         here as scipy has discontinued it in favor of basin hopping.
 
         https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.optimize.anneal.html
 
     'BH, Basin hopping
         Starts off in a search space randomly, "hopping" around until a suitable
-        minimum value is found. Note yet implimented.
+        minimum value is found.
 
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.basinhopping.html
 

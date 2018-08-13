@@ -1,7 +1,7 @@
-from .thermaltime import ThermalTime, M1
+from .thermaltime import ThermalTime, M1, FallCooling
 from .chuine_models import Uniforc, Unichill
 from .alternating import Alternating, MSB
-from .ensemble_models import BootstrapModel
+from .ensemble_models import BootstrapModel, WeightedEnsemble, Ensemble
 from .stat_models import Linear, Naive
 from .sequential import Sequential
 from .example_model import Model
@@ -16,4 +16,7 @@ __all__ = ['ThermalTime',
            'Sequential',
            'M1',
            'Naive',
+           'WeightedEnsemble',
+           'Ensemble',
+           'FallCooling',
            'Model']

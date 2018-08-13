@@ -7,23 +7,16 @@ from warnings import warn
 from copy import deepcopy
 
 
-class _base_model():
-    def __init__(self, loss_function='rmse'):
+class BaseModel():
+    def __init__(self):
         self._fitted_params = {}
         self.obs_fitting = None
         self.temperature_fitting = None
         self.doy_series = None
         self.debug = False
 
-        if isinstance(loss_function, str):
-            self.loss_function = utils.optimize.get_loss_function(method=loss_function)
-        elif callable(loss_function):
-            # validation.validate_loss_function(loss_function)
-            self.loss_function = loss_function
-        else:
-            raise TypeError('Unknown loss_function. Must be string or custom function')
-
-    def fit(self, observations, predictors, method='DE', optimizer_params='practical',
+    def fit(self, observations, predictors, loss_function='rmse',
+            method='DE', optimizer_params='practical',
             verbose=False, debug=False):
         """Estimate the parameters of a model
 
@@ -35,9 +28,15 @@ class _base_model():
                 pandas dataframe of associated predictor variables such as
                 temperature, precipitation, and day length
 
+            loss_function : str, or function
+            
+            A string for built in loss functions (currently only 'rmse'), 
+            or a customized function which accpepts 2 arguments. obs and pred,
+            both numpy arrays of the same shape
+            
             method : str
                 Optimization method to use. Either 'DE' or 'BF' for differential
-                eovlution or brute force methods.
+                evolution or brute force methods.
 
             optimizer_params : dict | str
                 Arguments for the scipy optimizer, or one of 3 presets 'testing',
@@ -53,6 +52,7 @@ class _base_model():
 
         validation.validate_predictors(predictors, self._required_data['predictor_columns'])
         validation.validate_observations(observations)
+        self._set_loss_function(loss_function)
         if len(self._parameters_to_estimate) == 0:
             raise RuntimeError('No parameters to estimate')
 
@@ -88,6 +88,12 @@ class _base_model():
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
 
+        # Check predictions for 999, indicating a bad fit.
+        if np.any(self.predict() == 999):
+            warn('999 values in predictions, indicating lack of convergence '\
+                 'in model fitting. Perhaps try with different optimizer '\
+                 'values.')
+
     def predict(self, to_predict=None, predictors=None):
         """Make predictions
 
@@ -98,7 +104,7 @@ class _base_model():
 
         Parameters:
             to_predict : dataframe, optional
-                pandas dataframe of site/year combinations to predicte from
+                pandas dataframe of site/year combinations to predict from
                 the given predictor data. just like the observations 
                 dataframe used in fit() but (optionally) without the doy column
 
@@ -108,7 +114,7 @@ class _base_model():
         Returns:
             predictions : array
                 1D array the same length of to_predict. Or if to_predict
-                is not used, the same lengh as observations used in fitting.
+                is not used, the same length as observations used in fitting.
 
         """
         self._check_parameter_completeness()
@@ -150,6 +156,21 @@ class _base_model():
                                         **self._fitted_params)
 
         return predictions
+
+    def _set_loss_function(self, loss_function):
+        """The loss function (ie. RMSE)
+
+        Either a sting for a built in function, or a customized
+        function which accpepts 2 arguments. obs, pred, both 
+        numpy arrays of the same shape
+        """
+        if isinstance(loss_function, str):
+            self.loss_function = utils.optimize.get_loss_function(method=loss_function)
+        elif callable(loss_function):
+            # validation.validate_loss_function(loss_function)
+            self.loss_function = loss_function
+        else:
+            raise TypeError('Unknown loss_function. Must be string or custom function')
 
     def _organize_predictors(self, observations, predictors, for_prediction):
         """Convert data to internal structure used by models
@@ -302,7 +323,7 @@ class _base_model():
     def _translate_scipy_parameters(self, parameters_array):
         """Map parameters from a 1D array to a dictionary for
         use in phenology model functions. Ordering matters
-        in unpacking the scipy_array since it isn't labelled. Thus
+        in unpacking the scipy_array since it isn't labeled. Thus
         it relies on self._parameters_to_estimate being an 
         OrdereddDict
         """
@@ -323,7 +344,7 @@ class _base_model():
 
         All scipy.optimize functions take require a function with a single
         parameter, x, which is the set of parameters to test. This takes
-        thats, labels is approriately to be based as **parameters to the
+        x, labels it appropriately to be used as **parameters to the
         internal phenology model, and adds any fixed parameters.
         """
         parameters = self._translate_scipy_parameters(x)
@@ -356,12 +377,13 @@ class _base_model():
 
     def score(self, metric='rmse', doy_observed=None,
               to_predict=None, predictors=None):
-        """Get the scoring metric for fitted data
+        """Evaluate a prediction given observed doy values
 
-        Get the score on the dataset used for fitting (if fitting was done),
-        otherwise set ``to_predict``, and ``predictors`` as used in
-        ``model.predict()``. In the latter case score is calculated using
-        observed values ``doy_observed``.
+        Given no arguments this will return the RMSE on the dataset used for
+        fitting (if fitting was done).
+        To evaluate a new set of data set ``to_predict``, and ``predictors``
+        as used in ``model.predict()``. The predictions from these will be
+        evluated against the true values in ``doy_observed``.
 
         Metrics available are root mean square error (``rmse``) and AIC (``aic``).
         For AIC the number of parameters in the model is set to the number of
@@ -369,19 +391,43 @@ class _base_model():
         model parameters. 
 
         Parameters:
-            metric : str
-                Either 'rmse' or 'aic'
+            metric : str, optional
+                The metric used either 'rmse' for the root mean square error,
+                or 'aic' for akaike information criteria.
+                
+            doy_observed : numpy array, optional
+                The true doy values to evaluate with. This must be a numpy
+                array the same length as the number of rows in to_predict
+
+            to_predict : dataframe, optional
+                pandas dataframe of site/year combinations to predict from
+                the given predictor data. just like the observations 
+                dataframe used in fit() but (optionally) without the doy column
+
+            predictors : dataframe, optional
+                pandas dataframe in the format specific to this package
+        
+        Returns:
+            The score as a float
         """
         self._check_parameter_completeness()
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
 
         if doy_observed is None:
             doy_observed = self.obs_fitting
         elif isinstance(doy_observed, np.ndarray):
-            pass
+            if not isinstance(to_predict, pd.DataFrame) or not isinstance(predictors, pd.DataFrame):
+                raise TypeError('to_predict and predictors must be pandas dataframes if ',
+                                'evaluating new data')
+
+            if doy_observed.shape[0] != to_predict.shape[0]:
+                raise TypeError('The length of doy_observed must be equal to the',
+                                'length of to_predict.')
+
         else:
             raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
 
         error_function = utils.optimize.get_loss_function(method=metric)
 

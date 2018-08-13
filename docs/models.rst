@@ -32,6 +32,7 @@ Primary Models
     MSB
     Sequential
     M1
+    FallCooling
     Naive
 
 
@@ -42,3 +43,4 @@ Ensemble Models
     :toctree: generated/
     
     BootstrapModel
+    WeightedEnsemble

@@ -1,9 +1,9 @@
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 import warnings
 
 
-class Linear(_base_model):
+class Linear(BaseModel):
     """Linear Regression Model
 
     A 2 parameter regression model with :math:`DOY` as
@@ -12,8 +12,10 @@ class Linear(_base_model):
     .. math::
         DOY = \\beta_{1} + \\beta_{2}T_{mean}
 
-    where :math:`T_{mean}` is the mean spring temperature.
-    The start and end of spring is configurable.
+    where :math:`T_{mean}` is the mean temperature of the time period specified.
+    By default it is set to model spring phenology (with mean temperature of
+    Jan. 1 - March 31). This can also be used for fall phenology by setting the
+    time parameters to the late summer/fall season.
 
     Parameters:
         intercept : int | float
@@ -24,33 +26,33 @@ class Linear(_base_model):
             | :math:`\\beta_{1}`, Slope of the model
             | default : (-25,25)
 
-        spring_start : int
-            | The start day of spring
+        time_start : int
+            | Start doy for the season of interest
             | default : 1 (Jan 1)
 
-        spring_end : int
-            | The last day of spring
-            | default : 90 \(March 30\)
+        time_length : int
+            | The length of the season in days
+            | default : 90
 
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'intercept': (-67, 298), 'slope': (-25, 25),
-                                        'spring_start': 0, 'spring_end': 90}
+                                        'time_start': 0, 'time_length': 90}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
                                'predictors': ['temperature', 'doy_series']}
 
     def _apply_model(self, temperature, doy_series, intercept, slope,
-                     spring_start, spring_end):
+                     time_start, time_length):
         mean_spring_temp = utils.transforms.mean_temperature(temperature, doy_series,
-                                                             start_doy=spring_start,
-                                                             end_doy=spring_end)
+                                                             start_doy=time_start,
+                                                             end_doy=time_start + time_length)
         return mean_spring_temp * slope + intercept
 
 
-class Naive(_base_model):
+class Naive(BaseModel):
     """A naive model of the spatially interpolated mean
 
     This is the mean doy for an event adjusted for latitude, essentially    
@@ -75,7 +77,7 @@ class Naive(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'intercept': (-67, 298), 'slope': (-25, 25)}
         self._organize_parameters(parameters)
         self._required_data = {'predictor_columns': ['site_id', 'year', 'doy'],

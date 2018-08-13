@@ -4,7 +4,7 @@ import pytest
 obs, predictors = utils.load_test_data()
 
 core_model_names = ['Uniforc','Unichill','ThermalTime','Alternating','MSB',
-                    'Linear','Sequential','M1','Naive']
+                    'Linear','Sequential','M1','Naive','FallCooling']
 
 # Setup a list of (model_name, fitted_model object)
 fitted_models = [utils.load_model(model_name)() for model_name in core_model_names]
@@ -32,9 +32,28 @@ def test_predict_output_length2(model_name, fitted_model):
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_predict_output_shape(model_name, fitted_model):
     """Predict output shape should be 1D"""
-    
     assert len(fitted_model.predict().shape) == 1
-    
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_score(model_name, fitted_model):
+    """Score should return a single number"""
+    assert isinstance(fitted_model.score(), float)
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_score_with_new_data(model_name, fitted_model):
+    """Score should return a single number using a new prediction set"""
+    assert isinstance(fitted_model.score(doy_observed = obs.doy.values[1:10],
+                                         to_predict = obs[1:10],
+                                         predictors = predictors), float)
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_do_not_score_with_non_numpy_observed_values(model_name, fitted_model):
+    """doy_observed argument should only be a numpy array"""
+    with pytest.raises(TypeError):
+        fitted_model.score(doy_observed = list(obs.doy.values[1:10]),
+                                         to_predict = obs[1:10],
+                                         predictors = predictors)
+
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_brute_force(model_name, fitted_model):
     """Test brute force optimization"""
@@ -114,7 +133,7 @@ def test_estimate_all_but_one_parameter(model_name, fitted_model):
 
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_error_on_bad_parameter_names(model_name, fitted_model):
-    """Expect error when uknown parameter name is used"""
+    """Expect error when unknown parameter name is used"""
     with pytest.raises(RuntimeError):
         utils.load_model(model_name)(parameters={'not_a_parameter':0})
         

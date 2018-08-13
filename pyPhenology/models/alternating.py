@@ -1,9 +1,9 @@
 import numpy as np
 from . import utils
-from .base import _base_model
+from .base import BaseModel
 
 
-class Alternating(_base_model):
+class Alternating(BaseModel):
     """Alternating model.
 
     Originally defined in Cannell & Smith 1983.
@@ -32,12 +32,12 @@ class Alternating(_base_model):
             | :math:`c` - scale parameter of chill day curve
             | default : (-5,0)
 
-        threshold : int | flaot
+        threshold : int | float
             | :math:`threshold` - Degree threshold above which forcing accumulates, and below which chilling accumulates.
             | default : 5
 
         t1 : int
-            | :math:`` - DOY which forcing and chilling accumulationg starts.
+            | :math:`` - DOY which forcing and chilling accumulation starts.
             | default : 1 (Jan 1)
 
     Notes:
@@ -49,7 +49,7 @@ class Alternating(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'threshold': 5, 't1': 1,
                                         'a': (-1000, 1000), 'b': (0, 5000), 'c': (-5, 0)}
         self._organize_parameters(parameters)
@@ -76,7 +76,7 @@ class Alternating(_base_model):
         return utils.transforms.doy_estimator(difference, doy_series, threshold=0)
 
 
-class MSB(_base_model):
+class MSB(BaseModel):
     """Macroscale Species-specific Budburst model.
 
     Extension of the Alternating model which adds a correction (:math:`d`)
@@ -108,7 +108,7 @@ class MSB(_base_model):
         d : int | float
             | :math:`d` - Correction factor using spring temperature
 
-        threshold : int | flaot
+        threshold : int | float
             | :math:`threshold` - Degree threshold above which forcing 
               accumulates, and below which chilling accumulates.
             | default : 5
@@ -126,7 +126,7 @@ class MSB(_base_model):
     """
 
     def __init__(self, parameters={}):
-        _base_model.__init__(self)
+        BaseModel.__init__(self)
         self.all_required_parameters = {'threshold': 5, 't1': 1, 'd': (-100, 100),
                                         'a': (-1000, 1000), 'b': (0, 5000), 'c': (-5, 0)}
         self._organize_parameters(parameters)
