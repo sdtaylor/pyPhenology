@@ -591,6 +591,12 @@ class WeightedEnsemble(EnsembleBase):
             core_model_info[-1].update({'weight': self.weights[i]})
         return core_model_info
 
+    def _get_model_info(self):
+        # essentially the same as get_params() but is in a format capable of
+        # being loaded again later by _parse_fully_fitted_model()
+        return {'model_name': type(self).__name__,
+                'core_models': self.get_params()}
+
     def get_weights(self):
         self._check_parameter_completeness()
         return self.weights
