@@ -5,8 +5,56 @@ from . import validation
 from copy import deepcopy
 import warnings
 
+class EnsembleBase():
+    def __init__(self):
+        pass
+    
+    def score(self, metric='rmse', doy_observed=None,
+              to_predict=None, predictors=None):
+        """Get the scoring metric for fitted data
+        Get the score on the dataset used for fitting (if fitting was done),
+        otherwise set ``to_predict``, and ``predictors`` as used in
+        ``model.predict()``. In the latter case score is calculated using
+        observed values ``doy_observed``.
+        Metrics available are root mean square error (``rmse``).
+        Parameters:
+            metric : str
+                Currently only rmse is available for BootstrapModel
+        """
+        self._check_parameter_completeness()
+        doy_estimated = self.predict(to_predict=to_predict,
+                                     predictors=predictors)
 
-class BootstrapModel():
+        if doy_observed is None:
+            doy_observed = self.observations.doy.values
+        elif isinstance(doy_observed, np.ndarray):
+            pass
+        else:
+            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
+
+        error_function = utils.optimize.get_loss_function(method=metric)
+
+        return error_function(doy_observed, doy_estimated)
+    
+    def save_params(self, filename, overwrite=False):
+        """Save model parameters
+        
+
+        Parameters:
+            filename : str
+                Filename to save model to. Note this can be loaded again by
+                passing the filename in the ``parameters`` argument, but only
+                with the BootstrapModel.
+            overwrite : bool
+                Overwrite the file if it exists
+        """
+        self._check_parameter_completeness()
+
+        utils.misc.write_saved_model(model_info=self._get_model_info(),
+                                     model_file=filename,
+                                     overwrite=overwrite)
+    
+class BootstrapModel(EnsembleBase):
     """Fit a model using bootstrapping of the data.
 
     Bootstrapping is a technique to estimate model uncertainty. Many
@@ -45,6 +93,7 @@ class BootstrapModel():
                 Also if it is a saved model file then the core_model and
                 num_bootstrap parameters are ignored.
         """
+        EnsembleBase.__init__(self)
         self.observations = None
         self.predictors = None
         self.model_list = []
@@ -91,17 +140,14 @@ class BootstrapModel():
         for bootstrap_iteration in model_info['parameters']:
             fitted_bootstrap_iteration = load_model_parameters(bootstrap_iteration)
             self.model_list.append(fitted_bootstrap_iteration)
-
+    
     def fit(self, observations, predictors, **kwargs):
         """Fit the underlying core models
-
         Parameters:
             observations : dataframe
                 pandas dataframe of phenology observations
-
             predictors : dataframe
                 pandas dataframe of associated predictors
-
             kwargs :
                 Other arguments passed to core model fitting (eg. optimizer methods)
         """
@@ -159,36 +205,6 @@ class BootstrapModel():
 
         return predictions
 
-    def score(self, metric='rmse', doy_observed=None,
-              to_predict=None, predictors=None):
-        """Get the scoring metric for fitted data
-
-        Get the score on the dataset used for fitting (if fitting was done),
-        otherwise set ``to_predict``, and ``predictors`` as used in
-        ``model.predict()``. In the latter case score is calculated using
-        observed values ``doy_observed``.
-
-        Metrics available are root mean square error (``rmse``).
-
-        Parameters:
-            metric : str
-                Currently only rmse is available for BootstrapModel
-        """
-        self._check_parameter_completeness()
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
-
-        if doy_observed is None:
-            doy_observed = self.observations.doy.values
-        elif isinstance(doy_observed, np.ndarray):
-            pass
-        else:
-            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
-
-        error_function = utils.optimize.get_loss_function(method=metric)
-
-        return error_function(doy_observed, doy_estimated)
-
     def _check_parameter_completeness(self):
         """Make sure all parameters have been set from fitting or loading at initialization"""
         
@@ -217,29 +233,7 @@ class BootstrapModel():
         return {'model_name': type(self).__name__,
                 'parameters': core_model_info}
 
-    def save_params(self, filename, overwrite=False):
-        """Save model parameters
-
-        Note this will save details on all bootstrapped models, and 
-        can only be loaded again as a bootstrap model.
-
-        Parameters:
-            filename : str
-                Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``parameters`` argument, but only
-                with the BootstrapModel.
-
-            overwrite : bool
-                Overwrite the file if it exists
-
-        """
-        self._check_parameter_completeness()
-
-        utils.misc.write_saved_model(model_info=self._get_model_info(),
-                                     model_file=filename,
-                                     overwrite=overwrite)
-
-class Ensemble():
+class Ensemble(EnsembleBase):
     """Fit an ensemble of different models.
     
     This model can fit multiple models into an ensemble where the 
@@ -266,6 +260,7 @@ class Ensemble():
         core_models : list of pyPhenology models, or a saved model file
 
         """
+        EnsembleBase.__init__(self)
         self.observations = None
         self.predictors = None
 
@@ -297,17 +292,14 @@ class Ensemble():
         for model in model_info['core_models']:
             fitted_ensemble_member = load_model_parameters(model)
             self.model_list.append(fitted_ensemble_member)
-            
+
     def fit(self, observations, predictors, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
-
         Parameters:
             observations : dataframe
                 pandas dataframe of phenology observations
-
             predictors : dataframe
                 pandas dataframe of associated predictors
-
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
@@ -353,36 +345,6 @@ class Ensemble():
 
         return predictions
 
-    def score(self, metric='rmse', doy_observed=None,
-              to_predict=None, predictors=None):
-        """Get the scoring metric for fitted data
-
-        Get the score on the dataset used for fitting (if fitting was done),
-        otherwise set ``to_predict``, and ``predictors`` as used in
-        ``model.predict()``. In the latter case score is calculated using
-        observed values ``doy_observed``.
-
-        Metrics available are root mean square error (``rmse``).
-
-        Parameters:
-            metric : str
-                Currently only rmse is available for WeightedEnsemble
-        """
-        self._check_parameter_completeness()
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
-
-        if doy_observed is None:
-            doy_observed = self.observations.doy.values
-        elif isinstance(doy_observed, np.ndarray):
-            pass
-        else:
-            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
-
-        error_function = utils.optimize.get_loss_function(method=metric)
-
-        return error_function(doy_observed, doy_estimated)
-
     def _check_parameter_completeness(self):
         """Make sure all parameters have been set from fitting or loading at initialization"""
         [m._check_parameter_completeness() for m in self.model_list]
@@ -408,29 +370,7 @@ class Ensemble():
         return {'model_name': type(self).__name__,
                 'core_models': core_model_info}
 
-    def save_params(self, filename, overwrite=False):
-        """Save model parameters
-
-        Note this will save details on all ensemble models, and 
-        can only be loaded again as an ensemble model.
-
-        Parameters:
-            filename : str
-                Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``parameters`` argument, but only
-                with the BootstrapModel.
-
-            overwrite : bool
-                Overwrite the file if it exists
-
-        """
-        self._check_parameter_completeness()
-
-        utils.misc.write_saved_model(model_info=self._get_model_info(),
-                                     model_file=filename,
-                                     overwrite=overwrite)
-
-class WeightedEnsemble():
+class WeightedEnsemble(EnsembleBase):
     """Fit an ensemble of many models with associated weights
 
     This model can combine multiple models into an ensemble where predictions
@@ -478,6 +418,7 @@ class WeightedEnsemble():
         core_models : list of pyPhenology models, or a saved model file
 
         """
+        EnsembleBase.__init__(self)
         self.observations = None
         self.predictors = None
 
@@ -633,38 +574,6 @@ class WeightedEnsemble():
             return self.weights, predictions
         else:
             raise ValueError('Unknown aggregation: ' + str(aggregation))
-        
-        
-
-    def score(self, metric='rmse', doy_observed=None,
-              to_predict=None, predictors=None):
-        """Get the scoring metric for fitted data
-
-        Get the score on the dataset used for fitting (if fitting was done),
-        otherwise set ``to_predict``, and ``predictors`` as used in
-        ``model.predict()``. In the latter case score is calculated using
-        observed values ``doy_observed``.
-
-        Metrics available are root mean square error (``rmse``).
-
-        Parameters:
-            metric : str
-                Currently only rmse is available for WeightedEnsemble
-        """
-        self._check_parameter_completeness()
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
-
-        if doy_observed is None:
-            doy_observed = self.observations.doy.values
-        elif isinstance(doy_observed, np.ndarray):
-            pass
-        else:
-            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
-
-        error_function = utils.optimize.get_loss_function(method=metric)
-
-        return error_function(doy_observed, doy_estimated)
 
     def _check_parameter_completeness(self):
         """Make sure all parameters have been set from fitting or loading at initialization"""
@@ -672,30 +581,6 @@ class WeightedEnsemble():
             raise RuntimeError('Model not fit')
         
         [m._check_parameter_completeness() for m in self.model_list]
-    
-    def save_params(self, filename, overwrite=False):
-        """Save model parameters
-
-        Note this can only be loaded again as a WeightedEnsemble model. 
-
-        Parameters:
-            filename : str
-                Filename to save model to. Note this can be loaded again by
-                passing the filename in the ``core_models`` argument, or by
-                using ``utils.load_saved_model``.
-
-            overwrite : bool
-                Overwrite the file if it exists
-
-        """
-        self._check_parameter_completeness()
-
-        model_info = {'model_name': type(self).__name__,
-                      'core_models': self.get_params()}
-
-        utils.misc.write_saved_model(model_info=model_info,
-                                     model_file=filename,
-                                     overwrite=overwrite)
     
     def get_params(self):
         self._check_parameter_completeness()
