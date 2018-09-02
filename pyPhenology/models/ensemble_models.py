@@ -465,9 +465,14 @@ class WeightedEnsemble(EnsembleBase):
 
         self.weights = np.array(self.weights)
 
+    def _fit_job(self, model, observations, predictors, **kwargs):
+        """A wrapper to fit models within joblib.Parallel"""
+        model.fit(observations, predictors, **kwargs)
+        return model
+
     def fit(self, observations, predictors, iterations=10, held_out_percent=0.2,
             loss_function='rmse', method='DE', optimizer_params='practical',
-            verbose=False, debug=False):
+            n_jobs=1, verbose=False, debug=False):
         """Fit the underlying core models
         
         Parameters:
@@ -495,52 +500,54 @@ class WeightedEnsemble(EnsembleBase):
         loss = utils.optimize.get_loss_function(loss_function)
         weight_bounds = [(1,10)] * len(self.model_list)
         translate_scipy_weights = lambda w: np.array(w)
-        for i in range(iterations):
-            held_out_observations = self.observations.sample(frac=held_out_percent,
-                                                             replace=False)
-            training_observations = self.observations[~self.observations.index.isin(held_out_observations.index)]
-            
-            held_out_predictions = []
+        
+        with Parallel(n_jobs = n_jobs) as parallel:
+            for i in range(iterations):
+                held_out_observations = self.observations.sample(frac=held_out_percent,
+                                                                 replace=False)
+                training_observations = self.observations[~self.observations.index.isin(held_out_observations.index)]
 
-            for model in self.model_list:
-                model.fit(training_observations, predictors,
-                          loss_function=loss_function, method=method, 
-                          optimizer_params=optimizer_params,
-                          verbose=verbose, debug=debug)
+                # Fit every model with a new set of random training data
+                self.model_list = parallel(delayed(self._fit_job)
+                    (m, training_observations, predictors,
+                     loss_function=loss_function, method=method, 
+                     optimizer_params=optimizer_params,
+                     verbose=verbose, debug=debug) for m in self.model_list)
                 
-                held_out_predictions.append(model.predict(held_out_observations, predictors=predictors))
+                # Predict with every model on a new set of random test data
+                held_out_predictions = [model.predict(held_out_observations, predictors=predictors) for model in self.model_list]
+                held_out_predictions = np.array(held_out_predictions).T
+        
+                # Special funtion for use inside scipy.optimize routines
+                def weighted_loss(w):
+                    w = np.array([w])
+                    w = w/w.sum()
+                    pred = (held_out_predictions * w).sum(1)
+                    return loss(held_out_observations.doy.values, pred)
+                
+                # Find the weights of each model with minimize RMSE
+                iteration_weights = utils.optimize.fit_parameters(function_to_minimize = weighted_loss,
+                                                                  bounds = weight_bounds,
+                                                                  method='DE',
+                                                                  optimizer_params=optimizer_params,
+                                                                  results_translator=translate_scipy_weights)
+                iteration_weights = iteration_weights / iteration_weights.sum()
+                self.fitted_weights[i] = iteration_weights
+        
+            self.weights = self.fitted_weights.mean(0)
             
-            held_out_predictions = np.array(held_out_predictions).T
-    
-            # Special funtion for use inside scipy.optimize routines
-            def weighted_loss(w):
-                w = np.array([w])
-                w = w/w.sum()
-                pred = (held_out_predictions * w).sum(1)
-                return loss(held_out_observations.doy.values, pred)
+            # Sum of weights should equal or be extremely close to 1
+            summed_weights = self.weights.sum().round(5)
+            if summed_weights != 1.0:
+                raise RuntimeError('Weights do not sum to 1, got '+str(summed_weights))
             
-            iteration_weights = utils.optimize.fit_parameters(function_to_minimize = weighted_loss,
-                                                              bounds = weight_bounds,
-                                                              method='DE',
-                                                              optimizer_params=optimizer_params,
-                                                              results_translator=translate_scipy_weights)
-            iteration_weights = iteration_weights / iteration_weights.sum()
-            self.fitted_weights[i] = iteration_weights
-        
-        self.weights = self.fitted_weights.mean(0)
-        
-        # Sum of weights should equal or be extremely close to 1
-        summed_weights = self.weights.sum().round(5)
-        if summed_weights != 1.0:
-            raise RuntimeError('Weights do not sum to 1, got '+str(summed_weights))
-        
-        # Refit the core models one last time to the full dataset. These 
-        # fitted models will be compbined with the weights for predictions
-        for model in self.model_list:
-                model.fit(observations, predictors,
-                          loss_function=loss_function, method=method, 
-                          optimizer_params=optimizer_params,
-                          verbose=verbose, debug=debug)
+            # Refit the core models one last time to the full dataset. These 
+            # fitted models will be compbined with the weights for predictions
+            self.model_list = parallel(delayed(self._fit_job)
+                (m, observations, predictors,
+                 loss_function=loss_function, method=method, 
+                 optimizer_params=optimizer_params,
+                 verbose=verbose, debug=debug) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None,
                 aggregation = 'weighted_mean', **kwargs):

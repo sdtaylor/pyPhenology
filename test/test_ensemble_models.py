@@ -1,6 +1,7 @@
 from pyPhenology import models, utils
 import numpy as np
 import pytest
+from copy import deepcopy
 
 obs, predictors = utils.load_test_data(name='vaccinium', phenophase='budburst')
 
@@ -74,6 +75,12 @@ def test_bootstrap_initialize():
     """Bootstrap model requires core_model and num_bootstraps set"""
     with pytest.raises(TypeError):
         models.BootstrapModel()
+
+@pytest.mark.parametrize('model_name, fitted_model', test_cases)
+def test_ensemble_fit_with_3_jobs(model_name, fitted_model):
+    """Fit with 3 processes"""
+    model_copy = deepcopy(fitted_model)
+    model_copy.fit(obs, predictors, optimizer_params='testing', n_jobs=3)
 
 @pytest.mark.parametrize('model_name, fitted_model', test_cases)
 def test_ensemble_predict_default(model_name, fitted_model):
