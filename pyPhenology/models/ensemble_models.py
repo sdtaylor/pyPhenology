@@ -4,6 +4,7 @@ from ..utils import load_model, load_model_parameters
 from . import validation
 from copy import deepcopy
 import warnings
+from joblib import Parallel, delayed
 
 class EnsembleBase():
     def __init__(self):
@@ -53,6 +54,11 @@ class EnsembleBase():
         utils.misc.write_saved_model(model_info=self._get_model_info(),
                                      model_file=filename,
                                      overwrite=overwrite)
+
+    def _fit_job(self, model, **kwargs):
+        """A wrapper to fit models within joblib.Parallel"""
+        model.fit(self.observations, self.predictors, **kwargs)
+        return model
     
 class BootstrapModel(EnsembleBase):
     """Fit a model using bootstrapping of the data.
@@ -141,24 +147,29 @@ class BootstrapModel(EnsembleBase):
             fitted_bootstrap_iteration = load_model_parameters(bootstrap_iteration)
             self.model_list.append(fitted_bootstrap_iteration)
     
-    def fit(self, observations, predictors, **kwargs):
+    def _fit_job(self, model, **kwargs):
+        """A wrapper to fit models within joblib.Parallel"""
+        obs_shuffled = self.observations.sample(frac=1, replace=True).copy()
+        model.fit(obs_shuffled, self.predictors, **kwargs)
+        return model
+
+    def fit(self, observations, predictors, n_jobs=1, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
+
         Parameters:
             observations : dataframe
                 pandas dataframe of phenology observations
+
             predictors : dataframe
                 pandas dataframe of associated predictors
+
             kwargs :
-                Other arguments passed to core model fitting (eg. optimizer methods)
+                Other arguments passed to core model fitting (eg. optimzer methods)
         """
-        # TODO: do the predictors transform here cause so it doesn't get repeated a bunch
-        # need to wait till fit takes arrays directly
         self.observations = observations
         self.predictors = predictors
-
-        for model in self.model_list:
-            obs_shuffled = observations.sample(frac=1, replace=True).copy()
-            model.fit(obs_shuffled, predictors, **kwargs)
+        
+        self.model_list = Parallel(n_jobs = n_jobs)(delayed(self._fit_job)(m, **kwargs) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None, aggregation='mean', **kwargs):
         """Make predictions from the bootstrapped models.
@@ -293,7 +304,7 @@ class Ensemble(EnsembleBase):
             fitted_ensemble_member = load_model_parameters(model)
             self.model_list.append(fitted_ensemble_member)
 
-    def fit(self, observations, predictors, verbose=False, debug=False, **kwargs):
+    def fit(self, observations, predictors, n_jobs=1, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
         Parameters:
             observations : dataframe
@@ -306,8 +317,7 @@ class Ensemble(EnsembleBase):
         self.observations = observations
         self.predictors = predictors
 
-        for model in self.model_list:
-            model.fit(observations, predictors, **kwargs)
+        self.model_list = Parallel(n_jobs = n_jobs)(delayed(self._fit_job)(m, **kwargs) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None, aggregation='mean', **kwargs):
         """Make predictions..

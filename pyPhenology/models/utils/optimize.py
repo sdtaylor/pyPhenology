@@ -1,12 +1,17 @@
 import numpy as np
 from scipy import optimize
 
+def rmse_loss(obs, pred):
+    return np.sqrt(np.mean((obs - pred)**2))
+
+def aic_loss(obs, pred, n_param):
+    return len(obs) * np.log(np.mean((obs - pred)**2)) + 2 * (n_param + 1)
 
 def get_loss_function(method):
     if method == 'rmse':
-        return lambda obs, pred: np.sqrt(np.mean((obs - pred)**2))
+        return rmse_loss
     elif method == 'aic':
-        return lambda obs, pred, n_param: len(obs) * np.log(np.mean((obs - pred)**2)) + 2 * (n_param + 1)
+        return aic_loss
     else:
         raise ValueError('Unknown loss method: ' + method)
 
