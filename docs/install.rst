@@ -10,6 +10,7 @@ Required dependencies
 - `scipy <https://www.scipy.org/scipylib/index.html>`__ (1.0 or later)
 - `numpy <http://www.numpy.org/>`__ (1.8 or later)
 - `pandas <http://pandas.pydata.org/>`__ (0.18.0 or later)
+- `joblib <https://joblib.readthedocs.io/>`__ (0.12.0 or later)
 
 all these requirements can be installed for Linux, Windows or MacOSX, e.g. by using the package manager `conda <https://conda.io/miniconda.html>`__.
 
