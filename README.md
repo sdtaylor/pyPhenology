@@ -13,7 +13,7 @@ Plant phenology models in python with a scikit-learn inspired API
 
 
 ## Installation
-Requires: scipy, pandas, and numpy
+Requires: scipy, pandas, joblib, and numpy
 
 Install via pip
 

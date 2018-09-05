@@ -163,6 +163,9 @@ class BootstrapModel(EnsembleBase):
             predictors : dataframe
                 pandas dataframe of associated predictors
 
+            n_jobs : int
+                number of parallel processes to use
+
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
@@ -309,8 +312,13 @@ class Ensemble(EnsembleBase):
         Parameters:
             observations : dataframe
                 pandas dataframe of phenology observations
+
             predictors : dataframe
                 pandas dataframe of associated predictors
+
+            n_jobs : int
+                number of parallel processes to use
+
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
@@ -488,7 +496,10 @@ class WeightedEnsemble(EnsembleBase):
             held_out_percent : float
                 Percent of randomly held out data to use in each stacking
                 iteration. Must be between 0 and 1. 
-                
+
+            n_jobs : int
+                number of parallel processes to use
+
             kwargs :
                 Other arguments passed to core model fitting (eg. optimzer methods)
         """
