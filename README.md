@@ -2,7 +2,8 @@
 [![Build Status](https://travis-ci.org/sdtaylor/pyPhenology.svg?branch=master)](https://travis-ci.org/sdtaylor/pyPhenology) 
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/sdtaylor/pyPhenology/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/pyphenology/badge/?version=master)](http://pyphenology.readthedocs.io/en/master/?badge=master)
-[![codecov](https://codecov.io/gh/sdtaylor/pyPhenology/branch/master/graph/badge.svg)](https://codecov.io/gh/sdtaylor/pyPhenology)  
+[![codecov](https://codecov.io/gh/sdtaylor/pyPhenology/branch/master/graph/badge.svg)](https://codecov.io/gh/sdtaylor/pyPhenology)
+[![DOI](http://joss.theoj.org/papers/10.21105/joss.00827/status.svg)](https://doi.org/10.21105/joss.00827)  
 
 Plant phenology models in python with a scikit-learn inspired API
 
@@ -46,6 +47,30 @@ model = models.ThermalTime(parameters={'T':0})
 model.fit(observations, predictors)
 model.get_params()
 {'t1': 26.369813953905265, 'F': 333.76534368004388, 'T': 0}
+```
+
+## Citation
+
+If you use this software in your research please cite it as:
+
+Taylor, S. D. (2018). pyPhenology: A python framework for plant phenology modelling. Journal of Open Source Software, 3(28), 827. https://doi.org/10.21105/joss.00827
+
+Bibtex:
+```
+@article{Taylor2018,
+author = {Taylor, Shawn David},
+doi = {10.21105/joss.00827},
+journal = {Journal of Open Source Software},
+mendeley-groups = {Software/Data},
+month = {aug},
+number = {28},
+pages = {827},
+title = {{pyPhenology: A python framework for plant phenology modelling}},
+url = {http://joss.theoj.org/papers/10.21105/joss.00827},
+volume = {3},
+year = {2018}
+}
+
 ```
 
 ## Acknowledgments

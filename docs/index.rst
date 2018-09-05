@@ -37,6 +37,29 @@ License
 =======
 pyPhenology uses the open source `MIT License <https://opensource.org/licenses/MIT>`__
 
+Citation
+========
+
+If you use this software in your research please cite it as  
+
+Taylor, S. D. (2018). pyPhenology: A python framework for plant phenology modelling. Journal of Open Source Software, 3(28), 827. https://doi.org/10.21105/joss.00827
+
+Bibtex::
+
+    @article{Taylor2018,
+    author = {Taylor, Shawn David},
+    doi = {10.21105/joss.00827},
+    journal = {Journal of Open Source Software},
+    mendeley-groups = {Software/Data},
+    month = {aug},
+    number = {28},
+    pages = {827},
+    title = {{pyPhenology: A python framework for plant phenology modelling}},
+    url = {http://joss.theoj.org/papers/10.21105/joss.00827},
+    volume = {3},
+    year = {2018}
+    }
+
 Acknowledgments
 ===============
 Development of this software was funded by `the Gordon and Betty Moore Foundation's Data-Driven Discovery Initiative <http://www.moore.org/programs/science/data-driven-discovery>`__ through `Grant GBMF4563 <http://www.moore.org/grants/list/GBMF4563>`__ to Ethan P. White.
