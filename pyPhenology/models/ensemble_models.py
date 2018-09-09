@@ -60,6 +60,10 @@ class EnsembleBase():
         model.fit(self.observations, self.predictors, **kwargs)
         return model
     
+    def _predict_job(self, model, to_predict, predictors, **kwargs):
+        """A wrapper to predict new data within joblib.Parallel"""
+        return model.predict(to_predict=to_predict, predictors=predictors, **kwargs)
+    
 class BootstrapModel(EnsembleBase):
     """Fit a model using bootstrapping of the data.
 
@@ -153,6 +157,7 @@ class BootstrapModel(EnsembleBase):
         model.fit(obs_shuffled, self.predictors, **kwargs)
         return model
 
+    
     def fit(self, observations, predictors, n_jobs=1, verbose=False, debug=False, **kwargs):
         """Fit the underlying core models
 
@@ -174,7 +179,8 @@ class BootstrapModel(EnsembleBase):
         
         self.model_list = Parallel(n_jobs = n_jobs)(delayed(self._fit_job)(m, **kwargs) for m in self.model_list)
 
-    def predict(self, to_predict=None, predictors=None, aggregation='mean', **kwargs):
+    def predict(self, to_predict=None, predictors=None, 
+                aggregation='mean', n_jobs=1, **kwargs):
         """Make predictions from the bootstrapped models.
 
         Predictions will be made using each of the bootstrapped models.
@@ -201,11 +207,9 @@ class BootstrapModel(EnsembleBase):
         if to_predict is None:
             to_predict = self.observations
 
-        predictions = []
-        for model in self.model_list:
-            predictions.append(model.predict(to_predict=to_predict,
-                                             predictors=predictors,
-                                             **kwargs))
+        predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
+            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            for m in self.model_list)
 
         predictions = np.array(predictions)
         if aggregation == 'mean':
@@ -327,7 +331,8 @@ class Ensemble(EnsembleBase):
 
         self.model_list = Parallel(n_jobs = n_jobs)(delayed(self._fit_job)(m, **kwargs) for m in self.model_list)
 
-    def predict(self, to_predict=None, predictors=None, aggregation='mean', **kwargs):
+    def predict(self, to_predict=None, predictors=None, 
+                aggregation='mean', n_jobs=1, **kwargs):
         """Make predictions..
 
         Predictions will be made using each core models, then a final prediction
@@ -345,11 +350,9 @@ class Ensemble(EnsembleBase):
         if to_predict is None:
             to_predict = self.observations
 
-        predictions = []
-        for model in self.model_list:
-            predictions.append(model.predict(to_predict=to_predict,
-                                             predictors=predictors,
-                                             **kwargs))
+        predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
+            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            for m in self.model_list)
 
         predictions = np.array(predictions)
         if aggregation == 'mean':
@@ -561,7 +564,7 @@ class WeightedEnsemble(EnsembleBase):
                  verbose=verbose, debug=debug) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None,
-                aggregation = 'weighted_mean', **kwargs):
+                aggregation = 'weighted_mean', n_jobs=1, **kwargs):
         """Make predictions..
 
         Predictions will be made using each core models, then a final average
@@ -586,11 +589,9 @@ class WeightedEnsemble(EnsembleBase):
             predictors = self.predictors
             to_predict = self.observations
 
-        predictions = []
-        for model in self.model_list:
-            predictions.append(model.predict(to_predict=to_predict,
-                                             predictors=predictors,
-                                             **kwargs))
+        predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
+            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            for m in self.model_list)
 
         predictions = np.array(predictions)
 
