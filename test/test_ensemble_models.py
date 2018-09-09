@@ -83,6 +83,11 @@ def test_ensemble_fit_with_3_jobs(model_name, fitted_model):
     model_copy.fit(obs, predictors, optimizer_params='testing', n_jobs=3)
 
 @pytest.mark.parametrize('model_name, fitted_model', test_cases)
+def test_ensemble_predict_with_3_jobs(model_name, fitted_model):
+    """Predict with 3 processes"""
+    assert fitted_model.predict(n_jobs=3).shape == obs.doy.values.shape
+
+@pytest.mark.parametrize('model_name, fitted_model', test_cases)
 def test_ensemble_predict_default(model_name, fitted_model):
     """Predict with no new data should return 1D array"""
     assert fitted_model.predict().shape == obs.doy.values.shape
