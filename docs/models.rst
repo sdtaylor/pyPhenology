@@ -42,5 +42,6 @@ Ensemble Models
 .. autosummary::
     :toctree: generated/
     
+    Ensemble
     BootstrapModel
     WeightedEnsemble
