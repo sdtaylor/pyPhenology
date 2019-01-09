@@ -1,16 +1,31 @@
 language: python
-python:
-    - "3.5"
-    - "3.6"
+
+matrix:
+  include:
+  # known_parameter tests compares parameter estimates against fixed values. 
+  # This easily fails with updated scipy/numpy internals, so test using
+  # specific versions.
+  - name: "Known Parameters"
+    python: "3.6"
+    env: 
+      - TEST_ARGS="-v test/test_known_parameter_values.py"
+      - INSTALL_ARGS="scipy==1.1.0 numpy==1.15.0 pandas>=0.21 joblib>=0.12"
+  # All other tests can be run with whatever versions get installed
+  - name: "All Other Tests"
+    python: "3.6"
+    env: 
+      - TEST_ARGS="-v --ignore=test/test_known_parameter_values.py --cov=pyPhenology"
+      - INSTALL_ARGS="-r requirements.txt"
 
 install:
-    - pip install -r requirements.txt
+    - pip install $INSTALL_ARGS
     - pip install -e .
     - pip install codecov -U
     - pip install pytest-cov -U
+    - pip list
     
 script:
-    - py.test -v --cov=pyPhenology
+    - py.test $TEST_ARGS
 
 after_success:
     - codecov
