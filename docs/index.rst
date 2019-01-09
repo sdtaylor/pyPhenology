@@ -13,6 +13,21 @@ thousand observations. The API is inspired by scikit-learn, so all models can wo
 with the same code (eg: :ref:`example_model_selection_aic`). pyPhenology is currently used to build the
 continental scale phenology forecasts on http://phenology.naturecast.org
 
+.. image:: https://travis-ci.org/sdtaylor/pyPhenology.svg?branch=master
+    :target: https://travis-ci.org/sdtaylor/pyPhenology
+    :alt: Build Status
+.. image:: http://img.shields.io/badge/license-MIT-blue.svg
+    :target: https://raw.githubusercontent.com/sdtaylor/pyPhenology/master/LICENSE
+    :alt: License
+.. image:: https://readthedocs.org/projects/pyphenology/badge/?version=master
+    :target: http://pyphenology.readthedocs.io
+    :alt: Documentation Status
+.. image:: https://codecov.io/gh/sdtaylor/pyPhenology/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/sdtaylor/pyPhenology
+    :alt: Codecov
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00827/status.svg
+    :target: https://doi.org/10.21105/joss.00827
+    :alt: DOI
 
 .. toctree::
    :maxdepth: 1
