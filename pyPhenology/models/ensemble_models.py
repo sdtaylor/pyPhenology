@@ -191,6 +191,9 @@ class BootstrapModel(EnsembleBase):
             aggregation : str
                 Either 'mean','median', or 'none'. 'none' return *all* predictions
                 in an array of size (num_bootstraps, num_samples)
+            
+            n_jobs : int
+                number of parallel processes to use
 
         """
         # Get the organized predictors. This is done from the 1st model in the
@@ -344,6 +347,9 @@ class Ensemble(EnsembleBase):
             aggregation : str
                 Either 'mean', 'median', or 'none'. If using 'none' this returns
                 an array of tuple of size (number of members, predictions). 
+            
+            n_jobs : int
+                number of parallel processes to use
         """
         if predictors is None:
             predictors = self.predictors
@@ -577,6 +583,9 @@ class WeightedEnsemble(EnsembleBase):
                 Either 'weighted_mean' to get a normal prediciton, or 'none'
                 to get predictions for all models. If using 'none' this returns
                 a tuple of (weights, predictions). 
+            
+            n_jobs : int
+                number of parallel processes to use
 
         """
 
