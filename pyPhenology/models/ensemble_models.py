@@ -211,7 +211,8 @@ class BootstrapModel(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors,
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
@@ -357,7 +358,8 @@ class Ensemble(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors, 
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
@@ -570,7 +572,7 @@ class WeightedEnsemble(EnsembleBase):
                  verbose=verbose, debug=debug) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None,
-                aggregation = 'weighted_mean', n_jobs=1, **kwargs):
+                aggregation = 'mean', n_jobs=1, **kwargs):
         """Make predictions..
 
         Predictions will be made using each core models, then a final average
@@ -599,12 +601,13 @@ class WeightedEnsemble(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors,
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
 
-        if aggregation=='weighted_mean':
+        if aggregation=='mean':
             # Transpose to align the model axis with the 1D weight array
             # then transpose back to sum the weighted predictions.
             return (predictions.T * self.weights).T.sum(0)
