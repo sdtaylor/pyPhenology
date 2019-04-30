@@ -17,7 +17,7 @@ class BaseModel():
 
     def fit(self, observations, predictors, loss_function='rmse',
             method='DE', optimizer_params='practical',
-            verbose=False, debug=False):
+            verbose=False, debug=False, **kwargs):
         """Estimate the parameters of a model
 
         Parameters:
@@ -94,7 +94,7 @@ class BaseModel():
                  'in model fitting. Perhaps try with different optimizer '\
                  'values.')
 
-    def predict(self, to_predict=None, predictors=None):
+    def predict(self, to_predict=None, predictors=None, **kwargs):
         """Make predictions
 
         Predict the DOY given predictor data and associated site/year info.
