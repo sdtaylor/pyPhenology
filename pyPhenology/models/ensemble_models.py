@@ -64,6 +64,17 @@ class EnsembleBase():
         """A wrapper to predict new data within joblib.Parallel"""
         return model.predict(to_predict=to_predict, predictors=predictors, **kwargs)
     
+    def ensemble_shape(self, shape=()):
+        """Returns a tuple signifying the layers of submodels
+        ie. for a single 50-bootstrap model the shape is (50,)
+        for an ensemble of four 50-bootstrapped  models the shape is (4,50)
+        """
+        num_sub_models = len(self.model_list)
+        if isinstance(self.model_list[0], EnsembleBase):
+            return self.model_list[0].ensemble_shape(shape = shape + (num_sub_models,))
+        else:
+            return shape + (num_sub_models,)
+    
 class BootstrapModel(EnsembleBase):
     """Fit a model using bootstrapping of the data.
 
@@ -211,7 +222,8 @@ class BootstrapModel(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors,
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
@@ -357,7 +369,8 @@ class Ensemble(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors, 
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
@@ -570,7 +583,7 @@ class WeightedEnsemble(EnsembleBase):
                  verbose=verbose, debug=debug) for m in self.model_list)
 
     def predict(self, to_predict=None, predictors=None,
-                aggregation = 'weighted_mean', n_jobs=1, **kwargs):
+                aggregation = 'mean', n_jobs=1, **kwargs):
         """Make predictions..
 
         Predictions will be made using each core models, then a final average
@@ -599,12 +612,13 @@ class WeightedEnsemble(EnsembleBase):
             to_predict = self.observations
 
         predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, **kwargs)
+            (m, to_predict = to_predict, predictors = predictors,
+             aggregation=aggregation, **kwargs)
             for m in self.model_list)
 
         predictions = np.array(predictions)
 
-        if aggregation=='weighted_mean':
+        if aggregation=='mean':
             # Transpose to align the model axis with the 1D weight array
             # then transpose back to sum the weighted predictions.
             return (predictions.T * self.weights).T.sum(0)
