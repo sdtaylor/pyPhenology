@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 NAME ='pyPhenology'
-VERSION = '0.7.0'
+VERSION = '0.7.1'
 DESCRIPTION = 'Plant phenology models in python'
 URL = 'https://github.com/sdtaylor/pyPhenology'
 AUTHOR = 'Shawn Taylor'
