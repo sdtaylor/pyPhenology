@@ -64,6 +64,17 @@ class EnsembleBase():
         """A wrapper to predict new data within joblib.Parallel"""
         return model.predict(to_predict=to_predict, predictors=predictors, **kwargs)
     
+    def ensemble_shape(self, shape=()):
+        """Returns a tuple signifying the layers of submodels
+        ie. for a single 50-bootstrap model the shape is (50,)
+        for an ensemble of four 50-bootstrapped  models the shape is (4,50)
+        """
+        num_sub_models = len(self.model_list)
+        if isinstance(self.model_list[0], EnsembleBase):
+            return self.model_list[0].ensemble_shape(shape = shape + (num_sub_models,))
+        else:
+            return shape + (num_sub_models,)
+    
 class BootstrapModel(EnsembleBase):
     """Fit a model using bootstrapping of the data.
 
