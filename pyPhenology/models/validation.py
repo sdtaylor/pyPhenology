@@ -44,6 +44,8 @@ def validate_observations(observations, for_prediction=False):
     for column in valid_columns:
         if column not in observations.columns:
             raise ValueError('missing required observations column: ' + column)
+        if observations[column].isna().any():
+            raise ValueError('Nan values in observation column: ' + column)
 
     return observations[valid_columns]
 

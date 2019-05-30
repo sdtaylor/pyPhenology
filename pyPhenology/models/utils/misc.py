@@ -65,7 +65,9 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
         doy_series = doy_series[:-1]
         warn("""Dropped temperature data for doy {d} due to missing data. Most likely from leap year mismatch""".format(d=last_doy_column))
 
-
+    # Dont need the doy column if it's present and prediction is being done
+    if for_prediction and 'doy' in observations.columns:
+        observations = observations.drop('doy', axis=1)
     # Give each observation a temperature time series
     obs_with_temp = observations.merge(predictors, on=['site_id', 'year'], how='left')
 
@@ -79,12 +81,12 @@ def temperature_only_data_prep(observations, predictors, for_prediction=False,
         warn('Dropped {n0} of {n1} observations because of missing data'.format(n0=n_dropped, n1=original_sample_size) +
              '\n Missing data from: \n' + str(missing_info))
 
-    observed_doy = obs_with_temp.doy.values
     temperature_array = obs_with_temp[doy_series].values.T
 
     if for_prediction:
         return temperature_array, doy_series
     else:
+        observed_doy = obs_with_temp.doy.values
         return observed_doy, temperature_array, doy_series
 
 
