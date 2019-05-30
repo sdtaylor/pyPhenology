@@ -1,5 +1,6 @@
 from pyPhenology import utils
 import pytest
+import numpy as np
 
 obs, predictors = utils.load_test_data()
 
@@ -143,3 +144,49 @@ def test_do_not_predict_wihout_fit(model_name, fitted_model):
     model = utils.load_model(model_name)()
     with pytest.raises(RuntimeError):
         model.predict(obs, predictors)
+
+#########################################################
+# These tests are for the core methods and do not need to be run 
+# for all model types
+        
+def test_predict_with_nan():
+    """model.predict() method should work with nan in obs.doy
+    column. see https://github.com/sdtaylor/pyPhenology/issues/105
+    """
+    single_model = utils.load_model('ThermalTime')()
+    single_model.fit(obs, predictors, optimizer_params='testing')
+
+    obs_with_nan = obs.copy(deep=True)
+    obs_with_nan['doy'] = np.nan
+    p_with_nan = single_model.predict(obs_with_nan, predictors)
+    p = single_model.predict(obs, predictors)
+
+    assert np.all(p==p_with_nan)
+
+def test_no_nan_in_observations_fit():
+    """the observation data.frame, either in fitting or prediction,
+    should not have any NA
+    
+    """
+    single_model = utils.load_model('ThermalTime')()
+    single_model.fit(obs, predictors, optimizer_params='testing')
+
+    obs_with_nan = obs.copy(deep=True)
+    obs_with_nan['year'][1] = np.nan
+    
+    with pytest.raises(ValueError):
+        single_model.predict(obs_with_nan, predictors)
+
+def test_no_nan_in_observations_predict():
+    """the observation data.frame, either in fitting or prediction,
+    should not have any NA
+    
+    """
+    single_model = utils.load_model('ThermalTime')()
+
+    obs_with_nan = obs.copy(deep=True)
+    obs_with_nan['doy'][1] = np.nan
+    
+    with pytest.raises(ValueError):
+        single_model.fit(obs_with_nan, predictors, optimizer_params='testing')
+    
