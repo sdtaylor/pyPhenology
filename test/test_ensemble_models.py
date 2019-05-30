@@ -100,7 +100,7 @@ def test_ensemble_model_predict_default(model_name, fitted_model):
 @pytest.mark.parametrize('model_name, fitted_model', test_cases_minus_weighted)
 def test_ensemble_model_predict_none_shape(model_name, fitted_model):
     """Predict with aggregation='none' returns a 2d array"""
-    assert len(fitted_model.predict(aggregation='none').shape) == 2
+    assert fitted_model.predict(aggregation='none').shape[:-1] == fitted_model.ensemble_shape()
 
 @pytest.mark.parametrize('model_name, fitted_model', test_cases)
 def test_ensemble_score(model_name, fitted_model):
@@ -149,9 +149,6 @@ def test_ensemble_aggregation(model_name, fitted_model):
 
 ######################
 # More specific tests for the different ensembles
-def test_bootstrap_model_predict_none_length():
-    """Predict with aggregation='none' returns a 2d array"""
-    assert bootstrap_model.predict(aggregation='none').shape[0] == n_bootstraps
 
 def test_WeightedEnsemble_weight_shape():
     """Array of fitted weights should be this shape"""
