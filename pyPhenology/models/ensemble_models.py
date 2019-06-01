@@ -221,10 +221,21 @@ class BootstrapModel(EnsembleBase):
         if to_predict is None:
             to_predict = self.observations
 
-        predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors,
-             aggregation=aggregation, **kwargs)
-            for m in self.model_list)
+        # If the models within this ensemble are themselves ensembles,
+        # then let those models do the parallel stuff.
+        if isinstance(self.model_list[0], EnsembleBase):
+            predictions = []
+            for m in self.model_list:
+                predictions.append(m.predict(to_predict = to_predict,
+                                             predictors = predictors,
+                                             aggregation = aggregation,
+                                             n_jobs = n_jobs,
+                                             **kwargs))
+        else:
+            predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
+                (m, to_predict = to_predict, predictors = predictors, 
+                 aggregation=aggregation, **kwargs)
+                for m in self.model_list)
 
         predictions = np.array(predictions)
         if aggregation == 'mean':
@@ -368,10 +379,21 @@ class Ensemble(EnsembleBase):
         if to_predict is None:
             to_predict = self.observations
 
-        predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
-            (m, to_predict = to_predict, predictors = predictors, 
-             aggregation=aggregation, **kwargs)
-            for m in self.model_list)
+        # If the models within this ensemble are themselves ensembles,
+        # then let those models do the parallel stuff.
+        if isinstance(self.model_list[0], EnsembleBase):
+            predictions = []
+            for m in self.model_list:
+                predictions.append(m.predict(to_predict = to_predict,
+                                             predictors = predictors,
+                                             aggregation = aggregation,
+                                             n_jobs = n_jobs,
+                                             **kwargs))
+        else:
+            predictions = Parallel(n_jobs = n_jobs)(delayed(self._predict_job)
+                (m, to_predict = to_predict, predictors = predictors, 
+                 aggregation=aggregation, **kwargs)
+                for m in self.model_list)
 
         predictions = np.array(predictions)
         if aggregation == 'mean':
