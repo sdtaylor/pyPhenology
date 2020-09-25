@@ -9,7 +9,7 @@ matrix:
     python: "3.6"
     env: 
       - TEST_ARGS="-v test/test_known_parameter_values.py"
-      - INSTALL_ARGS="scipy==1.1.0 numpy==1.15.0 pandas>=0.21 joblib>=0.12"
+      - INSTALL_ARGS="scipy==1.1.0 numpy==1.15.0 pandas==0.25.2 joblib>=0.12"
   # All other tests can be run with whatever versions get installed
   - name: "All Other Tests"
     python: "3.6"
