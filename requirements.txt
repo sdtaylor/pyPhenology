@@ -1,4 +1,4 @@
-scipy>=1.0 --only-binary :all:
-numpy>=1.15.4 --only-binary :all:
+scipy>=1.2 --only-binary :all:
+numpy>=1.16 --only-binary :all:
 pandas>=1.0 --only-binary :all:
 joblib>=0.12 --only-binary :all:
