@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
 NAME ='pyPhenology'
-VERSION = '0.7.1'
 DESCRIPTION = 'Plant phenology models in python'
 URL = 'https://github.com/sdtaylor/pyPhenology'
 AUTHOR = 'Shawn Taylor'
@@ -72,6 +71,13 @@ Development of this software was funded by
 [Grant GBMF4563](http://www.moore.org/grants/list/GBMF4563) to Ethan P. White.
 
 """
+
+# Set the version number in pyPhenology/version.py
+version = {}
+with open('pyPhenology/version.py') as fp:
+    exec(fp.read(), version)
+VERSION = version['__version__']
+
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
