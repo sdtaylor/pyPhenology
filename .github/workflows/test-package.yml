@@ -17,6 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8]
+        test-known-parameter: [false]
         # testing multiple numpy versions since it's core to unpackqa
         # python 3.6 final numpy version was 1.19
         # python 3.9 supports lower versions than below but install takes forever
@@ -30,6 +31,9 @@ jobs:
             numpy: '1.20.0'
           - python-version: 3.9
             numpy: '1.21.0'
+          - python-version: 3.6
+            numpy: '1.18.0'
+            test-known-parameter: true
     
     name: Py ${{ matrix.python-version }}, np ${{ matrix.numpy }}
     steps:
@@ -41,6 +45,7 @@ jobs:
     - name: Install dependencies
       env:
         NUMPY: ${{ matrix.numpy }}
+        TEST_KNOWN_PARAM: ${{ matrix.test-known-parameter }}
       run: |
         # The ~= operator will choose the latest PATCH release within MAJOR.MINOR version specified
         # See https://stackoverflow.com/a/50080281/6615512 
@@ -53,4 +58,10 @@ jobs:
         pip list
     - name: Test with pytest
       run: |
-        py.test test -v --ignore=test/test_known_parameter_values.py --cov=pyPhenology
+        if $TEST_KNOWN_PARAM
+        then
+            TEST_STR="test/test_known_parameter_values.py"
+        else
+            TEST_STR="test --ignore=test/test_known_parameter_values.py"
+        fi
+        py.test -v $TEST_STR --cov=pyPhenology
