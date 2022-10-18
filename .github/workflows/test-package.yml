@@ -1,0 +1,55 @@
+name: test-package 
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Run every month on the 1st
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 0 1 * *'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+        # testing multiple numpy versions since it's core to unpackqa
+        # python 3.6 final numpy version was 1.19
+        # python 3.9 supports lower versions than below but install takes forever
+        numpy: ['1.17.0','1.18.0','1.19.0','1.20.0','1.21.0']
+        include:
+          - python-version: 3.6
+            numpy: '1.17.0'
+          - python-version: 3.6
+            numpy: '1.18.0'
+          - python-version: 3.9
+            numpy: '1.20.0'
+          - python-version: 3.9
+            numpy: '1.21.0'
+    
+    name: Py ${{ matrix.python-version }}, np ${{ matrix.numpy }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      env:
+        NUMPY: ${{ matrix.numpy }}
+      run: |
+        # The ~= operator will choose the latest PATCH release within MAJOR.MINOR version specified
+        # See https://stackoverflow.com/a/50080281/6615512 
+        # and https://www.python.org/dev/peps/pep-0440/#compatible-release
+        pip install numpy~=$NUMPY pyyaml
+        pip install -e .
+        pip install codecov -U
+        pip install pytest-cov -U
+        pip list
+    - name: Test with pytest
+      run: |
+        py.test test -v --cov=pyUnpackQA
