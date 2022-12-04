@@ -49,4 +49,4 @@ jobs:
         pip list
     - name: Test with pytest
       run: |
-        py.test test -v --cov=pyUnpackQA
+        py.test test -v --cov=pyPhenology
