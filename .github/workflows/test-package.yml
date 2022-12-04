@@ -16,16 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
-        # testing multiple numpy versions since it's core to unpackqa
-        # python 3.6 final numpy version was 1.19
-        # python 3.9 supports lower versions than below but install takes forever
-        numpy: ['1.19.0','1.20.0','1.21.0']
+        # testing multiple numpy versions since it's core to the package.
+        # 3.8 and 3.8 currently have these np versions compatible.
+        python-version: ['3.8', '3.9']
+        numpy: ['1.20.0','1.21.0','1.22.0']
+        # 3.7 and 3.10 require earlier/later ones.
         include:
-          - python-version: 3.9
+          - python-version: 3.7
             numpy: '1.20.0'
-          - python-version: 3.9
+          - python-version: 3.7
             numpy: '1.21.0'
+          - python-version: '3.10'
+            numpy: '1.22.0'
     
     name: Py ${{ matrix.python-version }}, np ${{ matrix.numpy }}
     steps:
@@ -49,4 +51,4 @@ jobs:
         pip list
     - name: Test with pytest
       run: |
-        py.test test -v --cov=pyUnpackQA
+        py.test test -v --cov=pyPhenology
