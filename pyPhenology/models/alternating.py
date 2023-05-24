@@ -63,7 +63,8 @@ class Alternating(BaseModel):
 
         # Accumulated growing degree days from Jan 1
         gdd = temperature.copy()
-        gdd[gdd < threshold] = 0
+        gdd = gdd - threshold
+        gdd[gdd < 0] = 0
         gdd[doy_series < t1] = 0
         gdd = utils.transforms.forcing_accumulator(gdd)
 
@@ -140,7 +141,8 @@ class MSB(BaseModel):
 
         # Accumulated growing degree days from Jan 1
         gdd = temperature.copy()
-        gdd[gdd < threshold] = 0
+        gdd = gdd - threshold
+        gdd[gdd < 0] = 0
         gdd[doy_series < t1] = 0
         gdd = utils.transforms.forcing_accumulator(gdd)
 

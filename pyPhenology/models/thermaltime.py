@@ -43,7 +43,8 @@ class ThermalTime(BaseModel):
 
     def _apply_model(self, temperature, doy_series, t1, T, F):
         # Temperature threshold
-        temperature[temperature < T] = 0
+        temperature = temperature - T
+        temperature[temperature < 0] = 0
 
         # Only accumulate forcing after t1
         temperature[doy_series < t1] = 0
@@ -134,7 +135,8 @@ class M1(BaseModel):
 
     def _apply_model(self, temperature, doy_series, daylength, t1, T, F, k):
         # Temperature threshold
-        temperature[temperature < T] = 0
+        temperature = temperature - T
+        temperature[temperature < 0] = 0
 
         # Only accumulate forcing after t1
         temperature[doy_series < t1] = 0
@@ -201,7 +203,8 @@ class FallCooling(BaseModel):
 
     def _apply_model(self, temperature, doy_series, t1, T, F):
         # Temperature threshold
-        temperature[temperature > T] = 0
+        temperature = T - temperature
+        temperature[temperature < 0] = 0
 
         # Only accumulate forcing after t1
         temperature[doy_series < t1] = 0
